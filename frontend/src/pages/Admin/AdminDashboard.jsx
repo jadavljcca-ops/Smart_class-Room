@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import SVGChart from '../../components/Shared/SVGChart';
 import { Users, GraduationCap, Clock, Megaphone, FileText, BarChart3, X, Search, Calendar, Hash, FileDown, Eye, ArrowLeft, School, Trash2 } from 'lucide-react';
@@ -121,7 +121,6 @@ export default function AdminDashboard() {
 
   const handleDownloadNote = async (note) => {
     try {
-      const API_BASE_URL = 'http://localhost:5000/api';
       const response = await fetch(`${API_BASE_URL}/student/notes/download/${note.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });

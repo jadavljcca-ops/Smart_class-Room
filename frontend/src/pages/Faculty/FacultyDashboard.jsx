@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth, API_BASE_URL } from '../../context/AuthContext';
+import { useAuth, API_BASE_URL, BACKEND_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { 
   FileText, Upload, Plus, Edit, Trash2, X, Save, 
@@ -205,7 +205,7 @@ export default function FacultyDashboard() {
   };
 
   const handleViewNote = (note) => {
-    const fileUrl = `http://localhost:5000${note.file_path}`;
+    const fileUrl = `${BACKEND_URL}${note.file_path}`;
     window.open(fileUrl, '_blank');
   };
 
