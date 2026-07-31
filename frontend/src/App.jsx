@@ -18,6 +18,8 @@ import RegistrationRequests from './pages/Admin/RegistrationRequests';
 import FacultyManagement from './pages/Admin/FacultyManagement';
 import AnnouncementsManagement from './pages/Admin/AnnouncementsManagement';
 import DepartmentsManagement from './pages/Admin/DepartmentsManagement';
+import SubAdminsManagement from './pages/Admin/SubAdminsManagement';
+import StudentsManagement from './pages/Admin/StudentsManagement';
 
 // Faculty Pages
 import FacultyDashboard from './pages/Faculty/FacultyDashboard';
@@ -55,6 +57,16 @@ function RequireAuth({ children, allowedRoles }) {
   }
 
   return children;
+}
+
+// Main Admin specific guard
+function RequireMainAdmin({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user && user.role === 'admin' && user.adminRole === 'main_admin') {
+    return children;
+  }
+  return <Navigate to="/admin" replace />;
 }
 
 // Redirects home requests to user's dashboard based on their role
@@ -120,6 +132,14 @@ function AppLayout() {
             } 
           />
           <Route 
+            path="/admin/students" 
+            element={
+              <RequireAuth allowedRoles={['admin']}>
+                <StudentsManagement />
+              </RequireAuth>
+            } 
+          />
+          <Route 
             path="/admin/announcements" 
             element={
               <RequireAuth allowedRoles={['admin']}>
@@ -131,7 +151,19 @@ function AppLayout() {
             path="/admin/departments" 
             element={
               <RequireAuth allowedRoles={['admin']}>
-                <DepartmentsManagement />
+                <RequireMainAdmin>
+                  <DepartmentsManagement />
+                </RequireMainAdmin>
+              </RequireAuth>
+            } 
+          />
+          <Route 
+            path="/admin/sub-admins" 
+            element={
+              <RequireAuth allowedRoles={['admin']}>
+                <RequireMainAdmin>
+                  <SubAdminsManagement />
+                </RequireMainAdmin>
               </RequireAuth>
             } 
           />

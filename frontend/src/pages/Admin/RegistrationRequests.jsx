@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Check, X, Trash2, Search, Filter, RefreshCw, Calendar, Mail, Phone, Hash } from 'lucide-react';
+import { Check, X, Trash2, Search, Filter, RefreshCw, Calendar, Mail, Phone, Hash, Eye, EyeOff, Lock } from 'lucide-react';
 
-export default function RegistrationRequests() {
+export default function RegistrationRequests({ department: propDepartment }) {
   const { authFetch } = useAuth();
   const { showToast } = useToast();
 
@@ -15,7 +15,8 @@ export default function RegistrationRequests() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await authFetch('/admin/requests');
+      const url = propDepartment ? `/admin/requests?department=${propDepartment}` : '/admin/requests';
+      const res = await authFetch(url);
       if (res.ok) {
         const data = await res.json();
         setRequests(data);
@@ -78,9 +79,11 @@ export default function RegistrationRequests() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Registration Requests</h1>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
+            {propDepartment ? `${propDepartment} ` : ''}Registration Requests
+          </h1>
           <p style={{ color: 'hsl(var(--muted))' }}>
-            Review and approve student and faculty registrations. Users cannot log in until approved.
+            Review and approve student and faculty registrations{propDepartment ? ` for ${propDepartment}` : ''}. Users cannot log in until approved.
           </p>
         </div>
         <button 
@@ -174,6 +177,11 @@ export default function RegistrationRequests() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Hash size={14} />
                       Dept: {req.department}
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'hsl(var(--primary))', fontWeight: 600 }}>
+                      <Lock size={14} />
+                      Password: {req.raw_password || 'N/A'}
                     </div>
                     
                     {req.role === 'student' ? (

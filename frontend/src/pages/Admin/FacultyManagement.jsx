@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, UserPlus } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, UserPlus, Eye, EyeOff } from 'lucide-react';
 
-export default function FacultyManagement() {
+export default function FacultyManagement({ department: propDepartment }) {
   const { authFetch } = useAuth();
   const { showToast } = useToast();
 
@@ -24,7 +24,8 @@ export default function FacultyManagement() {
   const fetchFaculty = async () => {
     setLoading(true);
     try {
-      const res = await authFetch('/admin/faculty');
+      const url = propDepartment ? `/admin/faculty?department=${propDepartment}` : '/admin/faculty';
+      const res = await authFetch(url);
       if (res.ok) {
         const data = await res.json();
         setFaculty(data);
@@ -63,7 +64,7 @@ export default function FacultyManagement() {
     setFullName('');
     setEmail('');
     setMobileNumber('');
-    setDepartment('');
+    setDepartment(propDepartment || '');
     setEmployeeId('');
     setPassword('');
     setShowForm(true);
@@ -156,9 +157,11 @@ export default function FacultyManagement() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Faculty Management</h1>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
+            {propDepartment ? `${propDepartment} ` : ''}Faculty Management
+          </h1>
           <p style={{ color: 'hsl(var(--muted))' }}>
-            Add, update, or remove approved college faculty members.
+            Add, update, or remove approved college faculty members{propDepartment ? ` for ${propDepartment}` : ''}.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -208,6 +211,7 @@ export default function FacultyManagement() {
                 <th>Email</th>
                 <th>Mobile</th>
                 <th>Department</th>
+                <th>Password</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -220,6 +224,7 @@ export default function FacultyManagement() {
                   <td>{f.email}</td>
                   <td>{f.mobile_number}</td>
                   <td>{f.department}</td>
+                  <td style={{ fontWeight: 600, color: 'hsl(var(--primary))' }}>{f.raw_password || 'N/A'}</td>
                   <td>
                     <span className="badge badge-low" style={{ textTransform: 'capitalize' }}>
                       {f.status}
@@ -321,17 +326,26 @@ export default function FacultyManagement() {
 
               <div className="form-group">
                 <label className="form-label">Department</label>
-                <select
-                  className="form-control"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  required
-                >
-                  <option value="">Select Department</option>
-                  {departments.map((dept, idx) => (
-                    <option key={idx} value={dept}>{dept}</option>
-                  ))}
-                </select>
+                {propDepartment ? (
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={propDepartment}
+                    readOnly
+                  />
+                ) : (
+                  <select
+                    className="form-control"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((dept, idx) => (
+                      <option key={idx} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="form-group">

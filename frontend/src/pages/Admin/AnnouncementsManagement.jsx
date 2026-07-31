@@ -3,7 +3,7 @@ import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, Paperclip, Download, Calendar } from 'lucide-react';
 
-export default function AnnouncementsManagement() {
+export default function AnnouncementsManagement({ department: propDepartment }) {
   const { authFetch, token } = useAuth();
   const { showToast } = useToast();
 
@@ -65,7 +65,7 @@ export default function AnnouncementsManagement() {
     setEditingId(null);
     setTitle('');
     setDescription('');
-    setDepartment('All');
+    setDepartment(propDepartment || 'All');
     // Set default dates
     const today = new Date().toISOString().split('T')[0];
     const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -193,9 +193,11 @@ export default function AnnouncementsManagement() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Announcements & Notices</h1>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
+            {propDepartment ? `${propDepartment} ` : ''}Announcements & Notices
+          </h1>
           <p style={{ color: 'hsl(var(--muted))' }}>
-            Publish important alerts, events, and notices to college students and faculty.
+            Publish important alerts, events, and notices to college students and faculty{propDepartment ? ` in ${propDepartment}` : ''}.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -366,16 +368,25 @@ export default function AnnouncementsManagement() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Target Department</label>
-                  <select
-                    className="form-control"
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    required
-                  >
-                    {departments.map((dept, idx) => (
-                      <option key={idx} value={dept}>{dept}</option>
-                    ))}
-                  </select>
+                  {propDepartment ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={propDepartment}
+                      readOnly
+                    />
+                  ) : (
+                    <select
+                      className="form-control"
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      required
+                    >
+                      {departments.map((dept, idx) => (
+                        <option key={idx} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 <div className="form-group">

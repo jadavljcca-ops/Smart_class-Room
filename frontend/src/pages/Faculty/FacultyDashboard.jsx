@@ -462,16 +462,13 @@ export default function FacultyDashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Department</label>
-                  <select
+                  <input
+                    type="text"
                     className="form-control"
                     value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    required
-                  >
-                    {departments.map((dept, idx) => (
-                      <option key={idx} value={dept}>{dept}</option>
-                    ))}
-                  </select>
+                    readOnly
+                    style={{ backgroundColor: 'hsl(var(--secondary) / 0.15)', cursor: 'not-allowed' }}
+                  />
                 </div>
 
                 <div className="form-group">
@@ -523,17 +520,32 @@ export default function FacultyDashboard() {
                 <input
                   type="file"
                   className="form-control"
-                  onChange={(e) => setNoteFiles(Array.from(e.target.files))}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.files);
+                    setNoteFiles((prev) => [...prev, ...selected]);
+                    e.target.value = null; // Clear input to allow re-selection
+                  }}
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.zip"
                   multiple={!editingNoteId}
-                  required={!editingNoteId}
+                  required={!editingNoteId && noteFiles.length === 0}
                 />
                 {noteFiles.length > 0 && (
-                  <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'hsl(var(--primary))' }}>
-                    Selected {noteFiles.length} file(s):
-                    <ul style={{ paddingLeft: '1.25rem', marginTop: '0.25rem', marginBottom: 0 }}>
+                  <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', padding: '0.75rem', border: '1px solid hsl(var(--border))', borderRadius: '6px', backgroundColor: 'hsl(var(--secondary) / 0.1)' }}>
+                    <div style={{ fontWeight: 600, marginBottom: '0.4rem', color: 'hsl(var(--foreground))' }}>Selected File Queue:</div>
+                    <ul style={{ paddingLeft: '1rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       {noteFiles.map((f, i) => (
-                        <li key={i}>{f.name}</li>
+                        <li key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+                            📁 {f.name} <span style={{ color: 'hsl(var(--muted))', fontSize: '0.75rem' }}>({Math.round(f.size / 1024)} KB)</span>
+                          </span>
+                          <button 
+                            type="button" 
+                            onClick={() => setNoteFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                            style={{ background: 'none', border: 'none', color: 'hsl(var(--danger))', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+                          >
+                            Remove
+                          </button>
+                        </li>
                       ))}
                     </ul>
                   </div>

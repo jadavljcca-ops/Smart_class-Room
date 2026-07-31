@@ -36,3 +36,7 @@ backend/.env
 *.njsproj
 *.sln
 *.sw?
+
+# Portable node binaries
+.node-portable/
+

@@ -26,7 +26,8 @@ router.get('/notes', async (req, res) => {
 router.post('/notes', upload.array('files'), async (req, res) => {
   const facultyId = req.user.id;
   const facultyName = req.user.fullName;
-  const { subjectName, department, semester, unitNumber, description } = req.body;
+  const department = req.user.department; // Force note department to match faculty's department
+  const { subjectName, semester, unitNumber, description } = req.body;
 
   if (!subjectName || !department || !semester || !unitNumber || !description) {
     return res.status(400).json({ message: 'Please provide all required fields.' });
@@ -68,7 +69,8 @@ router.post('/notes', upload.array('files'), async (req, res) => {
 router.put('/notes/:id', upload.single('file'), async (req, res) => {
   const { id } = req.params;
   const facultyId = req.user.id;
-  const { subjectName, department, semester, unitNumber, description } = req.body;
+  const department = req.user.department; // Force note department to match faculty's department
+  const { subjectName, semester, unitNumber, description } = req.body;
 
   if (!subjectName || !department || !semester || !unitNumber || !description) {
     return res.status(400).json({ message: 'Please provide all required fields.' });

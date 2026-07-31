@@ -62,8 +62,8 @@ router.post('/register', async (req, res) => {
     // Insert into registration_requests
     await run(
       `INSERT INTO registration_requests (
-        role, full_name, email, mobile_number, department, semester, enrollment_number, employee_id, password_hash
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        role, full_name, email, mobile_number, department, semester, enrollment_number, employee_id, password_hash, raw_password
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         role,
         fullName,
@@ -73,7 +73,8 @@ router.post('/register', async (req, res) => {
         role === 'student' ? semester : null,
         role === 'student' ? enrollmentNumber : null,
         role === 'faculty' ? employeeId : null,
-        passwordHash
+        passwordHash,
+        password
       ]
     );
 
@@ -108,13 +109,27 @@ router.post('/login', async (req, res) => {
       const match = await bcrypt.compare(password, admin.password_hash);
       if (match) {
         const token = jwt.sign(
-          { id: admin.id, email: admin.email, role: 'admin', fullName: admin.full_name },
+          { 
+            id: admin.id, 
+            email: admin.email, 
+            role: 'admin', 
+            adminRole: admin.role || 'sub_admin', 
+            department: admin.department || null, 
+            fullName: admin.full_name 
+          },
           JWT_SECRET,
           { expiresIn: '1d' }
         );
         return res.json({
           token,
-          user: { id: admin.id, email: admin.email, role: 'admin', fullName: admin.full_name }
+          user: { 
+            id: admin.id, 
+            email: admin.email, 
+            role: 'admin', 
+            adminRole: admin.role || 'sub_admin', 
+            department: admin.department || null, 
+            fullName: admin.full_name 
+          }
         });
       }
     }
@@ -245,7 +260,7 @@ router.post('/change-password', authenticateToken, async (req, res) => {
     }
 
     const newHash = await bcrypt.hash(newPassword, 10);
-    await run(`UPDATE ${tableName} SET password_hash = ? WHERE id = ?`, [newHash, id]);
+    await run(`UPDATE ${tableName} SET password_hash = ?, raw_password = ? WHERE id = ?`, [newHash, newPassword, id]);
 
     return res.json({ message: 'Password changed successfully.' });
   } catch (error) {

@@ -47,8 +47,22 @@ function initializeTables() {
       full_name TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'sub_admin',
+      department TEXT,
+      raw_password TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Dynamic schema updates for legacy sqlite databases
+    db.run("ALTER TABLE admins ADD COLUMN role TEXT DEFAULT 'sub_admin'", [], (err) => {
+      // Ignore if column already exists
+    });
+    db.run("ALTER TABLE admins ADD COLUMN department TEXT", [], (err) => {
+      // Ignore if column already exists
+    });
+    db.run("ALTER TABLE admins ADD COLUMN raw_password TEXT", [], (err) => {
+      // Ignore if column already exists
+    });
 
     // 2. Faculty Table
     db.run(`CREATE TABLE IF NOT EXISTS faculty (
@@ -59,9 +73,13 @@ function initializeTables() {
       department TEXT NOT NULL,
       employee_id TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
+      raw_password TEXT,
       status TEXT DEFAULT 'Approved',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+    db.run("ALTER TABLE faculty ADD COLUMN raw_password TEXT", [], (err) => {
+      // Ignore if column already exists
+    });
 
     // 3. Students Table
     db.run(`CREATE TABLE IF NOT EXISTS students (
@@ -73,9 +91,13 @@ function initializeTables() {
       semester TEXT NOT NULL,
       enrollment_number TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
+      raw_password TEXT,
       status TEXT DEFAULT 'Approved',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+    db.run("ALTER TABLE students ADD COLUMN raw_password TEXT", [], (err) => {
+      // Ignore if column already exists
+    });
 
     // 4. RegistrationRequests Table (Pending student/faculty requests)
     db.run(`CREATE TABLE IF NOT EXISTS registration_requests (
@@ -89,9 +111,13 @@ function initializeTables() {
       enrollment_number TEXT, -- Null for faculty
       employee_id TEXT, -- Null for student
       password_hash TEXT NOT NULL,
+      raw_password TEXT,
       status TEXT DEFAULT 'Pending', -- 'Pending', 'Rejected'
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+    db.run("ALTER TABLE registration_requests ADD COLUMN raw_password TEXT", [], (err) => {
+      // Ignore if column already exists
+    });
 
     // 5. Announcements Table
     db.run(`CREATE TABLE IF NOT EXISTS announcements (
@@ -159,44 +185,61 @@ function initializeTables() {
       if (row.count === 0) {
         const salt = bcrypt.genSaltSync(10);
         const hash = bcrypt.hashSync('admin123', salt);
-        db.run("INSERT INTO admins (full_name, email, password_hash) VALUES (?, ?, ?)",
-          ['Main Admin', 'admin@ljcca.edu', hash],
+        db.run("INSERT INTO admins (full_name, email, password_hash, role, raw_password) VALUES (?, ?, ?, ?, ?)",
+          ['Main Admin', 'admin@ljcca.edu', hash, 'main_admin', 'admin123'],
           (err2) => {
             if (err2) {
               console.error('Error seeding admin:', err2);
             } else {
-              console.log('Seeded default admin user (admin@ljcca.edu / admin123)');
+              console.log('Seeded default main admin user (admin@ljcca.edu / admin123)');
             }
           }
         );
+      } else {
+        // Ensure default admin has role 'main_admin'
+        db.run("UPDATE admins SET role = 'main_admin', raw_password = 'admin123' WHERE email = 'admin@ljcca.edu'");
       }
     });
 
-    // Seed default departments if none exist
-    db.get("SELECT COUNT(*) as count FROM departments", [], (err, row) => {
+    // Seed default departments if none exist or if 'BCA' is missing
+    const defaultDepts = ['BCA', 'B.Com', 'B.A', 'BBA', 'B.Sc', 'Engineering'];
+    db.get("SELECT COUNT(*) as count FROM departments WHERE name = 'BCA'", [], (err, row) => {
       if (err) {
-        console.error('Error checking departments count:', err);
+        console.error('Error checking departments:', err);
         return;
       }
-      if (row.count === 0) {
-        const defaultDepts = [
-          'Computer Engineering',
-          'Information Technology',
-          'Civil Engineering',
-          'Mechanical Engineering',
-          'Electrical Engineering',
-          'Science & Humanities'
-        ];
-        const stmt = db.prepare("INSERT INTO departments (name) VALUES (?)");
-        defaultDepts.forEach((dept) => {
-          stmt.run(dept, (err2) => {
-            if (err2) console.error(`Error seeding department ${dept}:`, err2);
+      if (!row || row.count === 0) {
+        // Clear and seed correct departments list
+        db.serialize(() => {
+          db.run("DELETE FROM departments", [], (errDel) => {
+            if (errDel) console.error("Error clearing departments:", errDel);
           });
+          const stmt = db.prepare("INSERT INTO departments (name) VALUES (?)");
+          defaultDepts.forEach((dept) => {
+            stmt.run(dept, (err2) => {
+              if (err2) console.error(`Error seeding department ${dept}:`, err2);
+            });
+          });
+          const completedMsg = 'Seeded new departments list: BCA, B.Com, B.A, BBA, B.Sc, Engineering';
+          stmt.finalize();
+          console.log(completedMsg);
         });
-        stmt.finalize();
-        console.log('Seeded default departments list.');
       }
     });
+
+    // Populate raw_password values for existing NULL database columns
+    db.run("UPDATE admins SET raw_password = 'subadmin123' WHERE raw_password IS NULL AND role = 'sub_admin'");
+    db.run("UPDATE faculty SET raw_password = 'faculty123' WHERE raw_password IS NULL");
+    db.run("UPDATE students SET raw_password = 'student123' WHERE raw_password IS NULL");
+    db.run("UPDATE registration_requests SET raw_password = 'password123' WHERE raw_password IS NULL");
+
+    // Migrate legacy 'Computer Application' department name to 'BCA'
+    db.run("UPDATE admins SET department = 'BCA' WHERE department = 'Computer Application'");
+    db.run("UPDATE faculty SET department = 'BCA' WHERE department = 'Computer Application'");
+    db.run("UPDATE students SET department = 'BCA' WHERE department = 'Computer Application'");
+    db.run("UPDATE notes SET department = 'BCA' WHERE department = 'Computer Application'");
+    db.run("UPDATE announcements SET department = 'BCA' WHERE department = 'Computer Application'");
+    db.run("UPDATE registration_requests SET department = 'BCA' WHERE department = 'Computer Application'");
   });
 }
 

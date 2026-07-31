@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
             id: payload.id,
             email: payload.email,
             role: payload.role,
+            adminRole: payload.adminRole,
             fullName: payload.fullName,
             department: payload.department,
             semester: payload.semester,
