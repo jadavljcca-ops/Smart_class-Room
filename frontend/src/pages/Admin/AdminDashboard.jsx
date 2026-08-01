@@ -22,6 +22,8 @@ export default function AdminDashboard() {
   const [selectedDept, setSelectedDept] = useState(null);
   const [activeSubTab, setActiveSubTab] = useState('overview'); // 'overview', 'requests', 'faculty', 'announcements'
 
+  const [departments, setDepartments] = useState([]);
+
   // Modals state
   const [showStudentsModal, setShowStudentsModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
@@ -52,6 +54,22 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await authFetch('/admin/departments');
+      if (res.ok) {
+        const data = await res.json();
+        setDepartments(data.map(d => d.name));
+      }
+    } catch (err) {
+      console.error('Error loading departments:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   useEffect(() => {
     fetchStats();
@@ -227,7 +245,7 @@ export default function AdminDashboard() {
             Academic Departments Portals
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.25rem' }}>
-            {['BCA', 'B.Com', 'B.A', 'BBA', 'B.Sc', 'Engineering'].map((dept) => (
+            {(departments.length > 0 ? departments : ['BCA', 'B.Com', 'B.A', 'BBA', 'B.Sc', 'Engineering']).map((dept) => (
               <div 
                 key={dept} 
                 onClick={() => setSelectedDept(dept)}
