@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Search, Plus, Trash2, X, Save, RefreshCw, Upload, Download, AlertCircle, FileText, CheckCircle } from 'lucide-react';
+import { Search, Plus, Trash2, X, Save, RefreshCw, Upload, Download, AlertCircle, FileText, CheckCircle, LogOut } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 export default function StudentsManagement({ department: propDepartment, insideModal = false, onMutation }) {
@@ -10,7 +10,10 @@ export default function StudentsManagement({ department: propDepartment, insideM
 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [filterName, setFilterName] = useState('');
+  const [filterEnrollment, setFilterEnrollment] = useState('');
+  const [filterDept, setFilterDept] = useState('');
+  const [filterSem, setFilterSem] = useState('');
 
   // Form Modal state
   const [showForm, setShowForm] = useState(false);
@@ -243,16 +246,23 @@ export default function StudentsManagement({ department: propDepartment, insideM
       return {
         fullName: getVal(['fullname', 'name', 'studentname', 'full name', 'student name']),
         email: getVal(['email', 'emailaddress', 'email address']),
-        mobileNumber: getVal(['mobile', 'mobilenumber', 'phone', 'contact', 'mobile number', 'phone number']),
-        department: getVal(['department', 'dept']) || defaultDept,
+        mobileNumber: getVal(['mobile', 'mobilenumber', 'phone', 'contact', 'mobile number', 'phone number', 'mob']),
+        department: getVal(['department', 'dept', 'departments']) || defaultDept,
         semester: getVal(['semester', 'sem']),
-        enrollmentNumber: getVal(['enrollment', 'enrollmentnumber', 'enrollment no', 'enrollment number', 'enrollno', 'rollno', 'roll number']),
+        enrollmentNumber: getVal(['enrollment', 'enrollmentnumber', 'enrollments number', 'enrollment no', 'enrollment number', 'enrollments', 'enrollno', 'rollno', 'roll number']),
         password: getVal(['password', 'pass', 'defaultpassword']) || 'student123'
       };
     });
 
-    setParsedStudents(formatted);
-    showToast(`Parsed ${formatted.length} students from spreadsheet!`, 'success');
+    // Filter out rows that are entirely or mostly empty (i.e. no name, email, and enrollment number)
+    const validRows = formatted.filter(s => 
+      (s.fullName && s.fullName.toString().trim() !== '') || 
+      (s.email && s.email.toString().trim() !== '') || 
+      (s.enrollmentNumber && s.enrollmentNumber.toString().trim() !== '')
+    );
+
+    setParsedStudents(validRows);
+    showToast(`Parsed ${validRows.length} students from spreadsheet!`, 'success');
   };
 
   const handleBulkImport = async () => {
@@ -297,6 +307,34 @@ export default function StudentsManagement({ department: propDepartment, insideM
     }
   };
 
+  const handleForceLogoutAll = async () => {
+    const targetDeptName = propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : 'All');
+    const msg = targetDeptName === 'All'
+      ? "Are you sure you want to force logout ALL students across all departments? They will be prompted to log in again."
+      : `Are you sure you want to force logout all students in the ${targetDeptName} department? They will be prompted to log in again.`;
+
+    if (!window.confirm(msg)) {
+      return;
+    }
+
+    try {
+      const res = await authFetch('/admin/students/logout-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ department: targetDeptName })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'All students logged out successfully.', 'success');
+      } else {
+        showToast(data.message || 'Failed to logout students.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error during force logout.', 'error');
+    }
+  };
+
   // Download Sample CSV Helper
   const downloadSampleCSV = () => {
     const defaultDept = propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : 'BCA');
@@ -314,12 +352,12 @@ export default function StudentsManagement({ department: propDepartment, insideM
   };
 
   const filteredStudents = students.filter((s) => {
-    return (
-      s.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase()) ||
-      s.department.toLowerCase().includes(search.toLowerCase()) ||
-      s.enrollment_number.toLowerCase().includes(search.toLowerCase())
-    );
+    const matchName = !filterName || s.full_name.toLowerCase().includes(filterName.toLowerCase());
+    const matchEnrollment = !filterEnrollment || s.enrollment_number.toLowerCase().includes(filterEnrollment.toLowerCase());
+    const matchDept = !filterDept || s.department.toLowerCase() === filterDept.toLowerCase();
+    const matchSem = !filterSem || s.semester.toString() === filterSem.toString();
+    
+    return matchName && matchEnrollment && matchDept && matchSem;
   });
 
   return (
@@ -343,6 +381,10 @@ export default function StudentsManagement({ department: propDepartment, insideM
           </div>
         )}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button onClick={handleForceLogoutAll} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'hsl(var(--danger))', borderColor: 'hsl(var(--danger) / 0.3)' }} title="Forces all students in this scope to log in again next time they try to access the system.">
+            <LogOut size={16} />
+            {propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '') ? 'Logout Dept Students' : 'Logout All Students'}
+          </button>
           <button onClick={() => setShowBulkModal(true)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Upload size={16} />
             Bulk Import (.csv/.xlsx)
@@ -357,20 +399,71 @@ export default function StudentsManagement({ department: propDepartment, insideM
         </div>
       </div>
 
-      {/* Search Filter */}
-      <div className="search-controls" style={{ marginBottom: '1.5rem' }}>
-        <div className="search-input-wrapper" style={{ maxWidth: '400px' }}>
-          <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(var(--muted))' }}>
-            <Search size={16} />
-          </span>
+      {/* Filters Bar */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+        gap: '0.75rem', 
+        marginBottom: '1.5rem',
+        backgroundColor: 'hsl(var(--secondary) / 0.1)',
+        padding: '1rem',
+        borderRadius: '8px',
+        border: '1px solid hsl(var(--border) / 0.5)'
+      }}>
+        {/* Name Filter */}
+        <div className="form-group" style={{ margin: 0 }}>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Student Name</label>
           <input
             type="text"
             className="form-control"
-            placeholder="Search student name, department, enrollment..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ paddingLeft: '2.5rem' }}
+            placeholder="Search Name..."
+            value={filterName}
+            onChange={(e) => setFilterName(e.target.value)}
           />
+        </div>
+
+        {/* Enrollment Filter */}
+        <div className="form-group" style={{ margin: 0 }}>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Enrollment Number</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search Enrollment..."
+            value={filterEnrollment}
+            onChange={(e) => setFilterEnrollment(e.target.value)}
+          />
+        </div>
+
+        {/* Department Filter (Only show if not scoped to a specific department already) */}
+        {!(propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '')) && (
+          <div className="form-group" style={{ margin: 0 }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Department</label>
+            <select
+              className="form-control"
+              value={filterDept}
+              onChange={(e) => setFilterDept(e.target.value)}
+            >
+              <option value="">All Departments</option>
+              {departments.map((dept, idx) => (
+                <option key={idx} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Semester Filter */}
+        <div className="form-group" style={{ margin: 0 }}>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Semester</label>
+          <select
+            className="form-control"
+            value={filterSem}
+            onChange={(e) => setFilterSem(e.target.value)}
+          >
+            <option value="">All Semesters</option>
+            {[1, 2, 3, 4, 5, 6].map(sem => (
+              <option key={sem} value={sem}>Sem {sem}</option>
+            ))}
+          </select>
         </div>
       </div>
 

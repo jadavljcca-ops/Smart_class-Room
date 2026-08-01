@@ -738,5 +738,32 @@ router.delete('/notes/:id', async (req, res) => {
   }
 });
 
+// POST /api/admin/students/logout-all
+router.post('/students/logout-all', async (req, res) => {
+  const { department } = req.body;
+  let targetDept = department;
+
+  if (req.user.adminRole !== 'main_admin') {
+    targetDept = req.user.department;
+  }
+
+  try {
+    if (targetDept && targetDept !== 'All') {
+      await run('UPDATE students SET token_version = COALESCE(token_version, 1) + 1 WHERE department = ?', [targetDept]);
+      res.json({ message: `Successfully logged out all students in department: ${targetDept}` });
+    } else {
+      if (req.user.adminRole === 'main_admin') {
+        await run('UPDATE students SET token_version = COALESCE(token_version, 1) + 1');
+        res.json({ message: 'Successfully logged out all students across all departments.' });
+      } else {
+        res.status(403).json({ message: 'Forbidden. You can only logout students in your own department.' });
+      }
+    }
+  } catch (error) {
+    console.error('Logout all students error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 module.exports = router;
 

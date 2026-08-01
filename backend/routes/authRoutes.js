@@ -188,7 +188,8 @@ router.post('/login', async (req, res) => {
             fullName: student.full_name,
             department: student.department,
             semester: student.semester,
-            enrollmentNumber: student.enrollment_number
+            enrollmentNumber: student.enrollment_number,
+            tokenVersion: student.token_version || 1
           },
           JWT_SECRET,
           { expiresIn: '1d' }
@@ -202,7 +203,8 @@ router.post('/login', async (req, res) => {
             fullName: student.full_name,
             department: student.department,
             semester: student.semester,
-            enrollmentNumber: student.enrollment_number
+            enrollmentNumber: student.enrollment_number,
+            tokenVersion: student.token_version || 1
           }
         });
       }

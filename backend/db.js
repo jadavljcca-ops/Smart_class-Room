@@ -93,9 +93,13 @@ function initializeTables() {
       password_hash TEXT NOT NULL,
       raw_password TEXT,
       status TEXT DEFAULT 'Approved',
+      token_version INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
     db.run("ALTER TABLE students ADD COLUMN raw_password TEXT", [], (err) => {
+      // Ignore if column already exists
+    });
+    db.run("ALTER TABLE students ADD COLUMN token_version INTEGER DEFAULT 1", [], (err) => {
       // Ignore if column already exists
     });
 
