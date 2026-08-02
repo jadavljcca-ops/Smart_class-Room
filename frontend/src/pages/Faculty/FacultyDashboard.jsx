@@ -339,7 +339,7 @@ export default function FacultyDashboard() {
                       
                       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'hsl(var(--muted))', marginTop: '0.75rem' }}>
                         <span>Downloads: <strong style={{ color: 'hsl(var(--foreground))' }}>{note.download_count || 0}</strong></span>
-                        <span>Uploaded: {new Date(note.upload_date).toLocaleString()}</span>
+                        <span>Uploaded: {new Date(note.upload_date + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                       </div>
                     </div>
 
@@ -396,7 +396,7 @@ export default function FacultyDashboard() {
                 <div key={ann.id} className="card" style={{ padding: '1rem', borderLeft: ann.priority === 'High' ? '4px solid hsl(var(--danger))' : '1px solid hsl(var(--border))' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'hsl(var(--muted))' }}>
                     <span className={`badge badge-${ann.priority.toLowerCase()}`} style={{ fontSize: '0.65rem' }}>{ann.priority}</span>
-                    <span>{ann.publish_date}</span>
+                    <span>{new Date(ann.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                   </div>
                   <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginTop: '0.4rem', color: 'hsl(var(--foreground))' }}>{ann.title}</h4>
                   <p style={{ fontSize: '0.825rem', color: 'hsl(var(--foreground) / 0.85)', marginTop: '0.4rem', whiteSpace: 'pre-wrap' }}>

@@ -292,7 +292,7 @@ export default function AnnouncementsManagement({ department: propDepartment }) 
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <Calendar size={13} />
-                    Publish: {ann.publish_date}
+                    Posted: {new Date(ann.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <Calendar size={13} />

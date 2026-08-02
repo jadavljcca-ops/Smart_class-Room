@@ -623,7 +623,7 @@ export default function AdminDashboard() {
                         </td>
                         <td style={{ fontSize: '0.825rem', color: 'hsl(var(--muted))' }}>{note.file_name}</td>
                         <td style={{ fontWeight: 600, color: 'hsl(var(--primary))' }}>Prof. {note.faculty_name}</td>
-                        <td style={{ fontSize: '0.825rem' }}>{new Date(note.upload_date).toLocaleString()}</td>
+                        <td style={{ fontSize: '0.825rem' }}>{new Date(note.upload_date + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
                         <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                           <button
                             onClick={() => handleDownloadNote(note)}

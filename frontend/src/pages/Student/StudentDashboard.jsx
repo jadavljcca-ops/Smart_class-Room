@@ -238,7 +238,7 @@ export default function StudentDashboard() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'hsl(var(--muted))' }}>
                     <span className={`badge badge-${ann.priority.toLowerCase()}`} style={{ fontSize: '0.65rem' }}>{ann.priority}</span>
-                    <span>{ann.publish_date}</span>
+                    <span>{new Date(ann.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                   </div>
                   <h4 style={{ fontSize: '0.975rem', fontWeight: 700, marginTop: '0.4rem', color: 'hsl(var(--foreground))' }}>{ann.title}</h4>
                   <p style={{ fontSize: '0.85rem', color: 'hsl(var(--foreground) / 0.85)', marginTop: '0.4rem', whiteSpace: 'pre-wrap' }}>
@@ -370,7 +370,7 @@ export default function StudentDashboard() {
                         <User size={12} />
                         Uploaded by: <strong style={{ color: 'hsl(var(--foreground))' }}>Prof. {note.faculty_name}</strong>
                         <span>•</span>
-                        <span>{new Date(note.upload_date).toLocaleString()}</span>
+                        <span>{new Date(note.upload_date + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                       </div>
                     </div>
                     <div style={{ alignSelf: 'center' }}>
@@ -481,7 +481,7 @@ export default function StudentDashboard() {
                                 <User size={12} />
                                 Uploaded by: <strong style={{ color: 'hsl(var(--foreground))' }}>Prof. {note.faculty_name}</strong>
                                 <span>•</span>
-                                <span>{new Date(note.upload_date).toLocaleString()}</span>
+                                <span>{new Date(note.upload_date + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                               </div>
                             </div>
                             <div style={{ alignSelf: 'center' }}>
