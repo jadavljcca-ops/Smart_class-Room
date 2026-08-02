@@ -1035,6 +1035,48 @@ export default function LandingPage() {
           font-size: 0.8rem;
           color: hsl(var(--muted));
         }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+          .hero-section {
+            padding: 4rem 0 3rem 0;
+          }
+          .hero-title {
+            font-size: 2.2rem;
+          }
+          .hero-actions {
+            flex-direction: column;
+            width: 100%;
+          }
+          .hero-actions .btn {
+            width: 100%;
+          }
+          .features-tabs {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.5rem;
+          }
+          .stats-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+          }
+          .stat-value {
+            font-size: 2rem;
+          }
+          .departments-grid {
+            grid-template-columns: 1fr;
+          }
+          .cta-banner-card {
+            padding: 2rem 1.5rem;
+          }
+          .cta-banner-actions {
+            flex-direction: column;
+            width: 100%;
+          }
+          .cta-banner-actions .btn {
+            width: 100%;
+          }
+        }
       `}</style>
     </div>
   );
