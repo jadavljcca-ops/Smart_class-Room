@@ -339,7 +339,7 @@ export default function FacultyDashboard() {
                       
                       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'hsl(var(--muted))', marginTop: '0.75rem' }}>
                         <span>Downloads: <strong style={{ color: 'hsl(var(--foreground))' }}>{note.download_count || 0}</strong></span>
-                        <span>Uploaded: {new Date(note.upload_date).toLocaleDateString()}</span>
+                        <span>Uploaded: {new Date(note.upload_date).toLocaleString()}</span>
                       </div>
                     </div>
 

@@ -370,7 +370,7 @@ export default function StudentDashboard() {
                         <User size={12} />
                         Uploaded by: <strong style={{ color: 'hsl(var(--foreground))' }}>Prof. {note.faculty_name}</strong>
                         <span>•</span>
-                        <span>{new Date(note.upload_date).toLocaleDateString()}</span>
+                        <span>{new Date(note.upload_date).toLocaleString()}</span>
                       </div>
                     </div>
                     <div style={{ alignSelf: 'center' }}>
@@ -481,7 +481,7 @@ export default function StudentDashboard() {
                                 <User size={12} />
                                 Uploaded by: <strong style={{ color: 'hsl(var(--foreground))' }}>Prof. {note.faculty_name}</strong>
                                 <span>•</span>
-                                <span>{new Date(note.upload_date).toLocaleDateString()}</span>
+                                <span>{new Date(note.upload_date).toLocaleString()}</span>
                               </div>
                             </div>
                             <div style={{ alignSelf: 'center' }}>

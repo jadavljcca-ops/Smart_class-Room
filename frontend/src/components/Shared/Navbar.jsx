@@ -21,6 +21,8 @@ export default function Navbar() {
   
   const profileMenuRef = useRef(null);
   const notificationMenuRef = useRef(null);
+  const audioRef = useRef(new Audio('/notification.wav'));
+  const lastKnownNotifId = useRef(null);
 
   // Close menus on clicking outside
   useEffect(() => {
@@ -43,6 +45,21 @@ export default function Navbar() {
       const res = await authFetch('/notifications');
       if (res.ok) {
         const data = await res.json();
+        
+        // Check if there are new unread notifications
+        if (data && data.length > 0) {
+          const latestId = data[0].id;
+          
+          if (lastKnownNotifId.current !== null && latestId > lastKnownNotifId.current) {
+            // Check if any of the new ones are actually unread before playing sound
+            const hasNewUnread = data.some(n => n.id > lastKnownNotifId.current && !n.is_read);
+            if (hasNewUnread) {
+              audioRef.current.play().catch(e => console.log('Audio play failed', e));
+            }
+          }
+          lastKnownNotifId.current = latestId;
+        }
+        
         setNotifications(data);
       }
     } catch (err) {
