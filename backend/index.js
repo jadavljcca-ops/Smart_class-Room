@@ -57,6 +57,6 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`===================================================`);
   console.log(`  Server is running on http://localhost:${PORT}`);
-  console.log(`  Database: SQLite (database.sqlite)`);
+  console.log(`  Database: Neon PostgreSQL`);
   console.log(`===================================================`);
 });
