@@ -51,9 +51,12 @@ router.post('/notes', upload.array('files'), async (req, res) => {
       );
     }
 
-    // Send personalized notification to students of this department and semester
+    // Send personalized notification to students of this department AND semester
     const notifyMsg = `New note files uploaded: ${subjectName} (Unit ${unitNumber}) by Prof. ${facultyName}`;
-    const targetStudents = await query("SELECT id FROM students WHERE department = ? AND semester = ? AND status = 'Approved'", [department, semester]);
+    const targetStudents = await query(
+      "SELECT id FROM students WHERE department = ? AND semester = ? AND status = 'Approved'",
+      [department, semester]
+    );
     
     for (const student of targetStudents) {
       await run(
@@ -195,6 +198,27 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
     res.status(201).json({ message: 'Announcement created successfully.' });
   } catch (error) {
     console.error('Faculty add announcement error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// DELETE /api/faculty/announcements/:id
+router.delete('/announcements/:id', async (req, res) => {
+  const { id } = req.params;
+  const facultyDept = req.user.department;
+  try {
+    const existing = await get("SELECT * FROM announcements WHERE id = ?", [id]);
+    if (!existing) {
+      return res.status(404).json({ message: 'Announcement not found.' });
+    }
+    // Faculty can only delete announcements from their own department
+    if (existing.department !== facultyDept) {
+      return res.status(403).json({ message: 'Forbidden. You can only delete your own department announcements.' });
+    }
+    await run("DELETE FROM announcements WHERE id = ?", [id]);
+    res.json({ message: 'Announcement deleted successfully.' });
+  } catch (error) {
+    console.error('Faculty delete announcement error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });

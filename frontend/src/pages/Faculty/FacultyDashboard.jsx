@@ -230,6 +230,25 @@ export default function FacultyDashboard() {
     }
   };
 
+  const handleDeleteAnnouncement = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this announcement permanently?')) {
+      return;
+    }
+    try {
+      const res = await authFetch(`/faculty/announcements/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'Announcement deleted successfully.', 'success');
+        setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+      } else {
+        showToast(data.message || 'Failed to delete announcement.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error deleting announcement.', 'error');
+    }
+  };
+
   const handleDownloadNote = async (note) => {
     try {
       const response = await fetch(`${API_BASE_URL}/student/notes/download/${note.id}`, {
@@ -487,6 +506,17 @@ export default function FacultyDashboard() {
                       <Download size={10} />
                     </button>
                   )}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                    <button
+                      onClick={() => handleDeleteAnnouncement(ann.id)}
+                      className="btn btn-secondary"
+                      style={{ padding: '0.3rem 0.6rem', color: 'hsl(var(--danger))', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                      title="Delete Announcement"
+                    >
+                      <Trash2 size={13} />
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

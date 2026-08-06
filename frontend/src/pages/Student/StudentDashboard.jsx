@@ -19,8 +19,6 @@ export default function StudentDashboard() {
   const [notesQuery, setNotesQuery] = useState('');
   const [subjectQuery, setSubjectQuery] = useState('');
   const [facultyQuery, setFacultyQuery] = useState('');
-  const [deptFilter, setDeptFilter] = useState('all');
-  const [semFilter, setSemFilter] = useState('all');
   const [viewMode, setViewMode] = useState('subject'); // 'subject' or 'faculty'
   const [selectedFaculty, setSelectedFaculty] = useState(null);
 
@@ -80,7 +78,6 @@ export default function StudentDashboard() {
   useEffect(() => {
     fetchAnnouncements();
     fetchNotes();
-    fetchDepartments();
   }, []);
 
   const handleDownloadNote = async (note) => {
@@ -149,24 +146,20 @@ export default function StudentDashboard() {
     );
   });
 
-  // Filter Notes based on inputs
+  // Filter Notes based on search text only (dept+sem already filtered by backend)
   const filteredNotes = notes.filter((n) => {
     const subject = n.subject_name || '';
     const desc = n.description || '';
     const faculty = n.faculty_name || '';
-    const nDept = (n.department || '').trim();
-    const filterDept = (deptFilter || '').trim();
 
     const matchesSubject = subject.toLowerCase().includes((subjectQuery || '').toLowerCase()) || desc.toLowerCase().includes((subjectQuery || '').toLowerCase());
     const matchesFaculty = faculty.toLowerCase().includes((facultyQuery || '').toLowerCase());
-    const matchesDept = filterDept === 'all' || filterDept === '' || nDept.toLowerCase() === filterDept.toLowerCase();
-    const matchesSem = semFilter === 'all' || semFilter === '' || String(n.semester).trim() === String(semFilter).trim();
     const matchesGeneral = !notesQuery || 
       subject.toLowerCase().includes(notesQuery.toLowerCase()) || 
       faculty.toLowerCase().includes(notesQuery.toLowerCase()) ||
       desc.toLowerCase().includes(notesQuery.toLowerCase());
 
-    return matchesSubject && matchesFaculty && matchesDept && matchesSem && matchesGeneral;
+    return matchesSubject && matchesFaculty && matchesGeneral;
   });
 
 
@@ -309,13 +302,13 @@ export default function StudentDashboard() {
             </button>
           </div>
 
-          {/* Search boxes & Filters */}
+          {/* Search boxes */}
           <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem', backgroundColor: 'hsl(var(--secondary) / 0.3)' }}>
             <h4 style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', color: 'hsl(var(--muted))', marginBottom: '0.75rem' }}>
-              Advanced Notes Search
+              Search Notes
             </h4>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }} className="filters-grid">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }} className="filters-grid">
               <input
                 type="text"
                 className="form-control"
@@ -331,30 +324,6 @@ export default function StudentDashboard() {
                 onChange={(e) => setFacultyQuery(e.target.value)}
               />
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.75rem' }} className="filters-grid">
-              <select
-                className="form-control"
-                value={deptFilter}
-                onChange={(e) => setDeptFilter(e.target.value)}
-              >
-                <option value="all">All Departments</option>
-                {departments.map((dept, idx) => (
-                  <option key={idx} value={dept}>{dept}</option>
-                ))}
-              </select>
-
-              <select
-                className="form-control"
-                value={semFilter}
-                onChange={(e) => setSemFilter(e.target.value)}
-              >
-                <option value="all">All Semesters</option>
-                {[1,2,3,4,5,6,7,8].map(s => (
-                  <option key={s} value={s}>Semester {s}</option>
-                ))}
-              </select>
-            </div>
           </div>
 
           {/* Notes display */}
@@ -362,7 +331,7 @@ export default function StudentDashboard() {
             <div style={{ padding: '3rem', textAlign: 'center', color: 'hsl(var(--muted))' }}>Loading notes...</div>
           ) : filteredNotes.length === 0 ? (
             <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'hsl(var(--muted))' }}>
-              No faculty study notes found matching your filters.
+              No faculty study notes available for your department and semester yet.
             </div>
           ) : viewMode === 'subject' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

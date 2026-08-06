@@ -25,13 +25,17 @@ router.get('/announcements', requireStudent, async (req, res) => {
   }
 });
 
-// GET /api/student/notes (List notes with search filters)
+// GET /api/student/notes (List notes filtered by student's OWN department AND semester)
 router.get('/notes', requireStudent, async (req, res) => {
+  const dept = req.user.department;
+  const sem = req.user.semester;
   try {
     const list = await query(
       `SELECT id, faculty_id, faculty_name, subject_name, department, semester, unit_number, description, file_path, file_name, file_type, upload_date 
        FROM notes 
-       ORDER BY upload_date DESC`
+       WHERE department = ? AND semester = ?
+       ORDER BY upload_date DESC`,
+      [dept, sem]
     );
     res.json(list);
   } catch (error) {
