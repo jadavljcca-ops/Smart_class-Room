@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { LogIn, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { LogIn, Mail, Lock, User, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 export default function Login() {
   const { login } = useAuth();
@@ -13,6 +14,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,19 +28,50 @@ export default function Login() {
     try {
       const user = await login(identifier, password);
       showToast(`Welcome back, ${user.fullName}!`, 'success');
+      setLoggedInUser(user);
+      setShowSuccessPopup(true);
 
-      // Navigate to appropriate panel based on role
-      if (user.role === 'admin') {
-        navigate('/admin');
-      } else if (user.role === 'faculty') {
-        navigate('/faculty');
-      } else if (user.role === 'student') {
-        navigate('/student');
-      }
+      // Trigger celebration fireworks
+      const duration = 2500;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        confetti({
+          particleCount: 5,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'],
+          zIndex: 10000
+        });
+        confetti({
+          particleCount: 5,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'],
+          zIndex: 10000
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+
+      // Wait for 3 seconds with blurred background popup before navigating
+      setTimeout(() => {
+        setShowSuccessPopup(false);
+        if (user.role === 'admin') {
+          navigate('/admin');
+        } else if (user.role === 'faculty') {
+          navigate('/faculty');
+        } else if (user.role === 'student') {
+          navigate('/student');
+        }
+      }, 3000);
     } catch (err) {
       console.error(err);
       showToast(err.message || 'Login failed. Please check credentials.', 'error');
-    } finally {
       setSubmitting(false);
     }
   };
@@ -143,6 +177,46 @@ export default function Login() {
           </Link>
         </div>
       </div>
+
+      {/* Success Popup Overlay */}
+      {showSuccessPopup && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }}>
+          <div className="animate-fade-in" style={{
+            background: 'hsl(var(--card))',
+            padding: '2.5rem 1.5rem',
+            borderRadius: 'var(--radius)',
+            boxShadow: 'var(--shadow-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '90%',
+            maxWidth: '400px',
+            border: '1px solid hsl(var(--border))',
+            textAlign: 'center',
+            margin: '0 auto'
+          }}>
+            <CheckCircle size={60} style={{ color: 'hsl(var(--success))', marginBottom: '1rem' }} />
+            <h2 style={{ marginBottom: '0.5rem', color: 'hsl(var(--foreground))', fontSize: '1.5rem', fontWeight: 700 }}>Login Successful 🎉</h2>
+            <p style={{ color: 'hsl(var(--muted))', fontSize: '0.95rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
+              Welcome back, {loggedInUser?.fullName || 'User'}!
+            </p>
+            <p style={{ color: 'hsl(var(--muted))', fontSize: '0.85rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
+              Redirecting to your dashboard...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
