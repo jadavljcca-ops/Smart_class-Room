@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { 
   Bell, Sun, Moon, LogOut, Key, User, Menu, X, 
   ChevronDown, BookOpen, Megaphone, UserCheck, Users, ShieldAlert,
-  Home
+  Home, Download
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -20,6 +20,7 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [newNotifBanner, setNewNotifBanner] = useState(null); // { message, type }
   const [bellRinging, setBellRinging] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
   
   const profileMenuRef = useRef(null);
   const notificationMenuRef = useRef(null);
@@ -42,8 +43,27 @@ export default function Navbar() {
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   // Fetch notifications if user is logged in
   const fetchNotifications = async () => {
@@ -184,6 +204,26 @@ export default function Navbar() {
 
         {/* Right side controls (theme, notifications, profile/auth actions) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* PWA Install Button */}
+          {deferredPrompt && (
+            <button
+              onClick={handleInstallClick}
+              className="btn btn-primary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.4rem 0.8rem',
+                fontSize: '0.85rem',
+                borderRadius: 'var(--radius)'
+              }}
+              title="Install App"
+            >
+              <Download size={15} />
+              <span className="desktop-only-btn">Install App</span>
+            </button>
+          )}
+
           {/* Theme Toggle */}
           <button 
             onClick={toggleTheme} 
