@@ -18,11 +18,18 @@ export default function Navbar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [newNotifBanner, setNewNotifBanner] = useState(null); // { message, type }
+  const [bellRinging, setBellRinging] = useState(false);
   
   const profileMenuRef = useRef(null);
   const notificationMenuRef = useRef(null);
-  const audioRef = useRef(new Audio('/notification.wav'));
+  const audioRef = useRef(null);
   const lastKnownNotifId = useRef(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio('/notification.wav');
+    audioRef.current.volume = 0.75;
+  }, []);
 
   // Close menus on clicking outside
   useEffect(() => {
@@ -51,10 +58,24 @@ export default function Navbar() {
           const latestId = data[0].id;
           
           if (lastKnownNotifId.current !== null && latestId > lastKnownNotifId.current) {
-            // Check if any of the new ones are actually unread before playing sound
-            const hasNewUnread = data.some(n => n.id > lastKnownNotifId.current && !n.is_read);
-            if (hasNewUnread) {
-              audioRef.current.play().catch(e => console.log('Audio play failed', e));
+            // Find brand new unread notifications
+            const brandNewUnread = data.filter(n => n.id > lastKnownNotifId.current && !n.is_read);
+            if (brandNewUnread.length > 0) {
+              // Play notification sound
+              try {
+                if (audioRef.current) {
+                  audioRef.current.currentTime = 0;
+                  audioRef.current.play().catch(() => {});
+                }
+              } catch (e) {}
+
+              // Ring the bell
+              setBellRinging(true);
+              setTimeout(() => setBellRinging(false), 1500);
+
+              // Show floating banner with the latest new message
+              setNewNotifBanner(brandNewUnread[0].message);
+              setTimeout(() => setNewNotifBanner(null), 5000);
             }
           }
           lastKnownNotifId.current = latestId;
@@ -224,7 +245,7 @@ export default function Navbar() {
                     position: 'relative'
                   }}
                 >
-                  <Bell size={20} />
+                  <Bell size={20} className={bellRinging ? 'bell-ring' : ''} />
                   {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
                 </button>
 
@@ -526,6 +547,47 @@ export default function Navbar() {
         </div>
       )}
       
+      {/* Floating Notification Banner */}
+      {newNotifBanner && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '1.5rem',
+            right: '1.5rem',
+            zIndex: 99999,
+            maxWidth: '360px',
+            background: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--primary) / 0.5)',
+            borderLeft: '4px solid hsl(var(--primary))',
+            borderRadius: 'var(--radius)',
+            padding: '1rem 1.25rem',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75rem',
+            animation: 'slideInRight 0.4s ease'
+          }}
+        >
+          <div style={{ color: 'hsl(var(--primary))', flexShrink: 0, marginTop: '0.1rem' }}>
+            <Bell size={20} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: '0.875rem', marginBottom: '0.25rem', color: 'hsl(var(--foreground))' }}>
+              New Notification
+            </div>
+            <div style={{ fontSize: '0.825rem', color: 'hsl(var(--muted))', lineHeight: 1.4 }}>
+              {newNotifBanner}
+            </div>
+          </div>
+          <button
+            onClick={() => setNewNotifBanner(null)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))', padding: 0, flexShrink: 0 }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* CSS overrides specifically for hover navigation links */}
       <style>{`
         .nav-link {
@@ -542,6 +604,23 @@ export default function Navbar() {
         }
         .dropdown-item:hover {
           background-color: hsl(var(--secondary)) !important;
+        }
+        @keyframes slideInRight {
+          from { transform: translateX(110%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes bellRing {
+          0%, 100% { transform: rotate(0deg); }
+          15% { transform: rotate(15deg); }
+          30% { transform: rotate(-12deg); }
+          45% { transform: rotate(10deg); }
+          60% { transform: rotate(-8deg); }
+          75% { transform: rotate(5deg); }
+          90% { transform: rotate(-3deg); }
+        }
+        .bell-ring {
+          animation: bellRing 0.8s ease-in-out;
+          transform-origin: top center;
         }
         @media (max-width: 768px) {
           .desktop-nav {

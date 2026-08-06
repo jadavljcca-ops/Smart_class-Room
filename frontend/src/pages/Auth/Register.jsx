@@ -434,10 +434,7 @@ export default function Register() {
             margin: '0 auto'
           }}>
             <CheckCircle size={60} style={{ color: 'hsl(var(--success))', marginBottom: '1rem' }} />
-            <h2 style={{ marginBottom: '0.5rem', color: 'hsl(var(--foreground))', fontSize: '1.5rem', fontWeight: 700 }}>Registration Successful 🎉</h2>
-            <p style={{ color: 'hsl(var(--muted))', fontSize: '0.95rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
-              This is what fireworks should be like. 🎉
-            </p>
+            <h2 style={{ marginBottom: '0.5rem', color: 'hsl(var(--foreground))', fontSize: '1.5rem', fontWeight: 700 }}>Registration Successful</h2>
             <p style={{ color: 'hsl(var(--muted))', fontSize: '0.85rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
               Your registration request has been sent to the Main Admin. You can log in only after approval.
             </p>
