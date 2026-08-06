@@ -226,15 +226,27 @@ export default function AdminDashboard() {
           <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{headingText}</h1>
           <p style={{ color: 'hsl(var(--muted))' }}>{subheadingText}</p>
         </div>
-        {selectedDept && (
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button 
-            onClick={() => setSelectedDept(null)}
-            className="btn btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+            onClick={() => {
+              const attendanceUrl = import.meta.env.VITE_ATTENDANCE_APP_URL || 'http://localhost:5174';
+              window.open(`${attendanceUrl}?token=${token}&role=${user?.adminRole || 'admin'}`, '_blank');
+            }}
+            className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: 'hsl(var(--primary))' }}
           >
-            <ArrowLeft size={16} /> Exit {selectedDept} Portal
+            <Calendar size={16} /> Attendance Portal
           </button>
-        )}
+          {selectedDept && (
+            <button 
+              onClick={() => setSelectedDept(null)}
+              className="btn btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+            >
+              <ArrowLeft size={16} /> Exit {selectedDept} Portal
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Sub-departments Portal Grid for Main Admin (Global view) */}

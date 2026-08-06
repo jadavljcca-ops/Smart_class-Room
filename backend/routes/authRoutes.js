@@ -23,15 +23,27 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ message: 'Please provide all required fields.' });
   }
 
+  if (!/^\d{10}$/.test(mobileNumber)) {
+    return res.status(400).json({ message: 'Mobile number must be exactly 10 digits.' });
+  }
+
   try {
     // Check if email already exists in any table
     const adminCheck = await get('SELECT id FROM admins WHERE email = ?', [email]);
     const facultyCheck = await get('SELECT id FROM faculty WHERE email = ?', [email]);
     const studentCheck = await get('SELECT id FROM students WHERE email = ?', [email]);
-    const requestCheck = await get('SELECT id FROM registration_requests WHERE email = ?', [email]);
+    const requestCheck = await get('SELECT id, status FROM registration_requests WHERE email = ?', [email]);
 
-    if (adminCheck || facultyCheck || studentCheck || requestCheck) {
+    if (adminCheck || facultyCheck || studentCheck) {
       return res.status(400).json({ message: 'Email already registered.' });
+    }
+    
+    if (requestCheck) {
+      if (requestCheck.status === 'Pending') {
+        return res.status(400).json({ message: 'Your registration request is already pending approval.' });
+      } else if (requestCheck.status === 'Rejected') {
+        await run('DELETE FROM registration_requests WHERE email = ?', [email]);
+      }
     }
 
     // Check unique employee_id/enrollment_number
@@ -39,19 +51,36 @@ router.post('/register', async (req, res) => {
       if (!semester || !enrollmentNumber) {
         return res.status(400).json({ message: 'Semester and Enrollment Number are required for students.' });
       }
+      if (!/^\d{10}$/.test(enrollmentNumber)) {
+        return res.status(400).json({ message: 'Enrollment Number must be exactly 10 digits.' });
+      }
       const enrollCheck = await get('SELECT id FROM students WHERE enrollment_number = ?', [enrollmentNumber]);
-      const enrollReqCheck = await get('SELECT id FROM registration_requests WHERE enrollment_number = ?', [enrollmentNumber]);
-      if (enrollCheck || enrollReqCheck) {
+      const enrollReqCheck = await get('SELECT id, status FROM registration_requests WHERE enrollment_number = ?', [enrollmentNumber]);
+      if (enrollCheck) {
         return res.status(400).json({ message: 'Enrollment Number already exists.' });
+      }
+      if (enrollReqCheck) {
+        if (enrollReqCheck.status === 'Pending') {
+          return res.status(400).json({ message: 'Enrollment Number is already pending approval.' });
+        } else if (enrollReqCheck.status === 'Rejected') {
+          await run('DELETE FROM registration_requests WHERE enrollment_number = ?', [enrollmentNumber]);
+        }
       }
     } else if (role === 'faculty') {
       if (!employeeId) {
         return res.status(400).json({ message: 'Employee ID is required for faculty.' });
       }
       const empCheck = await get('SELECT id FROM faculty WHERE employee_id = ?', [employeeId]);
-      const empReqCheck = await get('SELECT id FROM registration_requests WHERE employee_id = ?', [employeeId]);
-      if (empCheck || empReqCheck) {
+      const empReqCheck = await get('SELECT id, status FROM registration_requests WHERE employee_id = ?', [employeeId]);
+      if (empCheck) {
         return res.status(400).json({ message: 'Employee ID already exists.' });
+      }
+      if (empReqCheck) {
+        if (empReqCheck.status === 'Pending') {
+          return res.status(400).json({ message: 'Employee ID is already pending approval.' });
+        } else if (empReqCheck.status === 'Rejected') {
+          await run('DELETE FROM registration_requests WHERE employee_id = ?', [employeeId]);
+        }
       }
     } else {
       return res.status(400).json({ message: 'Invalid role selection.' });
@@ -96,15 +125,15 @@ router.post('/register', async (req, res) => {
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { identifier, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required.' });
+  if (!identifier || !password) {
+    return res.status(400).json({ message: 'ID/Email and password are required.' });
   }
 
   try {
-    // 1. Check Admin
-    const admin = await get('SELECT * FROM admins WHERE email = ?', [email]);
+    // 1. Check Admin (usually login by email)
+    const admin = await get('SELECT * FROM admins WHERE email = ?', [identifier]);
     if (admin) {
       const match = await bcrypt.compare(password, admin.password_hash);
       if (match) {
@@ -134,8 +163,8 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // 2. Check Faculty
-    const faculty = await get('SELECT * FROM faculty WHERE email = ?', [email]);
+    // 2. Check Faculty (login by employee_id or email)
+    const faculty = await get('SELECT * FROM faculty WHERE employee_id = ? OR email = ?', [identifier, identifier]);
     if (faculty) {
       const match = await bcrypt.compare(password, faculty.password_hash);
       if (match) {
@@ -170,8 +199,8 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // 3. Check Student
-    const student = await get('SELECT * FROM students WHERE email = ?', [email]);
+    // 3. Check Student (login by enrollment_number or email)
+    const student = await get('SELECT * FROM students WHERE enrollment_number = ? OR email = ?', [identifier, identifier]);
     if (student) {
       const match = await bcrypt.compare(password, student.password_hash);
       if (match) {
@@ -211,7 +240,7 @@ router.post('/login', async (req, res) => {
     }
 
     // 4. Check Registration Requests Table for Pending Status message specificity
-    const request = await get('SELECT * FROM registration_requests WHERE email = ?', [email]);
+    const request = await get('SELECT * FROM registration_requests WHERE email = ? OR enrollment_number = ? OR employee_id = ?', [identifier, identifier, identifier]);
     if (request) {
       const match = await bcrypt.compare(password, request.password_hash);
       if (match) {

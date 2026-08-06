@@ -19,8 +19,8 @@ export default function StudentDashboard() {
   const [notesQuery, setNotesQuery] = useState('');
   const [subjectQuery, setSubjectQuery] = useState('');
   const [facultyQuery, setFacultyQuery] = useState('');
-  const [deptFilter, setDeptFilter] = useState(user?.department || 'all');
-  const [semFilter, setSemFilter] = useState(user?.semester || 'all');
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [semFilter, setSemFilter] = useState('all');
   const [viewMode, setViewMode] = useState('subject'); // 'subject' or 'faculty'
   const [selectedFaculty, setSelectedFaculty] = useState(null);
 
@@ -151,14 +151,20 @@ export default function StudentDashboard() {
 
   // Filter Notes based on inputs
   const filteredNotes = notes.filter((n) => {
-    const matchesSubject = n.subject_name.toLowerCase().includes(subjectQuery.toLowerCase()) || n.description.toLowerCase().includes(subjectQuery.toLowerCase());
-    const matchesFaculty = n.faculty_name.toLowerCase().includes(facultyQuery.toLowerCase());
-    const matchesDept = deptFilter === 'all' || n.department === deptFilter;
-    const matchesSem = semFilter === 'all' || String(n.semester) === String(semFilter);
-    const matchesGeneral = notesQuery === '' || 
-      n.subject_name.toLowerCase().includes(notesQuery.toLowerCase()) || 
-      n.faculty_name.toLowerCase().includes(notesQuery.toLowerCase()) ||
-      n.description.toLowerCase().includes(notesQuery.toLowerCase());
+    const subject = n.subject_name || '';
+    const desc = n.description || '';
+    const faculty = n.faculty_name || '';
+    const nDept = (n.department || '').trim();
+    const filterDept = (deptFilter || '').trim();
+
+    const matchesSubject = subject.toLowerCase().includes((subjectQuery || '').toLowerCase()) || desc.toLowerCase().includes((subjectQuery || '').toLowerCase());
+    const matchesFaculty = faculty.toLowerCase().includes((facultyQuery || '').toLowerCase());
+    const matchesDept = filterDept === 'all' || filterDept === '' || nDept.toLowerCase() === filterDept.toLowerCase();
+    const matchesSem = semFilter === 'all' || semFilter === '' || String(n.semester).trim() === String(semFilter).trim();
+    const matchesGeneral = !notesQuery || 
+      subject.toLowerCase().includes(notesQuery.toLowerCase()) || 
+      faculty.toLowerCase().includes(notesQuery.toLowerCase()) ||
+      desc.toLowerCase().includes(notesQuery.toLowerCase());
 
     return matchesSubject && matchesFaculty && matchesDept && matchesSem && matchesGeneral;
   });
@@ -181,6 +187,17 @@ export default function StudentDashboard() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button 
+            onClick={() => {
+              const attendanceUrl = import.meta.env.VITE_ATTENDANCE_APP_URL || 'http://localhost:5174';
+              window.open(`${attendanceUrl}?token=${token}&role=student`, '_blank');
+            }}
+            className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: 'hsl(var(--primary))' }}
+          >
+            <Calendar size={16} />
+            Attendance Portal
+          </button>
           <button 
             onClick={() => { fetchAnnouncements(); fetchNotes(); }} 
             className="btn btn-secondary"

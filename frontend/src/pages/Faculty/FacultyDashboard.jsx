@@ -29,6 +29,15 @@ export default function FacultyDashboard() {
   const [noteFiles, setNoteFiles] = useState([]);
   const [existingFileName, setExistingFileName] = useState('');
 
+  // Announcement Form state
+  const [showAnnForm, setShowAnnForm] = useState(false);
+  const [annTitle, setAnnTitle] = useState('');
+  const [annDescription, setAnnDescription] = useState('');
+  const [annPriority, setAnnPriority] = useState('Medium');
+  const [annPublishDate, setAnnPublishDate] = useState(new Date().toISOString().split('T')[0]);
+  const [annExpiryDate, setAnnExpiryDate] = useState('');
+  const [annAttachment, setAnnAttachment] = useState(null);
+
   const fetchNotes = async () => {
     setLoadingNotes(true);
     try {
@@ -163,6 +172,44 @@ export default function FacultyDashboard() {
     }
   };
 
+  const handleSaveAnnouncement = async (e) => {
+    e.preventDefault();
+    if (!annTitle || !annDescription || !annPublishDate || !annExpiryDate) {
+      showToast('Please fill all required fields.', 'warning');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('title', annTitle);
+    formData.append('description', annDescription);
+    formData.append('priority', annPriority);
+    formData.append('publishDate', annPublishDate);
+    formData.append('expiryDate', annExpiryDate);
+    if (annAttachment) formData.append('attachment', annAttachment);
+
+    try {
+      const res = await authFetch('/faculty/announcements', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'Announcement created successfully!', 'success');
+        setShowAnnForm(false);
+        setAnnTitle('');
+        setAnnDescription('');
+        setAnnPriority('Medium');
+        setAnnAttachment(null);
+        fetchAnnouncements();
+      } else {
+        showToast(data.message || 'Failed to create announcement.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error saving announcement.', 'error');
+    }
+  };
+
   const handleDeleteNote = async (id) => {
     if (!window.confirm('Are you sure you want to delete this note file permanently?')) {
       return;
@@ -232,11 +279,17 @@ export default function FacultyDashboard() {
 
   // Filter notes
   const filteredNotes = notes.filter((n) => {
+    const subject = n.subject_name || '';
+    const desc = n.description || '';
+    const sem = String(n.semester || '');
+    const unit = String(n.unit_number || '');
+    const search = (notesSearch || '').toLowerCase();
+    
     return (
-      n.subject_name.toLowerCase().includes(notesSearch.toLowerCase()) ||
-      n.description.toLowerCase().includes(notesSearch.toLowerCase()) ||
-      n.semester.includes(notesSearch) ||
-      n.unit_number.includes(notesSearch)
+      subject.toLowerCase().includes(search) ||
+      desc.toLowerCase().includes(search) ||
+      sem.includes(search) ||
+      unit.includes(search)
     );
   });
 
@@ -379,10 +432,27 @@ export default function FacultyDashboard() {
 
         {/* Right Column: Notices/Announcements */}
         <div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <BookOpen size={20} color="hsl(var(--accent))" />
-            Notice Board
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <BookOpen size={20} color="hsl(var(--accent))" />
+              Notice Board
+            </h2>
+            <button 
+              onClick={() => {
+                setAnnTitle('');
+                setAnnDescription('');
+                setAnnPriority('Medium');
+                setAnnPublishDate(new Date().toISOString().split('T')[0]);
+                setAnnExpiryDate('');
+                setAnnAttachment(null);
+                setShowAnnForm(true);
+              }}
+              className="btn btn-secondary"
+            >
+              <Plus size={16} />
+              New Notice
+            </button>
+          </div>
 
           {loadingAnnouncements ? (
             <div style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--muted))' }}>Loading notice board...</div>
@@ -462,13 +532,16 @@ export default function FacultyDashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Department</label>
-                  <input
-                    type="text"
+                  <select
                     className="form-control"
                     value={department}
-                    readOnly
-                    style={{ backgroundColor: 'hsl(var(--secondary) / 0.15)', cursor: 'not-allowed' }}
-                  />
+                    onChange={(e) => setDepartment(e.target.value)}
+                    required
+                  >
+                    {departments.map((dept, idx) => (
+                      <option key={idx} value={dept}>{dept}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="form-group">
@@ -573,6 +646,126 @@ export default function FacultyDashboard() {
                 >
                   <Save size={16} />
                   {editingNoteId ? 'Update Note' : 'Upload Note'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Announcement Form Modal */}
+      {showAnnForm && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, padding: '1rem'
+        }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Create New Announcement</h3>
+              <button 
+                onClick={() => setShowAnnForm(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAnnouncement}>
+              <div className="form-group">
+                <label className="form-label">Title</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g. Mid-Sem Exam Schedule"
+                  value={annTitle}
+                  onChange={(e) => setAnnTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-control"
+                  rows="4"
+                  placeholder="Details of the announcement..."
+                  value={annDescription}
+                  onChange={(e) => setAnnDescription(e.target.value)}
+                  style={{ resize: 'vertical' }}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Priority</label>
+                  <select
+                    className="form-control"
+                    value={annPriority}
+                    onChange={(e) => setAnnPriority(e.target.value)}
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Publish Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={annPublishDate}
+                    onChange={(e) => setAnnPublishDate(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Expiry Date (Auto-removes from board)</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={annExpiryDate}
+                  onChange={(e) => setAnnExpiryDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Attachment (Optional)</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  onChange={(e) => setAnnAttachment(e.target.files[0])}
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                />
+                {annAttachment && (
+                  <p style={{ fontSize: '0.75rem', color: 'hsl(var(--primary))', marginTop: '0.25rem' }}>
+                    Selected: {annAttachment.name}
+                  </p>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowAnnForm(false)}
+                  className="btn btn-secondary" 
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  style={{ flex: 1 }}
+                >
+                  <Save size={16} />
+                  Publish Notice
                 </button>
               </div>
             </form>

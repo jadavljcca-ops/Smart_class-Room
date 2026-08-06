@@ -31,8 +31,9 @@ router.get('/', async (req, res) => {
 // PUT /api/notifications/:id/read
 router.put('/:id/read', async (req, res) => {
   const { id } = req.params;
+  const userId = req.user.id;
   try {
-    await run("UPDATE notifications SET is_read = 1 WHERE id = ?", [id]);
+    await run("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?", [id, userId]);
     res.json({ message: 'Notification marked as read.' });
   } catch (error) {
     console.error('Update notification error:', error);
@@ -43,8 +44,9 @@ router.put('/:id/read', async (req, res) => {
 // DELETE /api/notifications/:id
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
+  const userId = req.user.id;
   try {
-    await run("DELETE FROM notifications WHERE id = ?", [id]);
+    await run("DELETE FROM notifications WHERE id = ? AND user_id = ?", [id, userId]);
     res.json({ message: 'Notification deleted successfully.' });
   } catch (error) {
     console.error('Delete notification error:', error);

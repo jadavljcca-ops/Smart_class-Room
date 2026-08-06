@@ -27,15 +27,11 @@ router.get('/announcements', requireStudent, async (req, res) => {
 
 // GET /api/student/notes (List notes with search filters)
 router.get('/notes', requireStudent, async (req, res) => {
-  const dept = req.user.department;
-  
   try {
     const list = await query(
-      `SELECT id, faculty_id, faculty_name, subject_name, department, semester, unit_number, description, file_name, file_type, upload_date 
+      `SELECT id, faculty_id, faculty_name, subject_name, department, semester, unit_number, description, file_path, file_name, file_type, upload_date 
        FROM notes 
-       WHERE department = ? 
-       ORDER BY upload_date DESC`,
-      [dept]
+       ORDER BY upload_date DESC`
     );
     res.json(list);
   } catch (error) {

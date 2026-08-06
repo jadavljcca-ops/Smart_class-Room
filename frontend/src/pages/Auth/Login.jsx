@@ -9,33 +9,21 @@ export default function Login() {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('student'); // 'student', 'faculty', 'admin'
-  const [isBlinking, setIsBlinking] = useState(false);
-
-  const handleTabChange = (tab) => {
-    if (tab !== activeTab) {
-      setActiveTab(tab);
-      setIsBlinking(true);
-      setTimeout(() => {
-        setIsBlinking(false);
-      }, 1000);
-    }
-  };
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      showToast('Please enter both email and password.', 'warning');
+    if (!identifier || !password) {
+      showToast('Please enter both ID/Email and password.', 'warning');
       return;
     }
 
     setSubmitting(true);
     try {
-      const user = await login(email, password);
+      const user = await login(identifier, password);
       showToast(`Welcome back, ${user.fullName}!`, 'success');
 
       // Navigate to appropriate panel based on role
@@ -56,7 +44,7 @@ export default function Login() {
 
   return (
     <div className="auth-wrapper">
-      <div className={`auth-card animate-fade-in ${isBlinking ? 'blink-animation' : ''}`}>
+      <div className="auth-card animate-fade-in">
         <div className="auth-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <img src="/logo.png" alt="LJ Logo" className="logo-img" style={{ width: '4.5rem', height: '4.5rem', marginBottom: '0.75rem', objectFit: 'contain' }} />
           <div className="auth-logo" style={{ fontSize: '1.5rem', fontWeight: 800 }}>LJ CCA Class Room</div>
@@ -65,46 +53,24 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Role Tabs */}
-        <div className="auth-tabs">
-          <div 
-            className={`auth-tab ${activeTab === 'student' ? 'active' : ''}`}
-            onClick={() => { handleTabChange('student'); }}
-          >
-            Student
-          </div>
-          <div 
-            className={`auth-tab ${activeTab === 'faculty' ? 'active' : ''}`}
-            onClick={() => { handleTabChange('faculty'); }}
-          >
-            Faculty
-          </div>
-          <div 
-            className={`auth-tab ${activeTab === 'admin' ? 'active' : ''}`}
-            onClick={() => { handleTabChange('admin'); }}
-          >
-            Admin
-          </div>
-        </div>
-
         <h3 style={{ marginBottom: '1.5rem', fontWeight: 700, fontSize: '1.25rem', textAlign: 'center' }}>
-          Secure {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Login
+          Secure Login
         </h3>
 
         <form onSubmit={handleSubmit}>
-          {/* Email input */}
+          {/* Identifier input */}
           <div className="form-group">
-            <label className="form-label">Email Address</label>
+            <label className="form-label">ID / Enrollment No. / Email</label>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(var(--muted))' }}>
-                <Mail size={16} />
+                <User size={16} />
               </span>
               <input
-                type="email"
+                type="text"
                 className="form-control"
-                placeholder={`e.g. name@ljcca.edu`}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your ID or Email"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 style={{ paddingLeft: '2.5rem' }}
                 required
               />
@@ -164,14 +130,12 @@ export default function Login() {
           </button>
         </form>
 
-        {activeTab !== 'admin' && (
-          <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem' }}>
-            <span style={{ color: 'hsl(var(--muted))' }}>New to class room? </span>
-            <Link to="/register" style={{ color: 'hsl(var(--primary))', fontWeight: 600, textDecoration: 'none' }}>
-              Create an Account
-            </Link>
-          </div>
-        )}
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem' }}>
+          <span style={{ color: 'hsl(var(--muted))' }}>New to class room? </span>
+          <Link to="/register" style={{ color: 'hsl(var(--primary))', fontWeight: 600, textDecoration: 'none' }}>
+            Create an Account
+          </Link>
+        </div>
 
         <div style={{ marginTop: '1.25rem', textAlign: 'center', borderTop: '1px solid hsl(var(--border) / 0.6)', paddingTop: '1.25rem' }}>
           <Link to="/" style={{ color: 'hsl(var(--muted))', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }} className="hover-text-primary">

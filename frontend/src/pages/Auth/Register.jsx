@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { UserPlus, User, Mail, Phone, Lock, School, GraduationCap, Briefcase, ArrowLeft, Eye, EyeOff } from 'lucide-react';
-
+import { UserPlus, User, Mail, Phone, Lock, School, GraduationCap, Briefcase, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import confetti from 'canvas-confetti';
 export default function Register() {
   const { register } = useAuth();
   const { showToast } = useToast();
@@ -35,6 +35,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
@@ -50,6 +51,16 @@ export default function Register() {
     e.preventDefault();
 
     // Input Validations
+    if (!/^\d{10}$/.test(mobileNumber)) {
+      showToast('Mobile number must be exactly 10 digits.', 'error');
+      return;
+    }
+
+    if (role === 'student' && !/^\d{10}$/.test(enrollmentNumber)) {
+      showToast('Enrollment number must be exactly 10 digits.', 'error');
+      return;
+    }
+
     if (password !== confirmPassword) {
       showToast('Passwords do not match.', 'error');
       return;
@@ -74,11 +85,39 @@ export default function Register() {
     try {
       const message = await register(payload);
       // Successful registration
-      showToast(message, 'success');
+      setShowSuccessPopup(true);
       
-      // Delay navigation slightly so user reads the toast or redirect immediately to login where they see approval instructions
-      alert(`Registration Sent!\n\nYour registration request has been sent to the Main Admin. You can log in only after approval.`);
-      navigate('/login');
+      // Trigger fireworks
+      const duration = 2500;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        confetti({
+          particleCount: 5,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'],
+          zIndex: 10000
+        });
+        confetti({
+          particleCount: 5,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'],
+          zIndex: 10000
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+
+      setTimeout(() => {
+        setShowSuccessPopup(false);
+        navigate('/login');
+      }, 3000);
     } catch (err) {
       console.error(err);
       showToast(err.message || 'Registration failed. Try again.', 'error');
@@ -167,8 +206,10 @@ export default function Register() {
                 className="form-control"
                 placeholder="10 digit mobile number"
                 pattern="[0-9]{10}"
+                maxLength="10"
+                minLength="10"
                 value={mobileNumber}
-                onChange={(e) => setMobileNumber(e.target.value)}
+                onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 style={{ paddingLeft: '2.5rem' }}
                 required
               />
@@ -225,9 +266,12 @@ export default function Register() {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="e.g. LJ20261012"
+                  placeholder="10 digit enrollment number"
+                  pattern="[0-9]{10}"
+                  maxLength="10"
+                  minLength="10"
                   value={enrollmentNumber}
-                  onChange={(e) => setEnrollmentNumber(e.target.value)}
+                  onChange={(e) => setEnrollmentNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   required
                 />
               </div>
@@ -361,6 +405,45 @@ export default function Register() {
           </Link>
         </div>
       </div>
+
+      {/* Success Popup Overlay */}
+      {showSuccessPopup && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }}>
+          <div className="animate-fade-in" style={{
+            background: 'hsl(var(--card))',
+            padding: '2.5rem 1.5rem',
+            borderRadius: 'var(--radius)',
+            boxShadow: 'var(--shadow-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '90%',
+            maxWidth: '400px',
+            border: '1px solid hsl(var(--border))',
+            textAlign: 'center',
+            margin: '0 auto'
+          }}>
+            <CheckCircle size={60} style={{ color: 'hsl(var(--success))', marginBottom: '1rem' }} />
+            <h2 style={{ marginBottom: '0.5rem', color: 'hsl(var(--foreground))', fontSize: '1.5rem', fontWeight: 700 }}>Registration Successful 🎉</h2>
+            <p style={{ color: 'hsl(var(--muted))', fontSize: '0.95rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
+              This is what fireworks should be like. 🎉
+            </p>
+            <p style={{ color: 'hsl(var(--muted))', fontSize: '0.85rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
+              Your registration request has been sent to the Main Admin. You can log in only after approval.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

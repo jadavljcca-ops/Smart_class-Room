@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  BookOpen, Users, Award, ShieldCheck, Megaphone, 
-  Download, Upload, ChevronRight, CheckCircle, 
+import {
+  BookOpen, Users, Award, ShieldCheck, Megaphone,
+  Download, Upload, ChevronRight, CheckCircle,
   HelpCircle, Layers, Activity, FileText, ArrowRight, Check
 } from 'lucide-react';
 
@@ -52,7 +52,7 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page animate-fade-in" style={{ overflowX: 'hidden' }}>
-      
+
       {/* Hero Section */}
       <section className="hero-section" style={{ position: 'relative', overflow: 'hidden' }}>
         {/* Animated background blobs */}
@@ -88,7 +88,7 @@ export default function LandingPage() {
               )}
             </div>
           </div>
-          
+
           <div className="hero-mockup-wrapper">
             <div className="hero-mockup-glow"></div>
             <div className="hero-mockup-card">
@@ -176,19 +176,19 @@ export default function LandingPage() {
 
           <div className="features-tabs-wrapper">
             <div className="features-tabs">
-              <button 
+              <button
                 className={`tab-btn ${activeTab === 'student' ? 'active' : ''}`}
                 onClick={() => setActiveTab('student')}
               >
                 <Users size={16} /> Students
               </button>
-              <button 
+              <button
                 className={`tab-btn ${activeTab === 'faculty' ? 'active' : ''}`}
                 onClick={() => setActiveTab('faculty')}
               >
                 <BookOpen size={16} /> Faculty Members
               </button>
-              <button 
+              <button
                 className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
                 onClick={() => setActiveTab('admin')}
               >
@@ -441,9 +441,36 @@ export default function LandingPage() {
         }
         
         .gradient-text {
-          background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+          background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)));
+          background-size: 200% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          animation: shine 3s linear infinite;
+        }
+        
+        @keyframes shine {
+          to {
+            background-position: 200% center;
+          }
+        }
+        
+        .hero-badge, .hero-title, .hero-subtitle, .hero-actions {
+          animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+        .hero-badge { animation-delay: 0.1s; }
+        .hero-title { animation-delay: 0.2s; }
+        .hero-subtitle { animation-delay: 0.3s; }
+        .hero-actions { animation-delay: 0.4s; }
+        
+        @keyframes slideUpFade {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         
         .hero-subtitle {
@@ -725,12 +752,28 @@ export default function LandingPage() {
           flex-direction: column;
           align-items: flex-start;
           transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .feature-card::before {
+          content: "";
+          position: absolute;
+          top: 0; left: -100%;
+          width: 50%; height: 100%;
+          background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+          transform: skewX(-20deg);
+          transition: 0.5s;
+        }
+        
+        .feature-card:hover::before {
+          left: 150%;
         }
         
         .feature-card:hover {
-          transform: translateY(-8px) scale(1.02);
-          box-shadow: var(--shadow-lg);
-          border-color: hsl(var(--primary) / 0.4);
+          transform: translateY(-8px) scale(1.03);
+          box-shadow: 0 15px 30px -5px rgba(0,0,0,0.1), 0 0 15px hsl(var(--primary)/0.25);
+          border-color: hsl(var(--primary) / 0.5);
         }
         
         .feature-card:hover .feature-icon-wrapper {
@@ -784,12 +827,32 @@ export default function LandingPage() {
           flex-direction: column;
           height: 100%;
           transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .dept-card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 2px;
+          background: linear-gradient(135deg, transparent, hsl(var(--accent)/0.6), transparent);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0;
+          transition: opacity 0.4s ease;
+        }
+        
+        .dept-card:hover::after {
+          opacity: 1;
         }
         
         .dept-card:hover {
           transform: translateY(-8px) scale(1.03);
-          box-shadow: var(--shadow-lg);
-          border-color: hsl(var(--accent) / 0.4);
+          box-shadow: 0 15px 30px -5px rgba(0,0,0,0.1), 0 0 20px hsl(var(--accent)/0.2);
+          border-color: transparent;
         }
 
         .dept-card:hover .dept-badge {

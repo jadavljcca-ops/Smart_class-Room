@@ -26,8 +26,8 @@ router.get('/notes', async (req, res) => {
 router.post('/notes', upload.array('files'), async (req, res) => {
   const facultyId = req.user.id;
   const facultyName = req.user.fullName;
-  const department = req.user.department; // Force note department to match faculty's department
-  const { subjectName, semester, unitNumber, description } = req.body;
+  const { subjectName, department: bodyDept, semester, unitNumber, description } = req.body;
+  const department = bodyDept || req.user.department;
 
   if (!subjectName || !department || !semester || !unitNumber || !description) {
     return res.status(400).json({ message: 'Please provide all required fields.' });
@@ -51,12 +51,16 @@ router.post('/notes', upload.array('files'), async (req, res) => {
       );
     }
 
-    // Send notification to students of this department and semester
+    // Send personalized notification to students of this department and semester
     const notifyMsg = `New note files uploaded: ${subjectName} (Unit ${unitNumber}) by Prof. ${facultyName}`;
-    await run(
-      `INSERT INTO notifications (user_role, message) VALUES (?, ?)`,
-      ['Student', notifyMsg]
-    );
+    const targetStudents = await query("SELECT id FROM students WHERE department = ? AND semester = ? AND status = 'Approved'", [department, semester]);
+    
+    for (const student of targetStudents) {
+      await run(
+        `INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`,
+        ['Student', student.id, notifyMsg]
+      );
+    }
 
     res.status(201).json({ message: 'Notes uploaded successfully.' });
   } catch (error) {
@@ -69,8 +73,8 @@ router.post('/notes', upload.array('files'), async (req, res) => {
 router.put('/notes/:id', upload.single('file'), async (req, res) => {
   const { id } = req.params;
   const facultyId = req.user.id;
-  const department = req.user.department; // Force note department to match faculty's department
-  const { subjectName, semester, unitNumber, description } = req.body;
+  const { subjectName, department: bodyDept, semester, unitNumber, description } = req.body;
+  const department = bodyDept || req.user.department;
 
   if (!subjectName || !department || !semester || !unitNumber || !description) {
     return res.status(400).json({ message: 'Please provide all required fields.' });
@@ -146,6 +150,51 @@ router.get('/announcements', async (req, res) => {
     res.json(list);
   } catch (error) {
     console.error('Faculty load announcements error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// POST /api/faculty/announcements
+router.post('/announcements', upload.single('attachment'), async (req, res) => {
+  const { title, description, publishDate, expiryDate, priority } = req.body;
+  const department = req.user.department; // Force their own department
+  const facultyName = req.user.fullName;
+
+  if (!title || !description || !publishDate || !expiryDate) {
+    return res.status(400).json({ message: 'Please fill all required fields.' });
+  }
+
+  let attachmentPath = null;
+  let attachmentName = null;
+  if (req.file) {
+    attachmentPath = `/uploads/${req.file.filename}`;
+    attachmentName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+  }
+
+  try {
+    await run(
+      `INSERT INTO announcements (title, description, department, attachment_path, attachment_name, publish_date, expiry_date, priority)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, description, department, attachmentPath, attachmentName, publishDate, expiryDate, priority || 'Medium']
+    );
+
+    // Send personalized notification to students of this department
+    const notifyMsg = `New Announcement from Prof. ${facultyName}: ${title}`;
+    
+    const targetStudents = await query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]);
+    for (const student of targetStudents) {
+      await run(`INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`, ['Student', student.id, notifyMsg]);
+    }
+    
+    // Also notify all admins
+    const targetAdmins = await query("SELECT id FROM admins");
+    for (const admin of targetAdmins) {
+      await run(`INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`, ['Admin', admin.id, notifyMsg]);
+    }
+
+    res.status(201).json({ message: 'Announcement created successfully.' });
+  } catch (error) {
+    console.error('Faculty add announcement error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });

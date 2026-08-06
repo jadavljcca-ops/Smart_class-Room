@@ -300,10 +300,26 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
       [title, description, department || 'All', attachmentPath, attachmentName, publishDate, expiryDate, priority || 'Medium']
     );
 
-    // Send notification to students and faculty
+    // Send personalized notification to students and faculty
     const notifyMsg = `New Announcement: ${title}`;
-    await run(`INSERT INTO notifications (user_role, message) VALUES (?, ?)`, ['Student', notifyMsg]);
-    await run(`INSERT INTO notifications (user_role, message) VALUES (?, ?)`, ['Faculty', notifyMsg]);
+    
+    let targetStudents = [];
+    let targetFaculty = [];
+    
+    if (department && department !== 'All') {
+      targetStudents = await query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]);
+      targetFaculty = await query("SELECT id FROM faculty WHERE department = ? AND status = 'Approved'", [department]);
+    } else {
+      targetStudents = await query("SELECT id FROM students WHERE status = 'Approved'");
+      targetFaculty = await query("SELECT id FROM faculty WHERE status = 'Approved'");
+    }
+
+    for (const student of targetStudents) {
+      await run(`INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`, ['Student', student.id, notifyMsg]);
+    }
+    for (const faculty of targetFaculty) {
+      await run(`INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`, ['Faculty', faculty.id, notifyMsg]);
+    }
 
     res.status(201).json({ message: 'Announcement created successfully.' });
   } catch (error) {
