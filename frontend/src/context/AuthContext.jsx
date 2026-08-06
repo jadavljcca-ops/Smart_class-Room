@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-export const BACKEND_URL = window.location.protocol + '//' + window.location.hostname + ':5000';
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (window.location.protocol + '//' + window.location.hostname + ':5000');
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 export const AuthProvider = ({ children }) => {
@@ -14,7 +14,12 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       // Decode JWT token to check expiration (simple manual base64 decode to avoid dependencies)
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const payload = JSON.parse(jsonPayload);
         const isExpired = payload.exp * 1000 < Date.now();
         if (isExpired) {
           logout();
