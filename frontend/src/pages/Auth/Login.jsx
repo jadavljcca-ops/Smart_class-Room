@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { LogIn, Mail, Lock, User, Eye, EyeOff, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { LogIn, Mail, Lock, User, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function Login() {
@@ -15,8 +15,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [showErrorPopup, setShowErrorPopup] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [loggedInUser, setLoggedInUser] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -73,15 +71,7 @@ export default function Login() {
       }, 3000);
     } catch (err) {
       console.error(err);
-      const errMsg = err.message || 'Login failed. Please check credentials.';
-      showToast(errMsg, 'error');
-      setErrorMessage(errMsg);
-      setShowErrorPopup(true);
-
-      setTimeout(() => {
-        setShowErrorPopup(false);
-      }, 3000);
-    } finally {
+      showToast(err.message || 'Login failed. Please check credentials.', 'error');
       setSubmitting(false);
     }
   };
@@ -159,9 +149,9 @@ export default function Login() {
           </div>
 
           {/* Submit button */}
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
+          <button
+            type="submit"
+            className="btn btn-primary"
             style={{ width: '100%', padding: '0.85rem', marginTop: '0.5rem' }}
             disabled={submitting}
           >
@@ -216,7 +206,7 @@ export default function Login() {
             margin: '0 auto'
           }}>
             <CheckCircle size={60} style={{ color: 'hsl(var(--success))', marginBottom: '1rem' }} />
-            <h2 style={{ marginBottom: '0.5rem', color: 'hsl(var(--foreground))', fontSize: '1.5rem', fontWeight: 700 }}>Login Successful</h2>
+            <h2 style={{ marginBottom: '0.5rem', color: 'hsl(var(--foreground))', fontSize: '1.5rem', fontWeight: 700 }}>Login Successful 🎉</h2>
             <p style={{ color: 'hsl(var(--muted))', fontSize: '0.95rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
               Welcome back, {loggedInUser?.fullName || 'User'}!
             </p>
@@ -226,47 +216,7 @@ export default function Login() {
           </div>
         </div>
       )}
-
-      {/* Error Popup Overlay */}
-      {showErrorPopup && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem'
-        }}>
-          <div className="animate-fade-in" style={{
-            background: 'hsl(var(--card))',
-            padding: '2.5rem 1.5rem',
-            borderRadius: 'var(--radius)',
-            boxShadow: 'var(--shadow-lg)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '90%',
-            maxWidth: '400px',
-            border: '1px solid #ef4444',
-            textAlign: 'center',
-            margin: '0 auto'
-          }}>
-            <XCircle size={60} style={{ color: '#ef4444', marginBottom: '1rem' }} />
-            <h2 style={{ marginBottom: '0.5rem', color: 'hsl(var(--foreground))', fontSize: '1.5rem', fontWeight: 700 }}>Login Failed</h2>
-            <p style={{ color: '#ef4444', fontSize: '0.95rem', lineHeight: 1.5, marginTop: '0.5rem', fontWeight: 600 }}>
-              {errorMessage}
-            </p>
-            <p style={{ color: 'hsl(var(--muted))', fontSize: '0.85rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
-              Please check your credentials and try again.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
 
