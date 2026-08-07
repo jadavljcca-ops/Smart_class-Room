@@ -155,7 +155,7 @@ export default function Navbar() {
           <img src="/logo.png" alt="LJ Logo" className="logo-img" style={{ width: '2.6rem', height: '2.6rem', objectFit: 'contain' }} />
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>
-              LJ CCA Class Room
+              Ljcca Class Room
             </span>
           </Link>
         </div>

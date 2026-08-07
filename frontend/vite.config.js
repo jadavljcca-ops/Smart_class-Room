@@ -11,7 +11,7 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'logo.png', 'icons.svg'],
       manifest: {
         short_name: "LJ ClassRoom",
-        name: "LJ CCA Class Room System",
+        name: "Ljcca Class Room System",
         description: "Progressive Web Application for classroom management, student rosters, study resources sharing, and announcements.",
         icons: [
           {

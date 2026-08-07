@@ -81,7 +81,7 @@ export default function Login() {
       <div className="auth-card animate-fade-in">
         <div className="auth-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <img src="/logo.png" alt="LJ Logo" className="logo-img" style={{ width: '4.5rem', height: '4.5rem', marginBottom: '0.75rem', objectFit: 'contain' }} />
-          <div className="auth-logo" style={{ fontSize: '1.5rem', fontWeight: 800 }}>LJ CCA Class Room</div>
+          <div className="auth-logo" style={{ fontSize: '1.5rem', fontWeight: 800 }}>Ljcca Class Room</div>
           <p style={{ color: 'hsl(var(--muted))', fontSize: '0.9rem' }}>
             College Classroom Management System
           </p>

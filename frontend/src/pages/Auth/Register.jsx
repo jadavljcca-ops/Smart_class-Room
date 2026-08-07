@@ -133,7 +133,7 @@ export default function Register() {
       <div className={`auth-card animate-fade-in ${isBlinking ? 'blink-animation' : ''}`} style={{ maxWidth: '540px', padding: '2rem 1.75rem' }}>
         <div className="auth-header" style={{ marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <img src="/logo.png" alt="LJ Logo" className="logo-img" style={{ width: '4.2rem', height: '4.2rem', marginBottom: '0.6rem', objectFit: 'contain' }} />
-          <div className="auth-logo" style={{ fontSize: '1.5rem', fontWeight: 800 }}>LJ CCA Class Room</div>
+          <div className="auth-logo" style={{ fontSize: '1.5rem', fontWeight: 800 }}>Ljcca Class Room</div>
           <p style={{ color: 'hsl(var(--muted))', fontSize: '0.85rem' }}>
             Register as a Student or Faculty member
           </p>

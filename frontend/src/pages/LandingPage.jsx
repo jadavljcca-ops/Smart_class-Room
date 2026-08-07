@@ -66,7 +66,7 @@ export default function LandingPage() {
               <span>Next-Gen Academic Hub</span>
             </span>
             <h1 className="hero-title">
-              Streamlining Learning & Collaboration for <span className="gradient-text">LJ CCA</span>
+              Streamlining Learning & Collaboration for <span className="gradient-text">LJCCA</span>
             </h1>
             <p className="hero-subtitle">
               A comprehensive classroom management ecosystem for students, faculty, and administrators. Access lectures notes, syllabus materials, and real-time updates seamlessly.
@@ -96,7 +96,7 @@ export default function LandingPage() {
                 <div className="mockup-dots">
                   <span></span><span></span><span></span>
                 </div>
-                <div className="mockup-title">LJ CCA Portal Preview</div>
+                <div className="mockup-title">LJCCA Portal Preview</div>
               </div>
               <div className="mockup-body">
                 {/* Mock Note Card */}
@@ -275,7 +275,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="cta-banner-card">
             <div className="cta-banner-content">
-              <h2>Join the LJ CCA Digital Community</h2>
+              <h2>Join the LJCCA Digital Community</h2>
               <p>Sign up now to access verified notes, campus updates, and assignments tailored to your courses.</p>
             </div>
             <div className="cta-banner-actions">
@@ -304,7 +304,7 @@ export default function LandingPage() {
           <div className="footer-brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <img src="/logo.png" alt="LJ Logo" className="logo-img" style={{ width: '2.4rem', height: '2.4rem', objectFit: 'contain' }} />
-              <span style={{ fontWeight: 800, fontSize: '1.15rem' }}>LJ CCA Class Room</span>
+              <span style={{ fontWeight: 800, fontSize: '1.15rem' }}>Ljcca Class Room</span>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'hsl(var(--muted))', lineHeight: 1.6 }}>
               LJ College of Computer Applications classroom system streamlines notes downloads, assignments tracking, and official notifications for students and faculty.

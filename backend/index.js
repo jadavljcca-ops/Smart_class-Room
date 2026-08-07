@@ -43,7 +43,7 @@ app.use('/api/notifications', notificationRoutes);
 
 // Base route for connectivity test
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'LJ CCA Class Room System server is running.' });
+  res.json({ status: 'ok', message: 'Ljcca Class Room System server is running.' });
 });
 
 // Global Error Handler
