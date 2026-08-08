@@ -71,7 +71,10 @@ export default function Navbar() {
     try {
       const res = await authFetch('/notifications');
       if (res.ok) {
-        const data = await res.json();
+        let data = await res.json();
+        
+        const dismissedNotifs = JSON.parse(localStorage.getItem('dismissedNotifs') || '[]');
+        data = data.filter(n => !dismissedNotifs.includes(n.id));
         
         // Check if there are new unread notifications
         if (data && data.length > 0) {
@@ -131,10 +134,15 @@ export default function Navbar() {
   const handleDeleteNotification = async (id, e) => {
     e.stopPropagation();
     try {
-      const res = await authFetch(`/notifications/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      
+      const dismissedNotifs = JSON.parse(localStorage.getItem('dismissedNotifs') || '[]');
+      if (!dismissedNotifs.includes(id)) {
+        dismissedNotifs.push(id);
+        localStorage.setItem('dismissedNotifs', JSON.stringify(dismissedNotifs));
       }
+
+      await authFetch(`/notifications/${id}`, { method: 'DELETE' });
     } catch (err) {
       console.error('Error deleting notification:', err);
     }
@@ -279,13 +287,21 @@ export default function Navbar() {
                   {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
                 </button>
 
-                {/* Notifications Dropdown */}
                 {showNotifications && (
-                  <div className="card dropdown-menu" style={{
-                    position: 'absolute',
-                    top: '2.5rem',
-                    right: 0,
-                    width: '320px',
+                  <>
+                    <div style={{
+                      position: 'fixed',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      zIndex: 999
+                    }} onClick={() => setShowNotifications(false)} />
+                    <div className="card dropdown-menu" style={{
+                      position: 'fixed',
+                      top: '35px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '90%',
+                      maxWidth: '400px',
                     maxHeight: '400px',
                     overflowY: 'auto',
                     zIndex: 1000,
@@ -362,6 +378,7 @@ export default function Navbar() {
                       ))
                     )}
                   </div>
+                  </>
                 )}
               </div>
 

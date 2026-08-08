@@ -219,6 +219,7 @@ export default function AdminDashboard() {
     : `Monitor metrics, manage registrations, faculty, and notices for the ${user?.department || 'selected'} department.`;
 
   return (
+    <>
     <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
       {/* Header */}
       <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -532,6 +533,7 @@ export default function AdminDashboard() {
           </div>
         </>
       )}
+      </div>
 
       {/* MODAL 1: Enrolled Students details list */}
       {showStudentsModal && (
@@ -540,7 +542,7 @@ export default function AdminDashboard() {
           backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem'
         }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <GraduationCap color="hsl(var(--primary))" />
@@ -570,7 +572,7 @@ export default function AdminDashboard() {
           backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem'
         }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '950px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '950px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <FileText color="hsl(var(--success))" />
@@ -672,6 +674,6 @@ export default function AdminDashboard() {
           }
         }
       `}</style>
-    </div>
+    </>
   );
 }

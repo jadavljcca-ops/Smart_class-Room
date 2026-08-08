@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, Paperclip, Download, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, Paperclip, Download, Calendar, ArrowLeft } from 'lucide-react';
 
 export default function AnnouncementsManagement({ department: propDepartment }) {
   const { authFetch, token } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -200,7 +202,12 @@ export default function AnnouncementsManagement({ department: propDepartment }) 
             Publish important alerts, events, and notices to college students and faculty{propDepartment ? ` in ${propDepartment}` : ''}.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {!propDepartment && (
+            <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <ArrowLeft size={16} /> Back to Dashboard
+            </button>
+          )}
           <button onClick={openAddModal} className="btn btn-primary">
             <Plus size={16} />
             Add Announcement

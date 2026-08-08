@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, UserPlus, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function FacultyManagement({ department: propDepartment }) {
   const { authFetch } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   const [faculty, setFaculty] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -164,7 +166,12 @@ export default function FacultyManagement({ department: propDepartment }) {
             Add, update, or remove approved college faculty members{propDepartment ? ` for ${propDepartment}` : ''}.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {!propDepartment && (
+            <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <ArrowLeft size={16} /> Back to Dashboard
+            </button>
+          )}
           <button onClick={openAddModal} className="btn btn-primary">
             <Plus size={16} />
             Add Faculty

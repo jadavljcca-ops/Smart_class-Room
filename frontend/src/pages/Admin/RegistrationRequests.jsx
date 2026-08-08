@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Check, X, Trash2, Search, Filter, RefreshCw, Calendar, Mail, Phone, Hash, Eye, EyeOff, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Check, X, Trash2, Search, Filter, RefreshCw, Calendar, Mail, Phone, Hash, Eye, EyeOff, Lock, ArrowLeft } from 'lucide-react';
 
 export default function RegistrationRequests({ department: propDepartment }) {
   const { authFetch } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,14 +88,21 @@ export default function RegistrationRequests({ department: propDepartment }) {
             Review and approve student and faculty registrations{propDepartment ? ` for ${propDepartment}` : ''}. Users cannot log in until approved.
           </p>
         </div>
-        <button 
-          onClick={fetchRequests} 
-          className="btn btn-secondary"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <RefreshCw size={16} />
-          Refresh
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {!propDepartment && (
+            <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <ArrowLeft size={16} /> Back to Dashboard
+            </button>
+          )}
+          <button 
+            onClick={fetchRequests} 
+            className="btn btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Search & Filter Row */}
