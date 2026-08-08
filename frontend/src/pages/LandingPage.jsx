@@ -337,8 +337,11 @@ export default function LandingPage() {
             </p>
           </div>
         </div>
-        <div className="container footer-bottom">
+        <div className="container footer-bottom" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
           <p>© {new Date().getFullYear()} Edumark. All rights reserved.</p>
+          <p style={{ fontSize: '1rem', color: 'orange', textAlign: 'center', marginTop: '0.25rem' }}>
+            This Module Built and Designed By <span style={{ fontWeight: 'bold' }}>Jadav Dashrath</span> And <span style={{ fontWeight: 'bold' }}>Dabhi Prit</span>
+          </p>
         </div>
       </footer>
 
