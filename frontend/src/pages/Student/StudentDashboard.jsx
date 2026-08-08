@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL, BACKEND_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { 
-  Megaphone, FileText, Search, Download, Paperclip, 
-  Calendar, RefreshCw, Filter, User, BookOpen, GraduationCap, School, Eye, Folder, ArrowLeft 
+import {
+  Megaphone, FileText, Search, Download, Paperclip,
+  Calendar, RefreshCw, Filter, User, BookOpen, GraduationCap, School, Eye, Folder, ArrowLeft
 } from 'lucide-react';
 
 export default function StudentDashboard() {
@@ -86,7 +86,7 @@ export default function StudentDashboard() {
       const response = await fetch(`${API_BASE_URL}/student/notes/download/${note.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (!response.ok) throw new Error('Download failed');
 
       const blob = await response.blob();
@@ -98,9 +98,9 @@ export default function StudentDashboard() {
       link.click();
       link.parentNode.removeChild(link);
       showToast('Download completed!', 'success');
-      
+
       // Update notes local count for download
-      setNotes(prev => 
+      setNotes(prev =>
         prev.map(n => n.id === note.id ? { ...n, download_count: (n.download_count || 0) + 1 } : n)
       );
     } catch (err) {
@@ -154,8 +154,8 @@ export default function StudentDashboard() {
 
     const matchesSubject = subject.toLowerCase().includes((subjectQuery || '').toLowerCase()) || desc.toLowerCase().includes((subjectQuery || '').toLowerCase());
     const matchesFaculty = faculty.toLowerCase().includes((facultyQuery || '').toLowerCase());
-    const matchesGeneral = !notesQuery || 
-      subject.toLowerCase().includes(notesQuery.toLowerCase()) || 
+    const matchesGeneral = !notesQuery ||
+      subject.toLowerCase().includes(notesQuery.toLowerCase()) ||
       faculty.toLowerCase().includes(notesQuery.toLowerCase()) ||
       desc.toLowerCase().includes(notesQuery.toLowerCase());
 
@@ -166,7 +166,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
-      
+
       {/* Welcome banner */}
       <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
@@ -180,7 +180,7 @@ export default function StudentDashboard() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button 
+          <button
             onClick={() => {
               const attendanceUrl = import.meta.env.VITE_ATTENDANCE_APP_URL || 'http://localhost:5174';
               window.open(`${attendanceUrl}?token=${token}&role=student`, '_blank');
@@ -191,8 +191,8 @@ export default function StudentDashboard() {
             <Calendar size={16} />
             Attendance Portal
           </button>
-          <button 
-            onClick={() => { fetchAnnouncements(); fetchNotes(); }} 
+          <button
+            onClick={() => { fetchAnnouncements(); fetchNotes(); }}
             className="btn btn-secondary"
             style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
           >
@@ -204,7 +204,7 @@ export default function StudentDashboard() {
 
       {/* Two-section page layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '2rem' }} className="student-layout">
-        
+
         {/* SECTION 1: Announcements & Notices */}
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -238,9 +238,9 @@ export default function StudentDashboard() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {filteredAnnouncements.map((ann) => (
-                <div 
-                  key={ann.id} 
-                  className="card animate-fade-in" 
+                <div
+                  key={ann.id}
+                  className="card animate-fade-in"
                   style={{
                     padding: '1.1rem',
                     borderLeft: ann.priority === 'High' ? '4px solid hsl(var(--danger))' : '1px solid hsl(var(--border))'
@@ -254,9 +254,9 @@ export default function StudentDashboard() {
                   <p style={{ fontSize: '0.85rem', color: 'hsl(var(--foreground) / 0.85)', marginTop: '0.4rem', whiteSpace: 'pre-wrap' }}>
                     {ann.description}
                   </p>
-                  
+
                   {ann.attachment_path && (
-                    <button 
+                    <button
                       onClick={() => handleDownloadAnnouncementAttachment(ann)}
                       style={{
                         background: 'none', border: 'none', cursor: 'pointer',
@@ -307,7 +307,7 @@ export default function StudentDashboard() {
             <h4 style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', color: 'hsl(var(--muted))', marginBottom: '0.75rem' }}>
               Search Notes
             </h4>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }} className="filters-grid">
               <input
                 type="text"
@@ -360,7 +360,7 @@ export default function StudentDashboard() {
                       </div>
                     </div>
                     <div style={{ alignSelf: 'center' }}>
-                      <button 
+                      <button
                         onClick={() => handleDownloadNote(note)}
                         className="btn btn-primary"
                         style={{ padding: '0.6rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
@@ -387,7 +387,7 @@ export default function StudentDashboard() {
                       return acc;
                     }, {})
                   ).map(([facName, facNotes]) => (
-                    <div 
+                    <div
                       key={facName}
                       onClick={() => setSelectedFaculty(facName)}
                       className="card"
@@ -471,7 +471,7 @@ export default function StudentDashboard() {
                               </div>
                             </div>
                             <div style={{ alignSelf: 'center' }}>
-                              <button 
+                              <button
                                 onClick={() => handleDownloadNote(note)}
                                 className="btn btn-primary"
                                 style={{ padding: '0.6rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}

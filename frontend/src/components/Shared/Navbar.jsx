@@ -148,8 +148,9 @@ export default function Navbar() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <nav className="navbar">
-      <div className="container navbar-inner">
+    <>
+      <nav className="navbar">
+        <div className="container navbar-inner">
         {/* Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{ backgroundColor: 'hsl(var(--primary))', color: '#020617', borderRadius: '12px', padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.6rem', height: '2.6rem' }}>
@@ -229,22 +230,6 @@ export default function Navbar() {
             </button>
           )}
 
-          {/* Theme Toggle */}
-          <button 
-            onClick={toggleTheme} 
-            className="btn-icon" 
-            title="Toggle Theme"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'inherit',
-              padding: '0.5rem',
-              borderRadius: '50%'
-            }}
-          >
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-          </button>
 
           {/* Go to Home Page Button (next to theme toggle on auth pages) */}
           {!user && (location.pathname === '/login' || location.pathname === '/register') && (
@@ -492,24 +477,6 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Mobile Menu Icon Toggle */}
-          <button 
-            onClick={() => setIsOpen(!isOpen)} 
-            className="mobile-toggle"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'inherit',
-              padding: '0.5rem',
-              display: 'none',
-              borderRadius: '50%',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {isOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
       </div>
 
@@ -591,6 +558,8 @@ export default function Navbar() {
           )}
         </div>
       )}
+
+
       
       {/* Floating Notification Banner */}
       {newNotifBanner && (
@@ -690,6 +659,21 @@ export default function Navbar() {
           }
         }
       `}</style>
-    </nav>
+      </nav>
+
+      {/* Mobile Menu Icon Toggle */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="mobile-toggle fab-button"
+        style={{
+          cursor: 'pointer',
+          color: '#020617',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        {isOpen ? <X size={28} /> : <Menu size={28} />}
+      </button>
+    </>
   );
 }

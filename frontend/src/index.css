@@ -628,3 +628,30 @@ tr:hover td {
     grid-template-columns: 1fr;
   }
 }
+
+/* Floating Action Button for Mobile Menu */
+.fab-button {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .fab-button {
+    display: flex !important;
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 9999;
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: hsl(var(--primary));
+    border-radius: 50%;
+    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.4);
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .fab-button:hover, .fab-button:active {
+    transform: scale(1.05);
+    box-shadow: 0 10px 40px rgba(245, 158, 11, 0.6);
+  }
+}
