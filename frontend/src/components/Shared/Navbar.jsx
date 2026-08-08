@@ -497,84 +497,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
-      {isOpen && (
-        <div className="mobile-menu-drawer animate-fade-in" style={{
-          position: 'absolute',
-          top: '4.5rem',
-          left: 0,
-          right: 0,
-          backgroundColor: 'hsl(var(--card))',
-          borderBottom: '1px solid hsl(var(--border))',
-          padding: '1.25rem 1.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          zIndex: 99,
-          boxShadow: 'var(--shadow-md)'
-        }}>
-          {user ? (
-            <>
-              {user.role === 'admin' && (
-                <>
-                  <Link to="/admin" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
-                  <Link to="/admin/requests" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/requests' ? 'active' : ''}`}>Requests</Link>
-                  <Link to="/admin/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
-                  <Link to="/admin/students" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
-                  <Link to="/admin/announcements" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
-                  {user.adminRole === 'main_admin' && (
-                    <>
-                      <Link to="/admin/departments" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>Departments</Link>
-                      <Link to="/admin/sub-admins" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>Sub Admins</Link>
-                    </>
-                  )}
-                </>
-              )}
 
-              {user.role === 'faculty' && (
-                <>
-                  <Link to="/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>Dashboard & Notes</Link>
-                </>
-              )}
-
-              {user.role === 'student' && (
-                <>
-                  <Link to="/student" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>Dashboard</Link>
-                </>
-              )}
-
-              {/* Profile options inside mobile drawer */}
-              <div style={{ marginTop: '0.5rem', borderTop: '1px solid hsl(var(--border) / 0.5)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ padding: '0 0.5rem' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{user.fullName}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'hsl(var(--muted))', textTransform: 'capitalize' }}>
-                    {user.role} {user.department ? `| ${user.department}` : ''}
-                  </div>
-                </div>
-                <Link to="/change-password" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}>
-                  <Key size={15} /> Change Password
-                </Link>
-                <button onClick={() => { handleLogout(); setIsOpen(false); }} className="btn btn-danger" style={{ width: '100%', justifyContent: 'flex-start', border: 'none', padding: '0.6rem 1rem' }}>
-                  <LogOut size={15} /> Logout
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <a href="/#features" onClick={() => setIsOpen(false)} className="nav-link">Features</a>
-              <a href="/#stats" onClick={() => setIsOpen(false)} className="nav-link">Statistics</a>
-              <a href="/#departments" onClick={() => setIsOpen(false)} className="nav-link">Departments</a>
-              <a href="/#faq" onClick={() => setIsOpen(false)} className="nav-link">FAQ</a>
-              
-              {/* Login / Register inside mobile drawer */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid hsl(var(--border) / 0.5)', paddingTop: '1rem' }}>
-                <Link to="/login" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%' }}>Login</Link>
-                <Link to="/register" onClick={() => setIsOpen(false)} className="btn btn-primary" style={{ width: '100%' }}>Register</Link>
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
 
       
@@ -677,6 +600,100 @@ export default function Navbar() {
         }
       `}</style>
       </nav>
+
+      {/* Mobile Menu Drawer */}
+      {isOpen && (
+        <>
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 9990
+          }} onClick={() => setIsOpen(false)} className="animate-fade-in" />
+          <div className="mobile-menu-drawer animate-fade-in" style={{
+            position: 'fixed',
+            top: '4.5rem',
+            left: 0,
+            right: 0,
+            maxHeight: 'calc(100vh - 4.5rem)',
+            overflowY: 'auto',
+            backgroundColor: 'hsl(var(--card))',
+            borderBottom: '1px solid hsl(var(--border))',
+            padding: '1.25rem 1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            zIndex: 9991,
+            boxShadow: 'var(--shadow-md)'
+          }}>
+          {user ? (
+            <>
+              {user.role === 'admin' && (
+                <>
+                  <Link to="/admin" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
+                  <Link to="/admin/requests" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/requests' ? 'active' : ''}`}>Requests</Link>
+                  <Link to="/admin/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
+                  <Link to="/admin/students" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
+                  <Link to="/admin/announcements" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
+                  {user.adminRole === 'main_admin' && (
+                    <>
+                      <Link to="/admin/departments" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>Departments</Link>
+                      <Link to="/admin/sub-admins" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>Sub Admins</Link>
+                    </>
+                  )}
+                </>
+              )}
+
+              {user.role === 'faculty' && (
+                <>
+                  <Link to="/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>Dashboard & Notes</Link>
+                </>
+              )}
+
+              {user.role === 'student' && (
+                <>
+                  <Link to="/student" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>Dashboard</Link>
+                </>
+              )}
+
+              {/* Profile options inside mobile drawer */}
+              <div style={{ marginTop: '0.5rem', borderTop: '1px solid hsl(var(--border) / 0.5)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ padding: '0 0.5rem' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{user.fullName}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'hsl(var(--muted))', textTransform: 'capitalize' }}>
+                    {user.role} {user.department ? `| ${user.department}` : ''}
+                  </div>
+                </div>
+                <Link to="/change-password" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}>
+                  <Key size={15} /> Change Password
+                </Link>
+                <button onClick={() => { handleLogout(); setIsOpen(false); }} className="btn btn-danger" style={{ width: '100%', justifyContent: 'flex-start', border: 'none', padding: '0.6rem 1rem' }}>
+                  <LogOut size={15} /> Logout
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <a href="/#features" onClick={() => setIsOpen(false)} className="nav-link">Features</a>
+              <a href="/#stats" onClick={() => setIsOpen(false)} className="nav-link">Statistics</a>
+              <a href="/#departments" onClick={() => setIsOpen(false)} className="nav-link">Departments</a>
+              <a href="/#faq" onClick={() => setIsOpen(false)} className="nav-link">FAQ</a>
+              
+              {/* Login / Register inside mobile drawer */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid hsl(var(--border) / 0.5)', paddingTop: '1rem' }}>
+                <Link to="/login" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%' }}>Login</Link>
+                <Link to="/register" onClick={() => setIsOpen(false)} className="btn btn-primary" style={{ width: '100%' }}>Register</Link>
+              </div>
+            </>
+          )}
+        </div>
+        </>
+      )}
 
       {/* Mobile Menu Icon Toggle */}
       <button 
