@@ -209,7 +209,7 @@ export default function SubAdminsManagement() {
                   <input
                     type="email"
                     className="form-control"
-                    placeholder="email@ljcca.edu"
+                    placeholder="email@edumark.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     style={{ paddingLeft: '2.5rem' }}

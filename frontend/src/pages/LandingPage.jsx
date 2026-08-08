@@ -47,7 +47,7 @@ export default function LandingPage() {
     { q: 'How do I register for the portal?', a: 'Students and Faculty members can register via the Join link. Once submitted, your registration request goes to the Admin for approval. You will receive access once the admin verifies your details.' },
     { q: 'What types of file formats are supported for notes?', a: 'Faculty members can upload PDF, Word documents, Powerpoint slides, Excel spreadsheets, and ZIP archives. The max file upload limit is 10MB.' },
     { q: 'How will I receive notifications about new notes?', a: 'Once a faculty member uploads new notes for your department and semester, a notification is immediately dispatched to your account. You will see a notification badge in the navbar.' },
-    { q: 'Can I change my registered department after sign up?', a: 'To maintain database sanity, you cannot change your department directly. You will need to contact the main administrator at admin@ljcca.edu to adjust your profile.' }
+    { q: 'Can I change my registered department after sign up?', a: 'To maintain database sanity, you cannot change your department directly. You will need to contact the main administrator at admin@edumark.com to adjust your profile.' }
   ];
 
   return (
@@ -66,7 +66,7 @@ export default function LandingPage() {
               <span>Next-Gen Academic Hub</span>
             </span>
             <h1 className="hero-title">
-              Streamlining Learning & Collaboration for <span className="gradient-text">LJCCA</span>
+              Streamlining Learning & Collaboration for <span className="gradient-text">Edumark</span>
             </h1>
             <p className="hero-subtitle">
               A comprehensive classroom management ecosystem for students, faculty, and administrators. Access lectures notes, syllabus materials, and real-time updates seamlessly.
@@ -96,7 +96,7 @@ export default function LandingPage() {
                 <div className="mockup-dots">
                   <span></span><span></span><span></span>
                 </div>
-                <div className="mockup-title">LJCCA Portal Preview</div>
+                <div className="mockup-title">Edumark Portal Preview</div>
               </div>
               <div className="mockup-body">
                 {/* Mock Note Card */}
@@ -171,7 +171,7 @@ export default function LandingPage() {
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">Designed for Every Campus Role</h2>
-            <p className="section-subtitle">A unified system offering tailored dashboards for all stakeholders in L.J. College of Computer Applications.</p>
+            <p className="section-subtitle">A unified system offering tailored dashboards for all stakeholders in Edumark.</p>
           </div>
 
           <div className="features-tabs-wrapper">
@@ -248,7 +248,7 @@ export default function LandingPage() {
               <p style={{ fontSize: '0.85rem', color: 'hsl(var(--muted))', marginBottom: '1rem' }}>
                 For account verification, password resets, or department edits, get in touch.
               </p>
-              <a href="mailto:support@ljcca.edu" className="btn btn-secondary btn-sm" style={{ textDecoration: 'none', width: 'fit-content' }}>
+              <a href="mailto:support@edumark.com" className="btn btn-secondary btn-sm" style={{ textDecoration: 'none', width: 'fit-content' }}>
                 Email Support Team
               </a>
             </div>
@@ -275,17 +275,17 @@ export default function LandingPage() {
         <div className="container">
           <div className="cta-banner-card">
             <div className="cta-banner-content">
-              <h2>Join the LJCCA Digital Community</h2>
+              <h2>Join the Edumark Digital Community</h2>
               <p>Sign up now to access verified notes, campus updates, and assignments tailored to your courses.</p>
             </div>
             <div className="cta-banner-actions">
               {user ? (
-                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="btn btn-primary btn-lg" style={{ backgroundColor: 'white', color: 'hsl(var(--primary))' }}>
+                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="btn btn-primary btn-lg" style={{ color: 'black' }}>
                   Go to Dashboard
                 </Link>
               ) : (
                 <>
-                  <Link to="/register" className="btn btn-primary btn-lg" style={{ backgroundColor: 'white', color: 'hsl(var(--primary))' }}>
+                  <Link to="/register" className="btn btn-primary btn-lg" style={{ color: 'black' }}>
                     Create Account
                   </Link>
                   <Link to="/login" className="btn btn-secondary btn-lg" style={{ borderColor: 'rgba(255, 255, 255, 0.4)', background: 'rgba(255, 255, 255, 0.1)', color: 'white' }}>
@@ -303,11 +303,18 @@ export default function LandingPage() {
         <div className="container footer-grid">
           <div className="footer-brand">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <img src="/logo.png" alt="LJ Logo" className="logo-img" style={{ width: '2.4rem', height: '2.4rem', objectFit: 'contain' }} />
-              <span style={{ fontWeight: 800, fontSize: '1.15rem' }}>Ljcca Class Room</span>
+              <div style={{ backgroundColor: 'hsl(var(--primary))', color: '#020617', borderRadius: '12px', padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.6rem', height: '2.6rem' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/>
+                  <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+                </svg>
+              </div>
+              <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>
+                <span style={{ color: 'white' }}>Edu</span><span style={{ color: 'hsl(var(--primary))' }}>Mark</span>
+              </span>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'hsl(var(--muted))', lineHeight: 1.6 }}>
-              LJ College of Computer Applications classroom system streamlines notes downloads, assignments tracking, and official notifications for students and faculty.
+              Edumark classroom system streamlines notes downloads, assignments tracking, and official notifications for students and faculty.
             </p>
           </div>
           <div className="footer-links-col">
@@ -321,7 +328,7 @@ export default function LandingPage() {
             <h4>Portal Access</h4>
             <Link to="/login">Account Login</Link>
             <Link to="/register">Register Profile</Link>
-            <a href="mailto:admin@ljcca.edu">Admin Desk</a>
+            <a href="mailto:admin@edumark.com">Admin Desk</a>
           </div>
           <div className="footer-links-col">
             <h4>Campus Address</h4>
@@ -331,7 +338,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="container footer-bottom">
-          <p>© {new Date().getFullYear()} L.J. College of Computer Applications. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Edumark. All rights reserved.</p>
         </div>
       </footer>
 

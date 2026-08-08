@@ -304,7 +304,7 @@ export default function FacultyManagement({ department: propDepartment }) {
                 <input
                   type="email"
                   className="form-control"
-                  placeholder="e.g. rajesh@ljcca.edu"
+                  placeholder="e.g. rajesh@edumark.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

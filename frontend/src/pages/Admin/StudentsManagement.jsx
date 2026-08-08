@@ -339,8 +339,8 @@ export default function StudentsManagement({ department: propDepartment, insideM
   const downloadSampleCSV = () => {
     const defaultDept = propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : 'BCA');
     const headers = 'Enrollment Number,Full Name,Email,Mobile Number,Department,Semester,Password\n';
-    const row1 = `22BCA2001,Amit Patel,amit@ljcca.edu,9876543210,${defaultDept},3,patel123\n`;
-    const row2 = `22BCA2002,Neha Shah,neha@ljcca.edu,9876543211,${defaultDept},3,shah123\n`;
+    const row1 = `22BCA2001,Amit Patel,amit@edumark.com,9876543210,${defaultDept},3,patel123\n`;
+    const row2 = `22BCA2002,Neha Shah,neha@edumark.com,9876543211,${defaultDept},3,shah123\n`;
     
     const blob = new Blob([headers + row1 + row2], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -569,7 +569,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
                 <input
                   type="email"
                   className="form-control"
-                  placeholder="e.g. amit@ljcca.edu"
+                  placeholder="e.g. amit@edumark.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

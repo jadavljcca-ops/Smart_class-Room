@@ -1,63 +1,47 @@
 /* Core CSS Design System for LJ CCA Class Room */
 
 :root {
-  /* Light Theme Variables */
-  --font-family: 'Outfit', sans-serif;
-  --background: 210 40% 98%;
-  --foreground: 222 47% 11%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --primary: 220 90% 42%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --accent: 354 85% 48%;
-  --accent-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 220 90% 42%;
-  --muted: 215.4 16.3% 46.9%;
-  --muted-foreground: 215.4 16.3% 56.9%;
-
-  --success: 142.1 76.2% 36.3%;
-  --warning: 38 92% 50%;
-  --danger: 346.8 77.2% 49.8%;
-
-  --radius: 12px;
-  --transition-speed: 0.3s;
-
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.35);
-}
-
-[data-theme='dark'] {
-  /* Dark Theme Variables - Softer Slate Theme */
-  --background: 220 20% 12%;
-  --foreground: 210 40% 98%;
-  --card: 220 20% 17%;
-  --card-foreground: 210 40% 98%;
-  --primary: 220 90% 64%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 220 15% 22%;
-  --secondary-foreground: 210 40% 98%;
-  --accent: 354 85% 58%;
-  --accent-foreground: 210 40% 98%;
-  --border: 220 12% 26%;
-  --input: 220 12% 26%;
-  --ring: 220 90% 64%;
-  --muted: 215 20.2% 65.1%;
-  --muted-foreground: 215 20.2% 55.1%;
+  /* Dark Theme Variables - edu-mark-ads style */
+  --font-family: 'Inter', 'Outfit', sans-serif;
+  
+  /* Deep Slate Background */
+  --background: 222 47% 5%;
+  --foreground: 0 0% 100%;
+  
+  /* Glassmorphic Cards */
+  --card: 222 47% 11%;
+  --card-foreground: 0 0% 100%;
+  
+  /* Yellow/Amber Primary */
+  --primary: 45 93% 47%;
+  --primary-foreground: 222 47% 11%;
+  
+  /* Secondary/Muted */
+  --secondary: 217 32% 17%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 35 92% 55%;
+  --accent-foreground: 0 0% 100%;
+  --border: 217 32% 17%;
+  --input: 217 32% 17%;
+  --ring: 45 93% 47%;
+  --muted: 215 20% 65%;
+  --muted-foreground: 215 20% 65%;
 
   --success: 142.1 70.6% 45.3%;
   --warning: 47.9 95.8% 51.2%;
   --danger: 346.8 84.2% 60.2%;
 
+  --radius: 16px;
+  --transition-speed: 0.3s;
+
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.15);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 25px rgba(245, 158, 11, 0.4);
+}
+
+[data-theme='dark'] {
+  /* Same variables to force the dark mode */
 }
 
 /* Resets */
@@ -69,8 +53,9 @@
 
 body {
   font-family: var(--font-family);
-  background-color: hsl(var(--background));
-  background-image: linear-gradient(rgba(240, 244, 248, 0.8), rgba(240, 244, 248, 0.8)), url('/background.png');
+  background-color: #001c3d;
+  background-image: radial-gradient(circle at top center, rgba(59, 130, 246, 0.15), transparent 60%),
+                    radial-gradient(circle at bottom, rgba(59, 130, 246, 0.1), transparent 60%);
   background-size: cover;
   background-attachment: fixed;
   background-repeat: no-repeat;
@@ -81,7 +66,7 @@ body {
 }
 
 [data-theme='dark'] body {
-  background-image: linear-gradient(rgba(25, 29, 36, 0.85), rgba(25, 29, 36, 0.85)), url('/background.png');
+  /* Default is already dark */
 }
 
 /* Custom Scrollbars */
@@ -179,11 +164,13 @@ body {
 
 /* Cards Design */
 .card {
-  background-color: hsl(var(--card));
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: hsl(var(--card-foreground));
-  border: 1px solid hsl(var(--border));
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius);
-  padding: 1.5rem;
+  padding: 2rem;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease, border-color var(--transition-speed) ease;
   position: relative;
@@ -191,9 +178,9 @@ body {
 }
 
 .card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   box-shadow: var(--shadow-md);
-  border-color: hsl(var(--primary) / 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .card-title {
@@ -262,20 +249,24 @@ body {
 }
 
 .btn-primary {
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: linear-gradient(to right, #fbbf24, #f59e0b);
+  color: #020617;
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px 0 rgba(245, 158, 11, 0.39);
 }
 
 .btn-primary:hover {
-  background-color: hsl(var(--primary) / 0.9);
-  transform: translateY(-1px);
+  background: linear-gradient(to right, #fcd34d, #fbbf24);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: var(--shadow-glow);
 }
 
 .btn-secondary {
-  background-color: hsl(var(--secondary));
-  color: hsl(var(--secondary-foreground));
-  border-color: hsl(var(--border));
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 .btn-secondary:hover {
