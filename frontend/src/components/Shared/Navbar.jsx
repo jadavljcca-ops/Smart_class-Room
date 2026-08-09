@@ -706,7 +706,7 @@ export default function Navbar() {
           justifyContent: 'center'
         }}
       >
-        {isOpen ? <X size={28} /> : <Menu size={28} />}
+        {isOpen ? <X size={22} /> : <Menu size={22} />}
       </button>
     </>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -7,10 +7,39 @@ import {
   HelpCircle, Layers, Activity, FileText, ArrowRight, Check
 } from 'lucide-react';
 
+const CountUp = ({ end, duration = 2000, suffix = "", isFloat = false }) => {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      setCount(progress * end);
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [end, duration]);
+  return <>{isFloat ? count.toFixed(1) : Math.floor(count).toLocaleString()}{suffix}</>;
+};
+
 export default function LandingPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('student');
   const [openFaq, setOpenFaq] = useState(null);
+  const [stats, setStats] = useState({ students: 5000, faculty: 120, materials: 1500, uptime: 99.9 });
+  
+  useEffect(() => {
+    fetch('http://localhost:5000/api/public/stats')
+      .then(res => res.json())
+      .then(data => {
+        if(data && typeof data.students === 'number') {
+          setStats(data);
+        }
+      })
+      .catch(err => console.error('Failed to load stats', err));
+  }, []);
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -147,19 +176,27 @@ export default function LandingPage() {
         <div className="container">
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-value">5,000+</div>
+              <div className="stat-value">
+                <CountUp end={stats.students} suffix={stats.students > 1000 ? "+" : ""} />
+              </div>
               <div className="stat-label">Active Students</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">120+</div>
+              <div className="stat-value">
+                <CountUp end={stats.faculty} suffix={stats.faculty > 100 ? "+" : ""} />
+              </div>
               <div className="stat-label">Expert Faculty</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">1,500+</div>
+              <div className="stat-value">
+                <CountUp end={stats.materials} suffix={stats.materials > 1000 ? "+" : ""} />
+              </div>
               <div className="stat-label">Lecture Notes Shared</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">99.9%</div>
+              <div className="stat-value">
+                <CountUp end={stats.uptime} isFloat={true} suffix="%" />
+              </div>
               <div className="stat-label">System Uptime</div>
             </div>
           </div>

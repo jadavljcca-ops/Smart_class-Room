@@ -667,8 +667,8 @@ tr:hover td {
     bottom: 25px;
     right: 25px;
     z-index: 9999;
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 2.8rem;
+    height: 2.8rem;
     background-color: hsl(var(--primary) / 0.75);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
