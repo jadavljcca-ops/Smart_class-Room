@@ -14,7 +14,7 @@ router.get('/announcements', requireStudent, async (req, res) => {
     // Return non-expired announcements for the student's department or 'All'
     const list = await query(
       `SELECT * FROM announcements 
-       WHERE (department = ? OR department = 'All') AND expiry_date >= date('now') 
+       WHERE (department = ? OR department = 'All') AND CAST(expiry_date AS DATE) >= CURRENT_DATE 
        ORDER BY created_at DESC`,
       [dept]
     );

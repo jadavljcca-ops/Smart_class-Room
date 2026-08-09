@@ -146,7 +146,7 @@ router.get('/announcements', async (req, res) => {
     // Show announcements for their department or 'All'
     const list = await query(
       `SELECT * FROM announcements 
-       WHERE (department = ? OR department = 'All') AND expiry_date >= date('now') 
+       WHERE (department = ? OR department = 'All') AND CAST(expiry_date AS DATE) >= CURRENT_DATE 
        ORDER BY created_at DESC`,
       [dept]
     );
