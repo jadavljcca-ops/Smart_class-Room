@@ -27,9 +27,43 @@ export default function Navbar() {
   const audioRef = useRef(null);
   const lastKnownNotifId = useRef(null);
 
+  const audioUnlocked = useRef(false);
+
   useEffect(() => {
     audioRef.current = new Audio('/notification.wav');
     audioRef.current.volume = 0.75;
+    audioRef.current.preload = 'auto';
+
+    // Browsers block audio unless user interacts first
+    const unlockAudio = () => {
+      if (audioRef.current && !audioUnlocked.current) {
+        audioUnlocked.current = true;
+        audioRef.current.muted = true;
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            audioRef.current.muted = false;
+          }).catch(() => {
+            audioRef.current.muted = false;
+          });
+        }
+      }
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
+    };
+
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
+
+    return () => {
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
+    };
   }, []);
 
   // Close menus on clicking outside
@@ -88,7 +122,10 @@ export default function Navbar() {
               try {
                 if (audioRef.current) {
                   audioRef.current.currentTime = 0;
-                  audioRef.current.play().catch(() => {});
+                  const playPromise = audioRef.current.play();
+                  if (playPromise !== undefined) {
+                    playPromise.catch((e) => console.log('Audio play blocked:', e));
+                  }
                 }
               } catch (e) {}
 
