@@ -57,10 +57,11 @@ router.get('/notes/download/:id', async (req, res) => {
       return res.status(404).json({ message: 'Note file not found.' });
     }
 
-    // Secure check: verify that the user's department matches the document's department
-    // (Except for main admin, who can download any department's documents)
-    const isMainAdmin = userRole === 'admin' && req.user.adminRole === 'main_admin';
-    if (!isMainAdmin && note.department !== req.user.department) {
+    // Allow download if user is faculty or admin, or if note department matches / is All
+    const isStaffOrAdmin = userRole === 'faculty' || userRole === 'admin';
+    const isDeptAllowed = isStaffOrAdmin || note.department === 'All' || !note.department || note.department === req.user.department;
+
+    if (!isDeptAllowed) {
       return res.status(403).json({ message: 'Forbidden. You do not have access to documents from other departments.' });
     }
 

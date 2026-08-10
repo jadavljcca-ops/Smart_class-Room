@@ -75,9 +75,9 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop Menu links based on auth state */}
+        {/* Desktop Menu links based on auth state & current page */}
         <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          {user ? (
+          {location.pathname !== '/' && user ? (
             <>
               {user.role === 'admin' && (
                 <>
@@ -113,6 +113,11 @@ export default function Navbar() {
               <a href="/#stats" className="nav-link">Statistics</a>
               <a href="/#departments" className="nav-link">Departments</a>
               <a href="/#faq" className="nav-link">FAQ</a>
+              {user && (
+                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="nav-link" style={{ fontWeight: 700, color: 'hsl(var(--primary))' }}>
+                  Go to Dashboard →
+                </Link>
+              )}
             </>
           )}
         </div>
@@ -384,7 +389,7 @@ export default function Navbar() {
             zIndex: 9991,
             boxShadow: 'var(--shadow-md)'
           }}>
-          {user ? (
+          {location.pathname !== '/' && user ? (
             <>
               {user.role === 'admin' && (
                 <>
