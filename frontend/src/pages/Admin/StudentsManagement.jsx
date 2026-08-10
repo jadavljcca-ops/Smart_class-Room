@@ -1,3 +1,4 @@
+import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -124,9 +125,11 @@ export default function StudentsManagement({ department: propDepartment, insideM
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete "${name}" permanently? All note download history for this student will also be deleted.`)) {
-      return;
-    }
+    const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: `Are you sure you want to delete "${name}" permanently? All note download history for this student will also be deleted.` 
+    });
+    if (!isConfirmed) return;
 
     try {
       const res = await authFetch(`/admin/students/${id}`, { method: 'DELETE' });
@@ -313,9 +316,11 @@ export default function StudentsManagement({ department: propDepartment, insideM
       ? "Are you sure you want to force logout ALL students across all departments? They will be prompted to log in again."
       : `Are you sure you want to force logout all students in the ${targetDeptName} department? They will be prompted to log in again.`;
 
-    if (!window.confirm(msg)) {
-      return;
-    }
+    const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: msg 
+    });
+    if (!isConfirmed) return;
 
     try {
       const res = await authFetch('/admin/students/logout-all', {

@@ -1,3 +1,4 @@
+import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -137,9 +138,11 @@ export default function AnnouncementsManagement({ department: propDepartment }) 
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this announcement permanently?')) {
-      return;
-    }
+    const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: 'Are you sure you want to delete this announcement permanently?' 
+    });
+    if (!isConfirmed) return;
 
     try {
       const res = await authFetch(`/admin/announcements/${id}`, { method: 'DELETE' });

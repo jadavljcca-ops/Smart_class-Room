@@ -1,3 +1,4 @@
+import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -126,9 +127,11 @@ export default function SubAdminsManagement() {
   };
 
   const handleDeleteSubAdmin = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete the Sub Admin account for "${name}"?`)) {
-      return;
-    }
+    const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: `Are you sure you want to delete the Sub Admin account for "${name}"?` 
+    });
+    if (!isConfirmed) return;
 
     try {
       const res = await authFetch(`/admin/sub-admins/${id}`, {

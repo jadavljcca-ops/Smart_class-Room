@@ -1,3 +1,4 @@
+import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -98,9 +99,11 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteStudent = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete "${name}" permanently?`)) {
-      return;
-    }
+    const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: `Are you sure you want to delete "${name}" permanently?` 
+    });
+    if (!isConfirmed) return;
     try {
       const res = await authFetch(`/admin/students/${id}`, { method: 'DELETE' });
       const data = await res.json();
@@ -159,9 +162,11 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteNote = async (id, subjectName) => {
-    if (!window.confirm(`Are you sure you want to delete "${subjectName}" note file permanently?`)) {
-      return;
-    }
+    const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: `Are you sure you want to delete "${subjectName}" note file permanently?` 
+    });
+    if (!isConfirmed) return;
     try {
       const res = await authFetch(`/admin/notes/${id}`, { method: 'DELETE' });
       const data = await res.json();

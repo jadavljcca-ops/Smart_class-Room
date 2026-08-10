@@ -1,3 +1,4 @@
+import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -124,9 +125,11 @@ export default function FacultyManagement({ department: propDepartment }) {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this faculty member permanently? All notes uploaded by them will also be deleted.')) {
-      return;
-    }
+    const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: 'Are you sure you want to delete this faculty member permanently? All notes uploaded by them will also be deleted.' 
+    });
+    if (!isConfirmed) return;
 
     try {
       const res = await authFetch(`/admin/faculty/${id}`, { method: 'DELETE' });

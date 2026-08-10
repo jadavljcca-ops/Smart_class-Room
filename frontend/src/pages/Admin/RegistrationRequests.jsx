@@ -1,3 +1,4 @@
+import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -38,8 +39,12 @@ export default function RegistrationRequests({ department: propDepartment }) {
   }, []);
 
   const handleAction = async (id, action) => {
-    if (action === 'Delete' && !window.confirm('Are you sure you want to delete this request permanently?')) {
-      return;
+    if (action === 'Delete') {
+      const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: 'Are you sure you want to delete this request permanently?' 
+    });
+    if (!isConfirmed) return;
     }
     
     try {

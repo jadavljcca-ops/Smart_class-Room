@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { LogIn, Mail, Lock, User, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
-import confetti from 'canvas-confetti';
+
 
 export default function Login() {
   const { login } = useAuth();
@@ -31,32 +31,6 @@ export default function Login() {
       setLoggedInUser(user);
       setShowSuccessPopup(true);
 
-      // Trigger celebration fireworks
-      const duration = 2500;
-      const end = Date.now() + duration;
-
-      (function frame() {
-        confetti({
-          particleCount: 5,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'],
-          zIndex: 10000
-        });
-        confetti({
-          particleCount: 5,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'],
-          zIndex: 10000
-        });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      }());
 
       // Wait for 3 seconds with blurred background popup before navigating
       setTimeout(() => {

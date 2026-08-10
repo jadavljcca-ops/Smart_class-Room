@@ -5,6 +5,7 @@ import {
   FileText, Upload, Plus, Edit, Trash2, X, Save, 
   Search, RefreshCw, Paperclip, Download, Eye, Calendar, BookOpen 
 } from 'lucide-react';
+import { confirmDelete } from '../../utils/alerts';
 
 export default function FacultyDashboard() {
   const { authFetch, token, user } = useAuth();
@@ -211,9 +212,11 @@ export default function FacultyDashboard() {
   };
 
   const handleDeleteNote = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this note file permanently?')) {
-      return;
-    }
+    const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: 'Are you sure you want to delete this note file permanently?' 
+    });
+    if (!isConfirmed) return;
 
     try {
       const res = await authFetch(`/faculty/notes/${id}`, { method: 'DELETE' });
@@ -231,9 +234,11 @@ export default function FacultyDashboard() {
   };
 
   const handleDeleteAnnouncement = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this announcement permanently?')) {
-      return;
-    }
+    const isConfirmed = await confirmDelete({ 
+      entityName: 'record', 
+      customText: 'Are you sure you want to delete this announcement permanently?' 
+    });
+    if (!isConfirmed) return;
     try {
       const res = await authFetch(`/faculty/announcements/${id}`, { method: 'DELETE' });
       const data = await res.json();
@@ -530,10 +535,10 @@ export default function FacultyDashboard() {
           position: 'fixed',
           top: 0, left: 0, width: '100vw', height: '100vh',
           backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '1rem'
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+          zIndex: 1000, padding: '2rem 1rem', overflowY: 'auto'
         }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '520px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))' }}>
+          <div className="card animate-fade-in" style={{ margin: 'auto', width: '100%', maxWidth: '520px', padding: '2rem', backgroundColor: 'hsl(var(--card))' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
                 {editingNoteId ? 'Update Lecture Note' : 'Upload Lecture Note'}
