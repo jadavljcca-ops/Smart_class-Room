@@ -571,6 +571,48 @@ router.post('/sub-admins', async (req, res) => {
   }
 });
 
+// PUT /api/admin/sub-admins/:id
+router.put('/sub-admins/:id', async (req, res) => {
+  if (req.user.adminRole !== 'main_admin') {
+    return res.status(403).json({ message: 'Forbidden. Main Admin access required.' });
+  }
+
+  const { id } = req.params;
+  const { fullName, email, password, department } = req.body;
+
+  if (!fullName || !email || !password || !department) {
+    return res.status(400).json({ message: 'Please provide all required fields.' });
+  }
+
+  try {
+    const existing = await get("SELECT * FROM admins WHERE id = ? AND role = 'sub_admin'", [id]);
+    if (!existing) {
+      return res.status(404).json({ message: 'Sub Admin not found.' });
+    }
+
+    // Check if email already exists for another user
+    const adminCheck = await get('SELECT id FROM admins WHERE email = ? AND id != ?', [email, id]);
+    const facultyCheck = await get('SELECT id FROM faculty WHERE email = ?', [email]);
+    const studentCheck = await get('SELECT id FROM students WHERE email = ?', [email]);
+
+    if (adminCheck || facultyCheck || studentCheck) {
+      return res.status(400).json({ message: 'Email already registered.' });
+    }
+
+    const bcrypt = require('bcryptjs');
+    const hash = await bcrypt.hash(password, 10);
+    await run(
+      `UPDATE admins SET full_name = ?, email = ?, password_hash = ?, department = ?, raw_password = ? WHERE id = ?`,
+      [fullName, email, hash, department, password, id]
+    );
+
+    res.json({ message: 'Sub Admin updated successfully.' });
+  } catch (error) {
+    console.error('Update sub-admin error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 // DELETE /api/admin/sub-admins/:id
 router.delete('/sub-admins/:id', async (req, res) => {
   if (req.user.adminRole !== 'main_admin') {

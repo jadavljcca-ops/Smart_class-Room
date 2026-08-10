@@ -86,11 +86,12 @@ function HomeRedirect() {
 // Main App layout container
 function AppLayout() {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   
   return (
-    <>
+    <div className={isAdmin ? 'admin-sidebar-layout' : 'standard-layout'}>
       <Navbar />
-      <main style={{ minHeight: 'calc(100vh - 4.5rem)' }}>
+      <main className={isAdmin ? 'admin-main-content' : ''} style={{ minHeight: 'calc(100vh - 4.5rem)', width: '100%' }}>
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
@@ -193,7 +194,7 @@ function AppLayout() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-    </>
+    </div>
   );
 }
 

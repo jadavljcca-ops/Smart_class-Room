@@ -2,7 +2,7 @@ import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Plus, Trash2, RefreshCw, Lock, Mail, User, School, Eye, EyeOff } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, Lock, Mail, User, School, Eye, EyeOff, Edit2 } from 'lucide-react';
 
 export default function SubAdminsManagement() {
   const { authFetch } = useAuth();
@@ -18,6 +18,7 @@ export default function SubAdminsManagement() {
   const [password, setPassword] = useState('');
   const [department, setDepartment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   // Department creation inline modal state
   const [showAddDeptModal, setShowAddDeptModal] = useState(false);
@@ -70,28 +71,44 @@ export default function SubAdminsManagement() {
 
     setSubmitting(true);
     try {
-      const res = await authFetch('/admin/sub-admins', {
-        method: 'POST',
+      const url = editingId ? `/admin/sub-admins/${editingId}` : '/admin/sub-admins';
+      const method = editingId ? 'PUT' : 'POST';
+      
+      const res = await authFetch(url, {
+        method: method,
         body: JSON.stringify({ fullName, email, password, department })
       });
       const data = await res.json();
 
       if (res.ok) {
-        showToast(data.message || 'Sub Admin created successfully!', 'success');
-        setFullName('');
-        setEmail('');
-        setPassword('');
-        setDepartment('');
+        showToast(data.message || `Sub Admin ${editingId ? 'updated' : 'created'} successfully!`, 'success');
+        resetForm();
         fetchSubAdmins();
       } else {
-        showToast(data.message || 'Failed to create sub admin.', 'error');
+        showToast(data.message || `Failed to ${editingId ? 'update' : 'create'} sub admin.`, 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast('Network error creating sub admin.', 'error');
+      showToast('Network error saving sub admin.', 'error');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setFullName('');
+    setEmail('');
+    setPassword('');
+    setDepartment('');
+    setEditingId(null);
+  };
+
+  const handleEditClick = (admin) => {
+    setEditingId(admin.id);
+    setFullName(admin.full_name);
+    setEmail(admin.email);
+    setPassword(admin.raw_password || '');
+    setDepartment(admin.department);
   };
 
   const handleCreateDepartmentInline = async () => {
@@ -177,10 +194,15 @@ export default function SubAdminsManagement() {
         {/* Left Column: Create Sub Admin */}
         <div>
           <div className="card">
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Plus size={20} color="hsl(var(--primary))" />
-              Add Sub-Admin
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Plus size={20} color="hsl(var(--primary))" />
+                {editingId ? 'Edit Sub-Admin' : 'Add Sub-Admin'}
+              </h3>
+              {editingId && (
+                <button type="button" onClick={resetForm} className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}>Cancel Edit</button>
+              )}
+            </div>
             
             <form onSubmit={handleAddSubAdmin}>
               {/* Full Name */}
@@ -297,7 +319,7 @@ export default function SubAdminsManagement() {
                 style={{ width: '100%', marginTop: '0.5rem' }}
                 disabled={submitting}
               >
-                {submitting ? 'Creating...' : 'Register Sub-Admin'}
+                {submitting ? 'Saving...' : (editingId ? 'Update Sub-Admin' : 'Register Sub-Admin')}
               </button>
             </form>
           </div>
@@ -342,7 +364,19 @@ export default function SubAdminsManagement() {
                       <td style={{ fontSize: '0.85rem', color: 'hsl(var(--muted))' }}>
                         {new Date(admin.created_at).toLocaleDateString()}
                       </td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => handleEditClick(admin)}
+                          className="btn btn-secondary"
+                          style={{ 
+                            padding: '0.4rem', 
+                            color: 'hsl(var(--primary))',
+                            borderColor: 'transparent'
+                          }}
+                          title="Edit Sub-Admin"
+                        >
+                          <Edit2 size={16} />
+                        </button>
                         <button
                           onClick={() => handleDeleteSubAdmin(admin.id, admin.full_name)}
                           className="btn btn-secondary"

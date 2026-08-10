@@ -740,3 +740,79 @@ tr:hover td {
 .swal-custom-delete-cancel:hover {
   background: rgba(255, 255, 255, 0.12) !important;
 }
+
+/* Sidebar mode for Admin */
+@media (min-width: 769px) {
+  .admin-sidebar-layout {
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  .admin-sidebar-layout .navbar {
+    width: 250px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: none;
+  }
+  
+  .admin-sidebar-layout .navbar-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    height: 100%;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
+  .admin-sidebar-layout .desktop-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 0.5rem !important;
+    margin-top: 1rem;
+    flex: 1;
+  }
+  
+  .admin-sidebar-layout .nav-link {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+
+  .admin-sidebar-layout .nav-link:hover, 
+  .admin-sidebar-layout .nav-link.active {
+    background-color: hsl(var(--card) / 0.8);
+    color: hsl(var(--primary));
+  }
+  
+  /* Right side controls */
+  .admin-sidebar-layout .navbar-inner > div:last-child {
+    width: 100%;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  /* Make profile dropdown expand upwards or rightwards */
+  .admin-sidebar-layout .dropdown-menu {
+    top: auto !important;
+    bottom: 100% !important;
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .admin-main-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100vh;
+  }
+}

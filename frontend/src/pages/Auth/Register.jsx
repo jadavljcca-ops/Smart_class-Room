@@ -85,14 +85,8 @@ export default function Register() {
     try {
       const message = await register(payload);
       // Successful registration
-      setShowSuccessPopup(true);
-      
-
-
-      setTimeout(() => {
-        setShowSuccessPopup(false);
-        navigate('/login');
-      }, 3000);
+      // Navigate immediately without popup
+      navigate('/login');
     } catch (err) {
       console.error(err);
       showToast(err.message || 'Registration failed. Try again.', 'error');

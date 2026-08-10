@@ -535,7 +535,7 @@ export default function FacultyDashboard() {
           position: 'fixed',
           top: 0, left: 0, width: '100vw', height: '100vh',
           backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000, padding: '2rem 1rem', overflowY: 'auto'
         }}>
           <div className="card animate-fade-in" style={{ margin: 'auto', width: '100%', maxWidth: '520px', padding: '2rem', backgroundColor: 'hsl(var(--card))' }}>

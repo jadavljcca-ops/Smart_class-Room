@@ -29,20 +29,14 @@ export default function Login() {
       const user = await login(identifier, password);
       showToast(`Welcome back, ${user.fullName}!`, 'success');
       setLoggedInUser(user);
-      setShowSuccessPopup(true);
 
-
-      // Wait for 3 seconds with blurred background popup before navigating
-      setTimeout(() => {
-        setShowSuccessPopup(false);
-        if (user.role === 'admin') {
-          navigate('/admin');
-        } else if (user.role === 'faculty') {
-          navigate('/faculty');
-        } else if (user.role === 'student') {
-          navigate('/student');
-        }
-      }, 3000);
+      if (user.role === 'admin' || user.role === 'faculty') {
+        if (user.role === 'admin') navigate('/admin');
+        if (user.role === 'faculty') navigate('/faculty');
+      } else {
+        // Navigate immediately without popup for all users
+        if (user.role === 'student') navigate('/student');
+      }
     } catch (err) {
       console.error(err);
       showToast(err.message || 'Login failed. Please check credentials.', 'error');
@@ -56,8 +50,8 @@ export default function Login() {
         <div className="auth-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ backgroundColor: 'hsl(var(--primary))', color: '#020617', borderRadius: '1.25rem', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '4.5rem', height: '4.5rem', marginBottom: '0.75rem', boxShadow: '0 10px 25px -5px rgba(245,158,11,0.3)' }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/>
-              <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+              <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+              <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
             </svg>
           </div>
           <div className="auth-logo" style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em' }}>

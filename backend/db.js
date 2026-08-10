@@ -7,11 +7,15 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
-  }
+  },
+  keepAlive: true,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 15000,
+  max: 20
 });
 
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
+pool.on('error', (err, client) => {
+  console.error('Unexpected error on idle pg client', err);
 });
 
 // SQLite translates '?' to PostgreSQL '$1, $2, etc.'
@@ -20,33 +24,47 @@ function translateQuery(sql) {
   return sql.replace(/\?/g, () => `$${paramIndex++}`);
 }
 
+async function executeWithRetry(fn, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === retries) throw err;
+      console.warn(`[DB Retry] Query failed (${err.code || err.message}). Retrying ${i + 1}/${retries}...`);
+      await new Promise(r => setTimeout(r, 500 * (i + 1)));
+    }
+  }
+}
+
 async function query(sql, params = []) {
   const translatedSql = translateQuery(sql);
-  const result = await pool.query(translatedSql, params);
-  return result.rows;
+  return executeWithRetry(async () => {
+    const result = await pool.query(translatedSql, params);
+    return result.rows;
+  });
 }
 
 async function run(sql, params = []) {
   let translatedSql = translateQuery(sql);
   
-  // If it's an INSERT statement without RETURNING, append RETURNING id
   if (translatedSql.trim().toUpperCase().startsWith('INSERT') && !translatedSql.toUpperCase().includes('RETURNING')) {
     translatedSql += ' RETURNING id';
   }
 
-  const result = await pool.query(translatedSql, params);
-  
-  // Simulate sqlite's this.lastID and this.changes
-  const changes = result.rowCount;
-  const id = result.rows.length > 0 && result.rows[0].id ? result.rows[0].id : null;
-  
-  return { id, changes };
+  return executeWithRetry(async () => {
+    const result = await pool.query(translatedSql, params);
+    const changes = result.rowCount;
+    const id = result.rows.length > 0 && result.rows[0].id ? result.rows[0].id : null;
+    return { id, changes };
+  });
 }
 
 async function get(sql, params = []) {
   const translatedSql = translateQuery(sql);
-  const result = await pool.query(translatedSql, params);
-  return result.rows[0];
+  return executeWithRetry(async () => {
+    const result = await pool.query(translatedSql, params);
+    return result.rows[0];
+  });
 }
 
 async function initializeTables() {
