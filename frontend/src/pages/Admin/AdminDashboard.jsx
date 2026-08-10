@@ -275,8 +275,16 @@ export default function AdminDashboard() {
                     border: '1px solid hsl(var(--border) / 0.8)',
                     transition: 'all 0.2s',
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.6)';
+                    e.currentTarget.style.boxShadow = '0 12px 28px -6px rgba(245, 158, 11, 0.35), 0 0 18px rgba(245, 158, 11, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.borderColor = 'hsl(var(--border) / 0.8)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                 >
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '1.3rem', color: 'hsl(var(--primary))' }}>{dept}</div>
