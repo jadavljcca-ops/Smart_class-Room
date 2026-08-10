@@ -169,8 +169,8 @@ export default function Navbar() {
 
           {user ? (
             <>
-              {/* Notifications Trigger - Hidden for admins as it's in their dashboard now */}
-              {user.role !== 'admin' && (
+              {/* Notifications Trigger - Hidden inside /admin routes as it's in their dashboard */}
+              {!location.pathname.startsWith('/admin') && (
                 <NotificationMenu />
               )}
 
