@@ -317,9 +317,6 @@ export default function FacultyDashboard() {
     );
   });
 
-  const totalDownloads = notes.reduce((sum, n) => sum + (n.download_count || 0), 0);
-
-
   return (
     <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
       
@@ -339,16 +336,6 @@ export default function FacultyDashboard() {
             <div className="card-value">{notes.length}</div>
             <div style={{ color: 'hsl(var(--primary))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--primary) / 0.1)' }}>
               <FileText size={24} />
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-title">Total Note Downloads</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-            <div className="card-value">{totalDownloads}</div>
-            <div style={{ color: 'hsl(var(--success))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--success) / 0.1)' }}>
-              <Download size={24} />
             </div>
           </div>
         </div>
