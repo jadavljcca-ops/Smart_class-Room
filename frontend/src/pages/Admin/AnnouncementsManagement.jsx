@@ -26,6 +26,7 @@ export default function AnnouncementsManagement({ department: propDepartment }) 
   const [priority, setPriority] = useState('Medium');
   const [attachment, setAttachment] = useState(null); // File object
   const [existingAttachmentName, setExistingAttachmentName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchAnnouncements = async () => {
     setLoading(true);
@@ -117,6 +118,7 @@ export default function AnnouncementsManagement({ department: propDepartment }) 
       formData.append('attachment', attachment);
     }
 
+    setSubmitting(true);
     try {
       const res = await authFetch(url, {
         method,
@@ -134,6 +136,8 @@ export default function AnnouncementsManagement({ department: propDepartment }) 
     } catch (err) {
       console.error(err);
       showToast('Network error saving announcement.', 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -466,10 +470,22 @@ export default function AnnouncementsManagement({ department: propDepartment }) 
                 <button 
                   type="submit" 
                   className="btn btn-primary" 
-                  style={{ flex: 1 }}
+                  style={{ 
+                    flex: 1,
+                    opacity: submitting ? 0.7 : 1,
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    pointerEvents: submitting ? 'none' : 'auto'
+                  }}
+                  disabled={submitting}
                 >
-                  <Save size={16} />
-                  {editingId ? 'Update Notice' : 'Publish Notice'}
+                  {submitting ? (
+                    editingId ? 'Updating Notice...' : 'Publishing Notice...'
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      {editingId ? 'Update Notice' : 'Publish Notice'}
+                    </>
+                  )}
                 </button>
               </div>
             </form>

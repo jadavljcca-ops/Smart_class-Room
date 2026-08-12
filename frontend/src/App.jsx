@@ -102,7 +102,7 @@ function AppLayout() {
           <Route 
             path="/change-password" 
             element={
-              <RequireAuth>
+              <RequireAuth allowedRoles={['admin', 'faculty']}>
                 <ChangePassword />
               </RequireAuth>
             } 

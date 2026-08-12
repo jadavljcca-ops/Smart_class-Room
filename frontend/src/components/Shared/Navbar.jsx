@@ -219,25 +219,27 @@ export default function Navbar() {
                       </div>
                     </div>
 
-                    <Link 
-                      to="/change-password" 
-                      onClick={() => setShowProfileMenu(false)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.5rem',
-                        borderRadius: '6px',
-                        textDecoration: 'none',
-                        color: 'inherit',
-                        fontSize: '0.85rem',
-                        cursor: 'pointer'
-                      }}
-                      className="dropdown-item"
-                    >
-                      <Key size={14} />
-                      Change Password
-                    </Link>
+                    {user.role !== 'student' && (
+                      <Link 
+                        to="/change-password" 
+                        onClick={() => setShowProfileMenu(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem',
+                          borderRadius: '6px',
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          fontSize: '0.85rem',
+                          cursor: 'pointer'
+                        }}
+                        className="dropdown-item"
+                      >
+                        <Key size={14} />
+                        Change Password
+                      </Link>
+                    )}
 
                     <button 
                       onClick={handleLogout}
@@ -427,9 +429,11 @@ export default function Navbar() {
                     {user.role} {user.department ? `| ${user.department}` : ''}
                   </div>
                 </div>
-                <Link to="/change-password" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}>
-                  <Key size={15} /> Change Password
-                </Link>
+                {user.role !== 'student' && (
+                  <Link to="/change-password" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}>
+                    <Key size={15} /> Change Password
+                  </Link>
+                )}
                 <button onClick={() => { handleLogout(); setIsOpen(false); }} className="btn btn-danger" style={{ width: '100%', justifyContent: 'flex-start', border: 'none', padding: '0.6rem 1rem' }}>
                   <LogOut size={15} /> Logout
                 </button>

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { query, run, get } = require('../db');
+const { query, run, get, insertBatchNotifications } = require('../db');
 const { authenticateToken, requireFaculty } = require('../middleware/auth');
 const upload = require('../utils/uploader');
 
@@ -29,7 +29,9 @@ router.post('/notes', upload.array('files'), async (req, res) => {
   const { subjectName, department: bodyDept, semester, unitNumber, description } = req.body;
   const department = bodyDept || req.user.department;
 
-  if (!subjectName || !department || !semester || !unitNumber || !description) {
+  const unit = unitNumber || '1';
+
+  if (!subjectName || !department || !semester || !description) {
     return res.status(400).json({ message: 'Please provide all required fields.' });
   }
 
@@ -47,23 +49,23 @@ router.post('/notes', upload.array('files'), async (req, res) => {
       await run(
         `INSERT INTO notes (faculty_id, faculty_name, subject_name, department, semester, unit_number, description, file_path, file_name, file_type)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [facultyId, facultyName, subjectName, department, semester, unitNumber, description, filePath, fileName, fileType]
+        [facultyId, facultyName, subjectName, department, semester, unit, description, filePath, fileName, fileType]
       );
     }
 
-    // Send personalized notification to students of this department AND semester
-    const notifyMsg = `New note files uploaded: ${subjectName} (Unit ${unitNumber}) by Prof. ${facultyName}`;
+    // Send personalized notification to students of this department AND semester via batch insert
+    const notifyMsg = `New note files uploaded: ${subjectName} by Prof. ${facultyName}`;
     const targetStudents = await query(
       "SELECT id FROM students WHERE department = ? AND semester = ? AND status = 'Approved'",
       [department, semester]
     );
     
-    for (const student of targetStudents) {
-      await run(
-        `INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`,
-        ['Student', student.id, notifyMsg]
-      );
-    }
+    const notifs = targetStudents.map(student => ({
+      user_role: 'Student',
+      user_id: student.id,
+      message: notifyMsg
+    }));
+    await insertBatchNotifications(notifs);
 
     res.status(201).json({ message: 'Notes uploaded successfully.' });
   } catch (error) {
@@ -79,7 +81,9 @@ router.put('/notes/:id', upload.single('file'), async (req, res) => {
   const { subjectName, department: bodyDept, semester, unitNumber, description } = req.body;
   const department = bodyDept || req.user.department;
 
-  if (!subjectName || !department || !semester || !unitNumber || !description) {
+  const unit = unitNumber || '1';
+
+  if (!subjectName || !department || !semester || !description) {
     return res.status(400).json({ message: 'Please provide all required fields.' });
   }
 
@@ -106,7 +110,7 @@ router.put('/notes/:id', upload.single('file'), async (req, res) => {
     await run(
       `UPDATE notes SET subject_name = ?, department = ?, semester = ?, unit_number = ?, description = ?, file_path = ?, file_name = ?, file_type = ?
        WHERE id = ?`,
-      [subjectName, department, semester, unitNumber, description, filePath, fileName, fileType, id]
+      [subjectName, department, semester, unit, description, filePath, fileName, fileType, id]
     );
 
     res.json({ message: 'Note updated successfully.' });
@@ -181,19 +185,19 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
       [title, description, department, attachmentPath, attachmentName, publishDate, expiryDate, priority || 'Medium']
     );
 
-    // Send personalized notification to students of this department
+    // Send personalized notification to students and admins via batch insert
     const notifyMsg = `New Announcement from Prof. ${facultyName}: ${title}`;
     
-    const targetStudents = await query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]);
-    for (const student of targetStudents) {
-      await run(`INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`, ['Student', student.id, notifyMsg]);
-    }
+    const [targetStudents, targetAdmins] = await Promise.all([
+      query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]),
+      query("SELECT id FROM admins")
+    ]);
     
-    // Also notify all admins
-    const targetAdmins = await query("SELECT id FROM admins");
-    for (const admin of targetAdmins) {
-      await run(`INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`, ['Admin', admin.id, notifyMsg]);
-    }
+    const notifs = [
+      ...targetStudents.map(s => ({ user_role: 'Student', user_id: s.id, message: notifyMsg })),
+      ...targetAdmins.map(a => ({ user_role: 'Admin', user_id: a.id, message: notifyMsg }))
+    ];
+    await insertBatchNotifications(notifs);
 
     res.status(201).json({ message: 'Announcement created successfully.' });
   } catch (error) {

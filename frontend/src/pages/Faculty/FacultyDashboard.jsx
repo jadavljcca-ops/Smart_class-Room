@@ -25,13 +25,14 @@ export default function FacultyDashboard() {
   const [subjectName, setSubjectName] = useState('');
   const [department, setDepartment] = useState(user?.department || '');
   const [semester, setSemester] = useState('1');
-  const [unitNumber, setUnitNumber] = useState('1');
   const [description, setDescription] = useState('');
   const [noteFiles, setNoteFiles] = useState([]);
   const [existingFileName, setExistingFileName] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   // Announcement Form state
   const [showAnnForm, setShowAnnForm] = useState(false);
+  const [savingAnn, setSavingAnn] = useState(false);
   const [annTitle, setAnnTitle] = useState('');
   const [annDescription, setAnnDescription] = useState('');
   const [annPriority, setAnnPriority] = useState('Medium');
@@ -100,7 +101,6 @@ export default function FacultyDashboard() {
     setSubjectName('');
     setDepartment(user?.department || '');
     setSemester('1');
-    setUnitNumber('1');
     setDescription('');
     setNoteFiles([]);
     setExistingFileName('');
@@ -112,7 +112,6 @@ export default function FacultyDashboard() {
     setSubjectName(note.subject_name);
     setDepartment(note.department);
     setSemester(note.semester);
-    setUnitNumber(note.unit_number);
     setDescription(note.description);
     setNoteFiles([]);
     setExistingFileName(note.file_name || '');
@@ -122,7 +121,7 @@ export default function FacultyDashboard() {
   const handleSaveNote = async (e) => {
     e.preventDefault();
 
-    if (!subjectName || !department || !semester || !unitNumber || !description) {
+    if (!subjectName || !department || !semester || !description) {
       showToast('Please provide all required fields.', 'warning');
       return;
     }
@@ -140,7 +139,7 @@ export default function FacultyDashboard() {
     formData.append('subjectName', subjectName);
     formData.append('department', department);
     formData.append('semester', semester);
-    formData.append('unitNumber', unitNumber);
+    formData.append('unitNumber', '1');
     formData.append('description', description);
 
     if (isEditing) {
@@ -153,6 +152,7 @@ export default function FacultyDashboard() {
       }
     }
 
+    setSavingNote(true);
     try {
       const res = await authFetch(url, {
         method,
@@ -170,6 +170,8 @@ export default function FacultyDashboard() {
     } catch (err) {
       console.error(err);
       showToast('Network error saving note.', 'error');
+    } finally {
+      setSavingNote(false);
     }
   };
 
@@ -188,6 +190,7 @@ export default function FacultyDashboard() {
     formData.append('expiryDate', annExpiryDate);
     if (annAttachment) formData.append('attachment', annAttachment);
 
+    setSavingAnn(true);
     try {
       const res = await authFetch('/faculty/announcements', {
         method: 'POST',
@@ -208,6 +211,8 @@ export default function FacultyDashboard() {
     } catch (err) {
       console.error(err);
       showToast('Network error saving announcement.', 'error');
+    } finally {
+      setSavingAnn(false);
     }
   };
 
@@ -306,14 +311,12 @@ export default function FacultyDashboard() {
     const subject = n.subject_name || '';
     const desc = n.description || '';
     const sem = String(n.semester || '');
-    const unit = String(n.unit_number || '');
     const search = (notesSearch || '').toLowerCase();
     
     return (
       subject.toLowerCase().includes(search) ||
       desc.toLowerCase().includes(search) ||
-      sem.includes(search) ||
-      unit.includes(search)
+      sem.includes(search)
     );
   });
 
@@ -395,7 +398,6 @@ export default function FacultyDashboard() {
                     <div>
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span className="badge badge-low" style={{ fontSize: '0.7rem' }}>Sem {note.semester}</span>
-                        <span className="badge badge-medium" style={{ fontSize: '0.7rem' }}>Unit {note.unit_number}</span>
                         <span style={{ fontSize: '0.75rem', color: 'hsl(var(--muted))', fontWeight: 600 }}>{note.file_type.toUpperCase()} File</span>
                       </div>
                       <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginTop: '0.4rem' }}>{note.subject_name}</h3>
@@ -551,7 +553,7 @@ export default function FacultyDashboard() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Department</label>
                   <select
@@ -576,20 +578,6 @@ export default function FacultyDashboard() {
                   >
                     {[1,2,3,4,5,6,7,8].map(s => (
                       <option key={s} value={s}>Sem {s}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Unit Number</label>
-                  <select
-                    className="form-control"
-                    value={unitNumber}
-                    onChange={(e) => setUnitNumber(e.target.value)}
-                    required
-                  >
-                    {[1,2,3,4,5,6,7,8].map(u => (
-                      <option key={u} value={u}>Unit {u}</option>
                     ))}
                   </select>
                 </div>
@@ -664,10 +652,22 @@ export default function FacultyDashboard() {
                 <button 
                   type="submit" 
                   className="btn btn-primary" 
-                  style={{ flex: 1 }}
+                  style={{ 
+                    flex: 1,
+                    opacity: savingNote ? 0.7 : 1,
+                    cursor: savingNote ? 'not-allowed' : 'pointer',
+                    pointerEvents: savingNote ? 'none' : 'auto'
+                  }}
+                  disabled={savingNote}
                 >
-                  <Save size={16} />
-                  {editingNoteId ? 'Update Note' : 'Upload Note'}
+                  {savingNote ? (
+                    'Uploading Notes...'
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      {editingNoteId ? 'Update Note' : 'Upload Note'}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -784,10 +784,22 @@ export default function FacultyDashboard() {
                 <button 
                   type="submit" 
                   className="btn btn-primary" 
-                  style={{ flex: 1 }}
+                  style={{ 
+                    flex: 1,
+                    opacity: savingAnn ? 0.7 : 1,
+                    cursor: savingAnn ? 'not-allowed' : 'pointer',
+                    pointerEvents: savingAnn ? 'none' : 'auto'
+                  }}
+                  disabled={savingAnn}
                 >
-                  <Save size={16} />
-                  Publish Notice
+                  {savingAnn ? (
+                    'Publishing Notice...'
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      Publish Notice
+                    </>
+                  )}
                 </button>
               </div>
             </form>

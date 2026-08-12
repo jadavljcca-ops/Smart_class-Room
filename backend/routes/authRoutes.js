@@ -132,8 +132,14 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    // 1. Check Admin (usually login by email)
-    const admin = await get('SELECT * FROM admins WHERE email = ?', [identifier]);
+    // 1. Fetch user records in parallel for instant login performance
+    const [admin, faculty, student, request] = await Promise.all([
+      get('SELECT * FROM admins WHERE email = ?', [identifier]),
+      get('SELECT * FROM faculty WHERE employee_id = ? OR email = ?', [identifier, identifier]),
+      get('SELECT * FROM students WHERE enrollment_number = ? OR email = ?', [identifier, identifier]),
+      get('SELECT * FROM registration_requests WHERE email = ? OR enrollment_number = ? OR employee_id = ?', [identifier, identifier, identifier])
+    ]);
+
     if (admin) {
       const match = await bcrypt.compare(password, admin.password_hash);
       if (match) {
@@ -163,8 +169,6 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // 2. Check Faculty (login by employee_id or email)
-    const faculty = await get('SELECT * FROM faculty WHERE employee_id = ? OR email = ?', [identifier, identifier]);
     if (faculty) {
       const match = await bcrypt.compare(password, faculty.password_hash);
       if (match) {
@@ -199,8 +203,6 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // 3. Check Student (login by enrollment_number or email)
-    const student = await get('SELECT * FROM students WHERE enrollment_number = ? OR email = ?', [identifier, identifier]);
     if (student) {
       const match = await bcrypt.compare(password, student.password_hash);
       if (match) {
@@ -239,8 +241,6 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // 4. Check Registration Requests Table for Pending Status message specificity
-    const request = await get('SELECT * FROM registration_requests WHERE email = ? OR enrollment_number = ? OR employee_id = ?', [identifier, identifier, identifier]);
     if (request) {
       const match = await bcrypt.compare(password, request.password_hash);
       if (match) {
@@ -277,7 +277,9 @@ router.post('/change-password', authenticateToken, async (req, res) => {
     let tableName = '';
     if (role === 'admin') tableName = 'admins';
     else if (role === 'faculty') tableName = 'faculty';
-    else if (role === 'student') tableName = 'students';
+    else if (role === 'student') {
+      return res.status(403).json({ message: 'Students are not allowed to change their password.' });
+    }
     else return res.status(400).json({ message: 'Invalid token role.' });
 
     const user = await get(`SELECT * FROM ${tableName} WHERE id = ?`, [id]);

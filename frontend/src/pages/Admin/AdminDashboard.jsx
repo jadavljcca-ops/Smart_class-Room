@@ -628,7 +628,6 @@ export default function AdminDashboard() {
                       <th>Subject Name</th>
                       <th>Department</th>
                       <th style={{ textAlign: 'center' }}>Sem</th>
-                      <th style={{ textAlign: 'center' }}>Unit</th>
                       <th>File Name</th>
                       <th>Uploaded By</th>
                       <th>Upload Date & Time</th>
@@ -642,9 +641,6 @@ export default function AdminDashboard() {
                         <td>{note.department}</td>
                         <td style={{ textAlign: 'center' }}>
                           <span className="badge badge-low">{note.semester}</span>
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                          <span className="badge badge-medium">{note.unit_number}</span>
                         </td>
                         <td style={{ fontSize: '0.825rem', color: 'hsl(var(--muted))' }}>{note.file_name}</td>
                         <td style={{ fontWeight: 600, color: 'hsl(var(--primary))' }}>Prof. {note.faculty_name}</td>

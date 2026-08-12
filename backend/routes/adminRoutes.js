@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { query, run, get } = require('../db');
+const { query, run, get, insertBatchNotifications } = require('../db');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const upload = require('../utils/uploader');
 
@@ -300,26 +300,29 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
       [title, description, department || 'All', attachmentPath, attachmentName, publishDate, expiryDate, priority || 'Medium']
     );
 
-    // Send personalized notification to students and faculty
+    // Send personalized notification to students and faculty via batch insert
     const notifyMsg = `New Announcement: ${title}`;
     
     let targetStudents = [];
     let targetFaculty = [];
     
     if (department && department !== 'All') {
-      targetStudents = await query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]);
-      targetFaculty = await query("SELECT id FROM faculty WHERE department = ? AND status = 'Approved'", [department]);
+      [targetStudents, targetFaculty] = await Promise.all([
+        query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]),
+        query("SELECT id FROM faculty WHERE department = ? AND status = 'Approved'", [department])
+      ]);
     } else {
-      targetStudents = await query("SELECT id FROM students WHERE status = 'Approved'");
-      targetFaculty = await query("SELECT id FROM faculty WHERE status = 'Approved'");
+      [targetStudents, targetFaculty] = await Promise.all([
+        query("SELECT id FROM students WHERE status = 'Approved'"),
+        query("SELECT id FROM faculty WHERE status = 'Approved'")
+      ]);
     }
 
-    for (const student of targetStudents) {
-      await run(`INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`, ['Student', student.id, notifyMsg]);
-    }
-    for (const faculty of targetFaculty) {
-      await run(`INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`, ['Faculty', faculty.id, notifyMsg]);
-    }
+    const notifs = [
+      ...targetStudents.map(s => ({ user_role: 'Student', user_id: s.id, message: notifyMsg })),
+      ...targetFaculty.map(f => ({ user_role: 'Faculty', user_id: f.id, message: notifyMsg }))
+    ];
+    await insertBatchNotifications(notifs);
 
     res.status(201).json({ message: 'Announcement created successfully.' });
   } catch (error) {

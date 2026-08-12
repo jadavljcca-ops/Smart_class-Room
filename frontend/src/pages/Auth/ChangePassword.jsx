@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Lock, ShieldCheck, Key } from 'lucide-react';
+import { Lock, ShieldCheck, Key, Eye, EyeOff } from 'lucide-react';
 
 export default function ChangePassword() {
   const { changePassword, user } = useAuth();
@@ -12,7 +12,19 @@ export default function ChangePassword() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user?.role === 'student') {
+      showToast('Students are not allowed to change password.', 'error');
+      navigate('/student');
+    }
+  }, [user, navigate, showToast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,9 +45,9 @@ export default function ChangePassword() {
       showToast(msg || 'Password updated successfully!', 'success');
       
       // Redirect back to dashboard based on role
-      if (user.role === 'admin') navigate('/admin');
-      else if (user.role === 'faculty') navigate('/faculty');
-      else if (user.role === 'student') navigate('/student');
+      if (user?.role === 'admin') navigate('/admin');
+      else if (user?.role === 'faculty') navigate('/faculty');
+      else if (user?.role === 'student') navigate('/student');
     } catch (err) {
       console.error(err);
       showToast(err.message || 'Failed to change password. Make sure old password is correct.', 'error');
@@ -45,9 +57,9 @@ export default function ChangePassword() {
   };
 
   const handleCancel = () => {
-    if (user.role === 'admin') navigate('/admin');
-    else if (user.role === 'faculty') navigate('/faculty');
-    else if (user.role === 'student') navigate('/student');
+    if (user?.role === 'admin') navigate('/admin');
+    else if (user?.role === 'faculty') navigate('/faculty');
+    else if (user?.role === 'student') navigate('/student');
   };
 
   return (
@@ -82,14 +94,35 @@ export default function ChangePassword() {
                 <Key size={16} />
               </span>
               <input
-                type="password"
+                type={showOldPassword ? 'text' : 'password'}
                 className="form-control"
                 placeholder="Enter current password"
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
-                style={{ paddingLeft: '2.5rem' }}
+                style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowOldPassword(!showOldPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'hsl(var(--muted))',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.2rem'
+                }}
+                title={showOldPassword ? 'Hide password' : 'Show password'}
+              >
+                {showOldPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
@@ -101,14 +134,35 @@ export default function ChangePassword() {
                 <Lock size={16} />
               </span>
               <input
-                type="password"
+                type={showNewPassword ? 'text' : 'password'}
                 className="form-control"
                 placeholder="Must be at least 6 characters"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                style={{ paddingLeft: '2.5rem' }}
+                style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'hsl(var(--muted))',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.2rem'
+                }}
+                title={showNewPassword ? 'Hide password' : 'Show password'}
+              >
+                {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
@@ -120,14 +174,35 @@ export default function ChangePassword() {
                 <ShieldCheck size={16} />
               </span>
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 className="form-control"
                 placeholder="Confirm new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                style={{ paddingLeft: '2.5rem' }}
+                style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'hsl(var(--muted))',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.2rem'
+                }}
+                title={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 

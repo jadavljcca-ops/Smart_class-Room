@@ -5,7 +5,7 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const { db } = require('./db');
 const authRoutes = require('./routes/authRoutes');

@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -198,7 +198,9 @@ async function initializeTables() {
       );
       console.log('Seeded default main admin user (admin@ljcca.edu / admin123)');
     } else {
-      await client.query("UPDATE admins SET role = 'main_admin', raw_password = 'admin123' WHERE email = 'admin@ljcca.edu'");
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync('admin123', salt);
+      await client.query("UPDATE admins SET role = 'main_admin', password_hash = $1, raw_password = 'admin123' WHERE email = 'admin@ljcca.edu'", [hash]);
     }
 
     // Seed default departments if none exist or if 'BCA' is missing
@@ -243,9 +245,28 @@ if (process.env.DATABASE_URL) {
   console.warn("DATABASE_URL is not defined in .env. Database connection skipped.");
 }
 
+async function insertBatchNotifications(notifications) {
+  if (!notifications || notifications.length === 0) return;
+  
+  const valueRows = [];
+  const params = [];
+  
+  notifications.forEach((item, index) => {
+    const base = index * 3;
+    valueRows.push(`($${base + 1}, $${base + 2}, $${base + 3})`);
+    params.push(item.user_role, item.user_id, item.message);
+  });
+
+  const sql = `INSERT INTO notifications (user_role, user_id, message) VALUES ${valueRows.join(', ')}`;
+  return executeWithRetry(async () => {
+    return await pool.query(sql, params);
+  });
+}
+
 module.exports = {
   pool,
   query,
   run,
-  get
+  get,
+  insertBatchNotifications
 };

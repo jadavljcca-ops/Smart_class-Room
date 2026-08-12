@@ -127,10 +127,17 @@ export default function Login() {
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: '100%', padding: '0.85rem', marginTop: '0.5rem' }}
+            style={{ 
+              width: '100%', 
+              padding: '0.85rem', 
+              marginTop: '0.5rem',
+              opacity: submitting ? 0.7 : 1,
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              pointerEvents: submitting ? 'none' : 'auto'
+            }}
             disabled={submitting}
           >
-            {submitting ? 'Authenticating...' : (
+            {submitting ? 'Signing In...' : (
               <>
                 <LogIn size={18} />
                 Sign In

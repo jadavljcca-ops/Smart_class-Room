@@ -341,7 +341,6 @@ export default function StudentDashboard() {
                     <div style={{ flex: 1, minWidth: '250px' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span className="badge badge-low" style={{ fontSize: '0.7rem' }}>Sem {note.semester}</span>
-                        <span className="badge badge-medium" style={{ fontSize: '0.7rem' }}>Unit {note.unit_number}</span>
                         <span className="badge badge-high" style={{ fontSize: '0.7rem', textTransform: 'capitalize', backgroundColor: 'hsl(var(--accent) / 0.12)', color: 'hsl(var(--accent))', borderColor: 'hsl(var(--accent) / 0.3)' }}>
                           {note.department}
                         </span>
@@ -452,7 +451,6 @@ export default function StudentDashboard() {
                             <div style={{ flex: 1, minWidth: '250px' }}>
                               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                                 <span className="badge badge-low" style={{ fontSize: '0.7rem' }}>Sem {note.semester}</span>
-                                <span className="badge badge-medium" style={{ fontSize: '0.7rem' }}>Unit {note.unit_number}</span>
                                 <span className="badge badge-high" style={{ fontSize: '0.7rem', textTransform: 'capitalize', backgroundColor: 'hsl(var(--accent) / 0.12)', color: 'hsl(var(--accent))', borderColor: 'hsl(var(--accent) / 0.3)' }}>
                                   {note.department}
                                 </span>
