@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import {
   BookOpen, Users, Award, ShieldCheck, Megaphone,
   Download, Upload, ChevronRight, CheckCircle,
-  HelpCircle, Layers, Activity, FileText, ArrowRight, Check
+  HelpCircle, Layers, Activity, FileText, ArrowRight,
+  Sparkles, Check, Globe, Zap, Smartphone, X, Bell
 } from 'lucide-react';
 
 const CountUp = ({ end, duration = 2000, suffix = "", isFloat = false }) => {
@@ -29,12 +30,12 @@ export default function LandingPage() {
   const [activeTab, setActiveTab] = useState('student');
   const [openFaq, setOpenFaq] = useState(null);
   const [stats, setStats] = useState({ students: 5000, faculty: 120, materials: 1500, uptime: 99.9 });
-  
+
   useEffect(() => {
     fetch('http://localhost:5000/api/public/stats')
       .then(res => res.json())
       .then(data => {
-        if(data && typeof data.students === 'number') {
+        if (data && typeof data.students === 'number') {
           setStats(data);
         }
       })
@@ -46,69 +47,76 @@ export default function LandingPage() {
   };
 
   const departments = [
-    { name: 'Computer Engineering', code: 'CE', desc: 'Focuses on software engineering, cloud architecture, and computer networking systems.' },
-    { name: 'Information Technology', code: 'IT', desc: 'Concentrates on database management, cybersecurity, web applications, and analytics.' },
-    { name: 'Civil Engineering', code: 'Civil', desc: 'Deals with planning, designing, and constructing sustainable infrastructure.' },
-    { name: 'Mechanical Engineering', code: 'Mech', desc: 'Covers thermodynamics, fluid dynamics, design, and manufacturing sciences.' },
-    { name: 'Electrical Engineering', code: 'EE', desc: 'Emphasizes power systems, electronics, signaling, and electrical machinery.' },
-    { name: 'Science & Humanities', code: 'S&H', desc: 'Provides core education in physics, chemistry, mathematics, and professional writing.' }
+    { name: 'Computer Engineering', code: 'CE', desc: 'Focuses on software engineering, cloud architecture, AI systems, and computer networking.' },
+    { name: 'Information Technology', code: 'IT', desc: 'Concentrates on database management, cybersecurity, web applications, and data analytics.' },
+    { name: 'Civil Engineering', code: 'Civil', desc: 'Deals with planning, designing, and constructing sustainable modern infrastructure.' },
+    { name: 'Mechanical Engineering', code: 'Mech', desc: 'Covers thermodynamics, fluid dynamics, mechanical design, and robotics.' },
+    { name: 'Electrical Engineering', code: 'EE', desc: 'Emphasizes smart power systems, signal processing, and electrical machinery.' },
+    { name: 'Science & Humanities', code: 'S&H', desc: 'Provides foundational sciences in physics, mathematics, chemistry, and communication.' }
   ];
 
   const features = {
     student: [
-      { icon: <Download size={22} />, title: 'Download Study Material', desc: 'Instantly download unit-wise PDFs, docx, or PPT materials uploaded directly by your department professors.' },
-      { icon: <Megaphone size={22} />, title: 'Immediate Broadcasts', desc: 'Receive high-priority announcements and urgent alerts straight from administration on your dashboard.' },
-      { icon: <Activity size={22} />, title: 'Personalized Feed', desc: 'See notifications specifically tailored to your department, semester, and registered courses.' }
+      { icon: <Download size={24} />, title: 'Download Study Material', desc: 'Instantly download unit-wise PDFs, PPTs, and code materials uploaded directly by your professors with 1-click access.' },
+      { icon: <Megaphone size={24} />, title: 'Immediate Broadcasts', desc: 'Receive high-priority announcements, exam notices, and urgent college alerts straight on your dashboard.' },
+      { icon: <Activity size={24} />, title: 'Personalized Smart Feed', desc: 'See notifications dynamically tailored to your department, semester, and registered subjects in real time.' }
     ],
     faculty: [
-      { icon: <Upload size={22} />, title: 'Upload Notes & Syllabus', desc: 'Easily drag and drop course documents, notes, and instructions categorized by subject and unit.' },
-      { icon: <Users size={22} />, title: 'Download Engagement', desc: 'Track how many students have downloaded your lecture materials to monitor learning progress.' },
-      { icon: <FileText size={22} />, title: 'Notify Your Classes', desc: 'Trigger instant notifications automatically to all students in your department when new notes are live.' }
+      { icon: <Upload size={24} />, title: 'Upload Notes & Syllabus', desc: 'Easily drag and drop course documents, syllabi, and notes categorized by subject and academic unit.' },
+      { icon: <Users size={24} />, title: 'Engagement Insights', desc: 'Monitor how many students have accessed and downloaded your lecture materials to track student progress.' },
+      { icon: <FileText size={24} />, title: 'Notify Classes Instantly', desc: 'Trigger instant notifications automatically to all students in your department when new lectures or notes go live.' }
     ],
     admin: [
-      { icon: <ShieldCheck size={22} />, title: 'Access Control', desc: 'Verify and approve registration requests for new faculty members and students securely.' },
-      { icon: <Layers size={22} />, title: 'Departments Management', desc: 'Quickly set up, rename, or structure college departments and academic boundaries.' },
-      { icon: <Award size={22} />, title: 'Broadcasting Hub', desc: 'Designate announcements as High, Medium, or Low priority with optional file attachments.' }
+      { icon: <ShieldCheck size={24} />, title: 'Role-Based Access Control', desc: 'Verify, approve, or manage registration requests for faculty and students securely with audit history.' },
+      { icon: <Layers size={24} />, title: 'Departments & Sub-Admins', desc: 'Quickly organize academic departments, manage subject hierarchies, and assign sub-admin responsibilities.' },
+      { icon: <Award size={24} />, title: 'Campus Broadcast Hub', desc: 'Designate announcements as High, Medium, or Low priority with optional file attachments and live feeds.' }
     ]
   };
 
   const faqs = [
     { q: 'How do I register for the portal?', a: 'Students and Faculty members can register via the Join link. Once submitted, your registration request goes to the Admin for approval. You will receive access once the admin verifies your details.' },
-    { q: 'What types of file formats are supported for notes?', a: 'Faculty members can upload PDF, Word documents, Powerpoint slides, Excel spreadsheets, and ZIP archives. The max file upload limit is 10MB.' },
+    { q: 'What types of file formats are supported for notes?', a: 'Faculty members can upload PDF, Word documents, PowerPoint slides, Excel spreadsheets, and ZIP archives. The max file upload limit is 10MB.' },
     { q: 'How will I receive notifications about new notes?', a: 'Once a faculty member uploads new notes for your department and semester, a notification is immediately dispatched to your account. You will see a notification badge in the navbar.' },
-    { q: 'Can I change my registered department after sign up?', a: 'To maintain database sanity, you cannot change your department directly. You will need to contact the main administrator at admin@edumark.com to adjust your profile.' }
+    { q: 'Can I change my registered department after sign up?', a: 'To maintain database integrity, you cannot change your department directly. You will need to contact the administrator at admin@edumark.com to adjust your profile.' }
   ];
 
   return (
-    <div className="landing-page animate-fade-in" style={{ overflowX: 'hidden' }}>
+    <div className="landing-page animate-fade-in" style={{ position: 'relative', overflowX: 'hidden' }}>
+
+      {/* Futuristic Glowing Ambient Orbs */}
+      <div className="abstract-blob blob-orb-1 animate-orb-pulse"></div>
+      <div className="abstract-blob blob-orb-2 animate-orb-pulse delay-2"></div>
+      <div className="abstract-blob blob-orb-3 animate-orb-pulse delay-4"></div>
 
       {/* Hero Section */}
-      <section className="hero-section" style={{ position: 'relative', overflow: 'hidden' }}>
-        {/* Animated background blobs */}
-        <div className="blob blob-1"></div>
-        <div className="blob blob-2"></div>
-
+      <section className="hero-section" style={{ position: 'relative', zIndex: 2 }}>
         <div className="container hero-container">
-          <div className="hero-content">
-            <span className="hero-badge">
-              <Activity size={14} style={{ color: 'hsl(var(--primary))' }} />
-              <span>Next-Gen Academic Hub</span>
-            </span>
+          
+          {/* Left Text Column */}
+          <div className="hero-content animate-fade-in-up delay-1">
+            <div className="edumark-badge">
+              <Sparkles size={16} className="spin-slow" style={{ color: '#f59e0b' }} />
+              <span>Next-Gen Academic & Classroom Ecosystem</span>
+            </div>
+
             <h1 className="hero-title">
-              Streamlining Learning & Collaboration for <span className="gradient-text">Edumark</span>
+              Streamlining Learning &amp; Collaboration for <br />
+              <span className="gradient-text animate-gradient-text">Edumark Campus</span>
             </h1>
+
             <p className="hero-subtitle">
-              A comprehensive classroom management ecosystem for students, faculty, and administrators. Access lectures notes, syllabus materials, and real-time updates seamlessly.
+              The unified digital platform for universities and colleges to share study materials, broadcast live announcements, and empower students and faculty with seamless cloud access.
             </p>
+
             <div className="hero-actions">
               {user ? (
-                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="btn btn-primary btn-lg">
-                  Go to your Dashboard <ArrowRight size={18} />
+                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="btn btn-primary btn-lg pulse-primary">
+                  Go to Dashboard <ArrowRight size={20} />
                 </Link>
               ) : (
                 <>
-                  <Link to="/login" className="btn btn-primary btn-lg">
-                    Access Portal <ArrowRight size={18} />
+                  <Link to="/login" className="btn btn-primary btn-lg pulse-primary">
+                    Access Portal <ArrowRight size={20} />
                   </Link>
                   <Link to="/register" className="btn btn-secondary btn-lg">
                     Request Registration
@@ -116,126 +124,198 @@ export default function LandingPage() {
                 </>
               )}
             </div>
+
+            {/* Trust Marks */}
+            <div className="trust-marks">
+              <span className="trust-item">
+                <CheckCircle size={16} style={{ color: '#10b981' }} />
+                <span>Instant Cloud Downloads</span>
+              </span>
+              <span className="trust-item">
+                <CheckCircle size={16} style={{ color: '#10b981' }} />
+                <span>Live Broadcasts</span>
+              </span>
+              <span className="trust-item">
+                <CheckCircle size={16} style={{ color: '#10b981' }} />
+                <span>Verified Faculty Notes</span>
+              </span>
+            </div>
           </div>
 
-          <div className="hero-mockup-wrapper">
-            <div className="hero-mockup-glow"></div>
-            <div className="hero-mockup-card">
-              <div className="mockup-header">
-                <div className="mockup-dots">
-                  <span></span><span></span><span></span>
-                </div>
-                <div className="mockup-title">Edumark Portal Preview</div>
-              </div>
-              <div className="mockup-body">
-                {/* Mock Note Card */}
-                <div className="mock-card">
-                  <div className="mock-card-header">
-                    <div className="mock-icon-bg">
-                      <BookOpen size={18} style={{ color: 'hsl(var(--primary))' }} />
-                    </div>
-                    <div>
-                      <div className="mock-title">Full Stack Web Development</div>
-                      <div className="mock-subtitle">Unit 3: REST API Design & CRUD</div>
-                    </div>
-                  </div>
-                  <div className="mock-details">
-                    <span>PDF Document • 4.2 MB</span>
-                    <span className="mock-badge">Verified Note</span>
-                  </div>
-                  <div className="mock-progress-bar">
-                    <div className="mock-progress" style={{ width: '85%' }}></div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'hsl(var(--muted))' }}>Uploaded by Prof. K. Patel</span>
-                    <button className="btn btn-primary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', borderRadius: '6px' }} disabled>
-                      Download
-                    </button>
-                  </div>
-                </div>
+          {/* Right Visual Floating Showcase Cards */}
+          <div className="hero-visual-content animate-fade-in-up delay-2">
+            <div className="glowing-center-orb animate-orb-pulse"></div>
 
-                {/* Mock Announcement Card */}
-                <div className="mock-card" style={{ borderLeft: '3px solid hsl(var(--danger))' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                    <span className="badge badge-high" style={{ padding: '0.15rem 0.4rem', fontSize: '0.65rem' }}>High Priority</span>
-                    <span style={{ fontSize: '0.65rem', color: 'hsl(var(--muted))' }}>Just now</span>
-                  </div>
-                  <div className="mock-announcement-title">Mid-Semester Syllabus & Schedule</div>
-                  <p style={{ fontSize: '0.75rem', color: 'hsl(var(--muted))', marginTop: '0.2rem' }}>
-                    The schedule for upcoming mid-semester examinations has been updated. Please download the file...
-                  </p>
+            {/* Floating Card 1: Active Lecture Stream */}
+            <div className="glass-panel animate-float shimmer-wrapper hero-floating-card hero-card-1">
+              <div className="card-mini-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <BookOpen size={18} style={{ color: '#f59e0b' }} />
+                  <span>Active Lecture Unit</span>
                 </div>
+                <span className="live-ping-container">
+                  <span className="live-ping-ring"></span>
+                  <span className="live-ping-dot"></span>
+                </span>
               </div>
+              <div className="card-mini-title">Full Stack Web Engineering - CE501</div>
+              <div className="card-mini-data">
+                <span className="data-label">Unit 3: REST API & Cloud Auth</span>
+                <span className="data-value" style={{ color: '#f59e0b' }}>PDF • 4.2 MB</span>
+              </div>
+              <div className="mock-progress-bar" style={{ marginTop: '10px' }}>
+                <div className="mock-progress" style={{ width: '92%' }}></div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>Prof. K. Patel • Computer Eng.</span>
+                <span className="mini-badge-success">Verified Note</span>
+              </div>
+            </div>
+
+            {/* Floating Card 2: Instant Broadcast & Cloud Sync */}
+            <div className="glass-panel animate-float-delayed shimmer-wrapper hero-floating-card hero-card-2">
+              <div className="card-mini-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Zap size={18} style={{ color: '#10b981' }} />
+                  <span>Cloud Synchronization</span>
+                </div>
+                <span className="live-ping-container">
+                  <span className="live-ping-ring" style={{ backgroundColor: '#10b981' }}></span>
+                  <span className="live-ping-dot" style={{ backgroundColor: '#10b981' }}></span>
+                </span>
+              </div>
+              <div className="card-mini-title">Real-Time Database Sync</div>
+              <div className="card-mini-data">
+                <span className="data-label">Latency / Uptime</span>
+                <span className="data-value" style={{ color: '#10b981' }}>99.9% Online (&lt; 20ms)</span>
+              </div>
+            </div>
+
+            {/* Floating Card 3: Priority Notification Alert */}
+            <div className="glass-panel animate-float-reverse shimmer-wrapper hero-floating-card hero-card-3">
+              <div className="card-mini-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Megaphone size={18} style={{ color: '#38bdf8' }} />
+                  <span>Urgent Broadcast</span>
+                </div>
+                <span className="mini-badge" style={{ marginLeft: 'auto' }}>High Priority</span>
+              </div>
+              <div className="card-mini-title">Mid-Semester Exam Schedule & Syllabus</div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                <span className="mini-badge">All Departments</span>
+                <span className="mini-badge-success">Official Announcement</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Stats Banner */}
+      <section id="stats" className="stats-section" style={{ position: 'relative', zIndex: 2 }}>
+        <div className="container">
+          <div className="glass-panel shimmer-wrapper stats-banner animate-fade-in-up delay-3">
+            <div className="stat-box stat-box-hover">
+              <div className="stat-num stat-num-glow">
+                <CountUp end={stats.students} suffix={stats.students > 1000 ? "+" : ""} />
+              </div>
+              <div className="stat-desc">Active Students</div>
+            </div>
+            <div className="stat-divider"></div>
+
+            <div className="stat-box stat-box-hover">
+              <div className="stat-num stat-num-glow">
+                <CountUp end={stats.faculty} suffix={stats.faculty > 100 ? "+" : ""} />
+              </div>
+              <div className="stat-desc">Expert Faculty</div>
+            </div>
+            <div className="stat-divider"></div>
+
+            <div className="stat-box stat-box-hover">
+              <div className="stat-num stat-num-glow">
+                <CountUp end={stats.materials} suffix={stats.materials > 1000 ? "+" : ""} />
+              </div>
+              <div className="stat-desc">Lecture Notes Shared</div>
+            </div>
+            <div className="stat-divider"></div>
+
+            <div className="stat-box stat-box-hover">
+              <div className="stat-num stat-num-glow">
+                <CountUp end={stats.uptime} isFloat={true} suffix="%" />
+              </div>
+              <div className="stat-desc">System Uptime</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section id="stats" className="stats-section">
+      {/* 3 Simple Steps Section (How It Works) */}
+      <section id="how-it-works" className="how-it-works-section" style={{ position: 'relative', zIndex: 2 }}>
         <div className="container">
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-value">
-                <CountUp end={stats.students} suffix={stats.students > 1000 ? "+" : ""} />
-              </div>
-              <div className="stat-label">Active Students</div>
+          <div className="section-header animate-fade-in-up">
+            <h2 className="section-title">How Edumark Works in 3 Simple Steps</h2>
+            <p className="section-subtitle">A seamless pipeline designed for fast notes distribution and instant student notifications.</p>
+          </div>
+
+          <div className="steps-grid">
+            <div className="step-item glass-panel feature-card-hover shimmer-wrapper">
+              <div className="step-icon-wrapper step-icon-glow">1</div>
+              <h3 className="step-title">Faculty Uploads Notes</h3>
+              <p className="step-desc">Professors upload lecture PDFs, PPT slides, and syllabus files categorized by subject and unit.</p>
             </div>
-            <div className="stat-card">
-              <div className="stat-value">
-                <CountUp end={stats.faculty} suffix={stats.faculty > 100 ? "+" : ""} />
-              </div>
-              <div className="stat-label">Expert Faculty</div>
+
+            <div className="step-connector"></div>
+
+            <div className="step-item glass-panel feature-card-hover shimmer-wrapper">
+              <div className="step-icon-wrapper step-icon-glow" style={{ animationDelay: '1s' }}>2</div>
+              <h3 className="step-title">Instant Broadcast</h3>
+              <p className="step-desc">Students in that department and semester automatically receive an instant notification badge and alert.</p>
             </div>
-            <div className="stat-card">
-              <div className="stat-value">
-                <CountUp end={stats.materials} suffix={stats.materials > 1000 ? "+" : ""} />
-              </div>
-              <div className="stat-label">Lecture Notes Shared</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">
-                <CountUp end={stats.uptime} isFloat={true} suffix="%" />
-              </div>
-              <div className="stat-label">System Uptime</div>
+
+            <div className="step-connector"></div>
+
+            <div className="step-item glass-panel feature-card-hover shimmer-wrapper">
+              <div className="step-icon-wrapper step-icon-glow" style={{ animationDelay: '2s' }}>3</div>
+              <h3 className="step-title">1-Click Study Download</h3>
+              <p className="step-desc">Students access their personalized portal on desktop or mobile and download study files instantly.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="features-section">
+      <section id="features" className="features-section" style={{ position: 'relative', zIndex: 2 }}>
         <div className="container">
-          <div className="section-header">
+          <div className="section-header animate-fade-in-up">
             <h2 className="section-title">Designed for Every Campus Role</h2>
-            <p className="section-subtitle">A unified system offering tailored dashboards for all stakeholders in Edumark.</p>
+            <p className="section-subtitle">A unified system offering dedicated workspaces for students, faculty, and administrators.</p>
           </div>
 
           <div className="features-tabs-wrapper">
-            <div className="features-tabs">
+            <div className="features-tabs glass-panel">
               <button
                 className={`tab-btn ${activeTab === 'student' ? 'active' : ''}`}
                 onClick={() => setActiveTab('student')}
               >
-                <Users size={16} /> Students
+                <Users size={18} /> Students
               </button>
               <button
                 className={`tab-btn ${activeTab === 'faculty' ? 'active' : ''}`}
                 onClick={() => setActiveTab('faculty')}
               >
-                <BookOpen size={16} /> Faculty Members
+                <BookOpen size={18} /> Faculty Members
               </button>
               <button
                 className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
                 onClick={() => setActiveTab('admin')}
               >
-                <ShieldCheck size={16} /> Portal Admins
+                <ShieldCheck size={18} /> Portal Admins
               </button>
             </div>
 
             <div className="features-content-grid">
               {features[activeTab].map((feat, index) => (
-                <div key={index} className="feature-card card">
+                <div key={index} className="glass-panel feature-card feature-card-hover shimmer-wrapper">
                   <div className="feature-icon-wrapper">
                     {feat.icon}
                   </div>
@@ -249,21 +329,23 @@ export default function LandingPage() {
       </section>
 
       {/* Departments Section */}
-      <section id="departments" className="departments-section">
+      <section id="departments" className="departments-section" style={{ position: 'relative', zIndex: 2 }}>
         <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">Our Supported Academic Departments</h2>
-            <p className="section-subtitle">Explore notes and announcements filtered dynamically across the major academic departments of the college.</p>
+          <div className="section-header animate-fade-in-up">
+            <h2 className="section-title">Supported Academic Departments</h2>
+            <p className="section-subtitle">Explore notes and announcements filtered dynamically across all engineering and science departments.</p>
           </div>
 
           <div className="departments-grid">
             {departments.map((dept, index) => (
-              <div key={index} className="dept-card card">
+              <div key={index} className="glass-panel dept-card feature-card-hover shimmer-wrapper">
                 <div className="dept-badge">{dept.code}</div>
                 <h3 className="dept-name">{dept.name}</h3>
                 <p className="dept-desc">{dept.desc}</p>
                 <div className="dept-footer">
-                  <span className="dept-link">Explore Material <ChevronRight size={14} /></span>
+                  <span className="dept-link">
+                    Explore Department <ChevronRight size={16} />
+                  </span>
                 </div>
               </div>
             ))}
@@ -272,31 +354,33 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="faq-section">
+      <section id="faq" className="faq-section" style={{ position: 'relative', zIndex: 2 }}>
         <div className="container faq-container">
           <div className="faq-intro">
-            <HelpCircle size={40} className="faq-intro-icon" />
+            <div className="faq-intro-icon-box step-icon-glow">
+              <HelpCircle size={32} style={{ color: '#001b3d' }} />
+            </div>
             <h2 className="faq-title">Frequently Asked Questions</h2>
             <p className="faq-subtitle">
-              Have questions about using the classroom portal? Browse through the quick answers below or contact the support deck.
+              Have questions about using the classroom portal? Browse through quick answers below or contact our administrator desk.
             </p>
-            <div className="faq-support-card card">
-              <div style={{ fontWeight: 700, marginBottom: '0.25rem' }}>Need Direct Assistance?</div>
-              <p style={{ fontSize: '0.85rem', color: 'hsl(var(--muted))', marginBottom: '1rem' }}>
-                For account verification, password resets, or department edits, get in touch.
+            <div className="glass-panel faq-support-card shimmer-wrapper">
+              <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.35rem', color: '#fff' }}>Need Assistance?</div>
+              <p style={{ fontSize: '0.88rem', color: '#94a3b8', marginBottom: '1.2rem', lineHeight: 1.5 }}>
+                For account verification, password resets, or department edits, get in touch directly.
               </p>
-              <a href="mailto:support@edumark.com" className="btn btn-secondary btn-sm" style={{ textDecoration: 'none', width: 'fit-content' }}>
-                Email Support Team
+              <a href="mailto:admin@edumark.com" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+                Email Admin Support
               </a>
             </div>
           </div>
 
           <div className="faq-accordion">
             {faqs.map((faq, index) => (
-              <div key={index} className={`faq-item card ${openFaq === index ? 'open' : ''}`}>
+              <div key={index} className={`glass-panel faq-item shimmer-wrapper ${openFaq === index ? 'open' : ''}`}>
                 <div className="faq-question" onClick={() => toggleFaq(index)}>
                   <span>{faq.q}</span>
-                  <ChevronRight size={18} className="faq-chevron" />
+                  <ChevronRight size={20} className="faq-chevron" />
                 </div>
                 <div className="faq-answer">
                   <p>{faq.a}</p>
@@ -308,25 +392,27 @@ export default function LandingPage() {
       </section>
 
       {/* Campus CTA Section */}
-      <section className="cta-banner-section">
+      <section className="cta-banner-section" style={{ position: 'relative', zIndex: 2 }}>
         <div className="container">
-          <div className="cta-banner-card">
+          <div className="glass-panel shimmer-wrapper cta-banner-card">
             <div className="cta-banner-content">
-              <h2>Join the Edumark Digital Community</h2>
-              <p>Sign up now to access verified notes, campus updates, and assignments tailored to your courses.</p>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.4rem', fontWeight: 800 }}>Join the Edumark Digital Community</h2>
+              <p style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '0.5rem', lineHeight: 1.6 }}>
+                Sign up now to access verified notes, official campus updates, and assignments tailored to your courses.
+              </p>
             </div>
             <div className="cta-banner-actions">
               {user ? (
-                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="btn btn-primary btn-lg" style={{ color: 'black' }}>
-                  Go to Dashboard
+                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="btn btn-primary btn-lg pulse-primary">
+                  Go to Dashboard <ArrowRight size={20} />
                 </Link>
               ) : (
                 <>
-                  <Link to="/register" className="btn btn-primary btn-lg" style={{ color: 'black' }}>
-                    Create Account
+                  <Link to="/register" className="btn btn-primary btn-lg pulse-primary">
+                    Create Account <ArrowRight size={20} />
                   </Link>
-                  <Link to="/login" className="btn btn-secondary btn-lg" style={{ borderColor: 'rgba(255, 255, 255, 0.4)', background: 'rgba(255, 255, 255, 0.1)', color: 'white' }}>
-                    Access Panel
+                  <Link to="/login" className="btn btn-secondary btn-lg">
+                    Access Portal
                   </Link>
                 </>
               )}
@@ -336,28 +422,29 @@ export default function LandingPage() {
       </section>
 
       {/* Footer Section */}
-      <footer className="landing-footer">
+      <footer className="landing-footer" style={{ position: 'relative', zIndex: 2 }}>
         <div className="container footer-grid">
           <div className="footer-brand">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <div style={{ backgroundColor: 'hsl(var(--primary))', color: '#020617', borderRadius: '12px', padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.6rem', height: '2.6rem' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.2rem' }}>
+              <div style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '12px', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.8rem', height: '2.8rem', boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#001b3d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/>
                   <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
                 </svg>
               </div>
-              <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>
-                <span style={{ color: 'white' }}>Edu</span><span style={{ color: 'hsl(var(--primary))' }}>Mark</span>
+              <span style={{ fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em' }}>
+                <span style={{ color: 'white' }}>Edu</span><span style={{ color: '#f59e0b' }}>Mark</span>
               </span>
             </div>
-            <p style={{ fontSize: '0.85rem', color: 'hsl(var(--muted))', lineHeight: 1.6 }}>
-              Edumark classroom system streamlines notes downloads, assignments tracking, and official notifications for students and faculty.
+            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
+              Edumark classroom system streamlines notes downloads, syllabus sharing, and official notifications for students and faculty across all college departments.
             </p>
           </div>
           <div className="footer-links-col">
             <h4>Quick Links</h4>
             <a href="/#features">Features</a>
             <a href="/#stats">Statistics</a>
+            <a href="/#how-it-works">How It Works</a>
             <a href="/#departments">Departments</a>
             <a href="/#faq">FAQs</a>
           </div>
@@ -369,822 +456,800 @@ export default function LandingPage() {
           </div>
           <div className="footer-links-col">
             <h4>Campus Address</h4>
-            <p style={{ fontSize: '0.85rem', color: 'hsl(var(--muted))', lineHeight: 1.6 }}>
-              Tibrewal Commerce College, NEAR NEW, IIM Rd, Vastrapur, Ahmedabad, Gujarat 380015
+            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
+              LJ University Campus, S.G. Road, Ahmedabad, Gujarat 382210
             </p>
           </div>
         </div>
-        <div className="container footer-bottom" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
-          <p>© {new Date().getFullYear()} Edumark. All rights reserved.</p>
-          <p style={{ fontSize: '1rem', color: 'orange', textAlign: 'center', marginTop: '0.25rem' }}>
-            This Module Built and Designed By <span style={{ fontWeight: 'bold' }}>Jadav Dashrath</span> And <span style={{ fontWeight: 'bold' }}>Dabhi Prit</span>
+        <div className="container footer-bottom" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
+          <p>© {new Date().getFullYear()} Edumark System. All rights reserved.</p>
+          <p style={{ fontSize: '0.95rem', color: '#f59e0b', textAlign: 'center', marginTop: '0.25rem' }}>
+            Built &amp; Designed with Modern Academic Architecture
           </p>
         </div>
       </footer>
 
-      {/* Beautiful Landing Page Specific CSS */}
+      {/* High-End Component Scoped Styles & Animations */}
       <style>{`
-        /* Floating Background Blobs */
-        .blob {
+        /* Ambient Blobs */
+        .abstract-blob {
           position: absolute;
           border-radius: 50%;
-          filter: blur(80px);
-          z-index: 0;
-          opacity: 0.15;
+          filter: blur(90px);
+          z-index: 1;
           pointer-events: none;
         }
-        
-        .blob-1 {
-          top: 10%;
-          left: 5%;
-          width: 300px;
-          height: 300px;
-          background-color: hsl(var(--primary));
-          animation: floatBlob 12s infinite alternate ease-in-out;
-        }
-        
-        .blob-2 {
-          bottom: 10%;
-          right: 5%;
-          width: 350px;
-          height: 350px;
-          background-color: hsl(var(--accent));
-          animation: floatBlob 16s infinite alternate-reverse ease-in-out;
+
+        .blob-orb-1 {
+          top: -8%;
+          left: -6%;
+          width: 55vw;
+          height: 55vw;
+          background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(0, 59, 122, 0.2) 50%, transparent 70%);
         }
 
-        @keyframes floatBlob {
-          0% {
-            transform: translate(0px, 0px) scale(1);
-          }
-          50% {
-            transform: translate(40px, -60px) scale(1.12);
-          }
-          100% {
-            transform: translate(-20px, 20px) scale(0.95);
-          }
+        .blob-orb-2 {
+          top: 35%;
+          right: -8%;
+          width: 50vw;
+          height: 50vw;
+          background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, rgba(0, 37, 75, 0.2) 50%, transparent 70%);
         }
 
-        @keyframes floatCard {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-8px) rotate(0.6deg);
-          }
+        .blob-orb-3 {
+          bottom: -5%;
+          left: 20%;
+          width: 45vw;
+          height: 45vw;
+          background: radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, transparent 70%);
         }
 
-        /* Hero Section Styling */
+        /* Hero Section */
         .hero-section {
-          padding: 6rem 0 5rem 0;
-          position: relative;
-          background: radial-gradient(circle at 15% 15%, hsl(var(--primary) / 0.12) 0%, transparent 50%),
-                      radial-gradient(circle at 85% 85%, hsl(var(--accent) / 0.1) 0%, transparent 50%);
+          padding: 6.5rem 0 5rem 0;
         }
-        
+
         .hero-container {
           display: grid;
-          grid-template-columns: 1.1fr 0.9fr;
-          gap: 4rem;
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 3.5rem;
           align-items: center;
-          position: relative;
-          z-index: 1;
         }
-        
-        @media (max-width: 968px) {
-          .hero-container {
-            grid-template-columns: 1fr;
-            text-align: center;
-            gap: 3rem;
-          }
-          .hero-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-        }
-        
-        .hero-badge {
+
+        .edumark-badge {
           display: inline-flex;
           align-items: center;
-          gap: 0.5rem;
-          background-color: hsl(var(--primary) / 0.12);
-          color: hsl(var(--primary));
-          padding: 0.4rem 0.8rem;
-          border-radius: 9999px;
-          font-size: 0.775rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 1.5rem;
-          border: 1px solid hsl(var(--primary) / 0.2);
-        }
-        
-        .hero-title {
-          font-size: clamp(2.2rem, 4vw, 3.4rem);
-          font-weight: 800;
-          line-height: 1.15;
-          letter-spacing: -0.025em;
-          margin-bottom: 1.25rem;
-        }
-        
-        .gradient-text {
-          background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)));
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: shine 3s linear infinite;
-        }
-        
-        @keyframes shine {
-          to {
-            background-position: 200% center;
-          }
-        }
-        
-        .hero-badge, .hero-title, .hero-subtitle, .hero-actions {
-          animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-        }
-        .hero-badge { animation-delay: 0.1s; }
-        .hero-title { animation-delay: 0.2s; }
-        .hero-subtitle { animation-delay: 0.3s; }
-        .hero-actions { animation-delay: 0.4s; }
-        
-        @keyframes slideUpFade {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .hero-subtitle {
-          font-size: 1.1rem;
-          color: hsl(var(--muted));
-          line-height: 1.6;
-          margin-bottom: 2rem;
-          max-width: 580px;
-        }
-        
-        .hero-actions {
-          display: flex;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-        
-        .btn-lg {
-          padding: 0.85rem 1.75rem;
-          font-size: 1rem;
-        }
-        
-        /* Mockup Card Design */
-        .hero-mockup-wrapper {
-          position: relative;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        
-        .hero-mockup-glow {
-          position: absolute;
-          width: 320px;
-          height: 320px;
-          background-color: hsl(var(--primary) / 0.2);
-          border-radius: 50%;
-          filter: blur(60px);
-          z-index: 1;
-        }
-        
-        .hero-mockup-card {
-          width: 100%;
-          max-width: 440px;
-          background-color: hsl(var(--card));
-          border: 1px solid hsl(var(--border));
-          border-radius: 16px;
-          box-shadow: var(--shadow-lg);
-          z-index: 2;
-          overflow: hidden;
-          animation: floatCard 6s ease-in-out infinite;
-        }
-        
-        .mockup-header {
-          display: flex;
-          align-items: center;
-          padding: 0.85rem 1.25rem;
-          background-color: hsl(var(--secondary) / 0.6);
-          border-bottom: 1px solid hsl(var(--border));
-        }
-        
-        .mockup-dots {
-          display: flex;
-          gap: 0.4rem;
-          margin-right: 1.25rem;
-        }
-        
-        .mockup-dots span {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background-color: hsl(var(--muted) / 0.4);
-        }
-        .mockup-dots span:nth-child(1) { background-color: hsl(var(--danger) / 0.8); }
-        .mockup-dots span:nth-child(2) { background-color: hsl(var(--warning) / 0.8); }
-        .mockup-dots span:nth-child(3) { background-color: hsl(var(--success) / 0.8); }
-        
-        .mockup-title {
-          font-size: 0.775rem;
-          font-weight: 600;
-          color: hsl(var(--muted));
-          letter-spacing: 0.02em;
-        }
-        
-        .mockup-body {
-          padding: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.25rem;
-          background-color: hsl(var(--card));
-        }
-        
-        .mock-card {
-          padding: 1rem;
-          border: 1px solid hsl(var(--border));
-          border-radius: 10px;
-          background-color: hsl(var(--secondary) / 0.2);
-        }
-        
-        .mock-card-header {
-          display: flex;
-          gap: 0.75rem;
-          margin-bottom: 0.75rem;
-        }
-        
-        .mock-icon-bg {
-          width: 2.2rem;
-          height: 2.2rem;
-          border-radius: 8px;
-          background-color: hsl(var(--primary) / 0.12);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          margin-top: 0.1rem;
-        }
-        
-        .mock-title {
+          gap: 8px;
+          padding: 8px 16px;
+          border-radius: 99px;
           font-size: 0.85rem;
           font-weight: 700;
+          color: #f59e0b;
+          background: rgba(245, 158, 11, 0.12);
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          margin-bottom: 1.8rem;
+          box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
         }
-        
-        .mock-subtitle {
-          font-size: 0.75rem;
-          color: hsl(var(--muted));
+
+        .hero-title {
+          font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+          font-weight: 800;
+          line-height: 1.15;
+          letter-spacing: -0.02em;
+          margin-bottom: 1.5rem;
+          color: #ffffff;
         }
-        
-        .mock-details {
+
+        .gradient-text {
+          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 45%, #38bdf8 100%);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          display: inline-block;
+        }
+
+        .hero-subtitle {
+          font-size: 1.15rem;
+          color: #94a3b8;
+          line-height: 1.65;
+          margin-bottom: 2.2rem;
+          max-width: 600px;
+        }
+
+        .hero-actions {
+          display: flex;
+          gap: 1.2rem;
+          flex-wrap: wrap;
+          margin-bottom: 2rem;
+        }
+
+        .btn-lg {
+          padding: 0.95rem 2rem;
+          font-size: 1.05rem;
+          font-weight: 700;
+          border-radius: 99px;
+        }
+
+        .trust-marks {
+          display: flex;
+          gap: 1.5rem;
+          flex-wrap: wrap;
+          font-size: 0.88rem;
+          color: #cbd5e1;
+          margin-top: 0.5rem;
+        }
+
+        .trust-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        /* Hero Floating Cards Showcase */
+        .hero-visual-content {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          padding: 10px 0;
+        }
+
+        .glowing-center-orb {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 280px;
+          height: 280px;
+          background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, rgba(56, 189, 248, 0.15) 50%, transparent 70%);
+          border-radius: 50%;
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        .hero-floating-card {
+          position: relative;
+          z-index: 2;
+          padding: 22px 24px;
+          border-radius: 16px;
+        }
+
+        .hero-card-1 {
+          border-color: rgba(245, 158, 11, 0.35) !important;
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px rgba(245, 158, 11, 0.15) !important;
+        }
+
+        .hero-card-2 {
+          border-color: rgba(16, 185, 129, 0.35) !important;
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.15) !important;
+          margin-left: 20px;
+        }
+
+        .hero-card-3 {
+          border-color: rgba(56, 189, 248, 0.35) !important;
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.15) !important;
+        }
+
+        .card-mini-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 0.82rem;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          font-weight: 700;
+          margin-bottom: 12px;
+        }
+
+        .card-mini-title {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #ffffff;
+          margin-bottom: 12px;
+        }
+
+        .card-mini-data {
           display: flex;
           justify-content: space-between;
-          font-size: 0.7rem;
-          color: hsl(var(--muted));
-          margin-bottom: 0.5rem;
+          align-items: center;
+          padding: 10px 14px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
         }
-        
-        .mock-badge {
-          background-color: hsl(var(--success) / 0.12);
-          color: hsl(var(--success));
-          padding: 0.1rem 0.35rem;
-          border-radius: 4px;
-          font-weight: 600;
+
+        .data-label {
+          font-size: 0.84rem;
+          color: #94a3b8;
         }
-        
+
+        .data-value {
+          font-size: 0.88rem;
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .mini-badge {
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          background: rgba(56, 189, 248, 0.15);
+          color: #38bdf8;
+        }
+
+        .mini-badge-success {
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          background: rgba(16, 185, 129, 0.15);
+          color: #10b981;
+        }
+
         .mock-progress-bar {
           height: 6px;
-          background-color: hsl(var(--border));
+          background: rgba(255, 255, 255, 0.1);
           border-radius: 3px;
           overflow: hidden;
         }
-        
+
         .mock-progress {
           height: 100%;
-          background-color: hsl(var(--primary));
+          background: linear-gradient(90deg, #f59e0b, #fbbf24);
           border-radius: 3px;
         }
-        
-        .mock-announcement-title {
-          font-size: 0.8rem;
-          font-weight: 700;
-        }
-        
+
         /* Stats Section */
         .stats-section {
-          padding: 3rem 0;
-          background-color: hsl(var(--card));
-          border-top: 1px solid hsl(var(--border));
-          border-bottom: 1px solid hsl(var(--border));
+          padding: 3rem 0 4rem 0;
         }
-        
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 2rem;
-          text-align: center;
+
+        .stats-banner {
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+          padding: 34px 28px;
+          border-radius: 20px !important;
+          flex-wrap: wrap;
+          gap: 20px;
         }
-        
-        .stat-card {
-          padding: 1rem;
-          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+        .stat-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          flex: 1;
+          min-width: 160px;
         }
-        
-        .stat-card:hover {
-          transform: translateY(-4px) scale(1.06);
-        }
-        
-        .stat-value {
+
+        .stat-num {
           font-size: 2.5rem;
           font-weight: 800;
-          color: hsl(var(--primary));
-          margin-bottom: 0.25rem;
-          transition: text-shadow 0.3s ease;
+          color: #f59e0b;
+          letter-spacing: -0.02em;
+          transition: text-shadow 0.3s;
         }
-        
-        .stat-card:hover .stat-value {
-          text-shadow: 0 0 12px hsl(var(--primary) / 0.3);
-        }
-        
-        .stat-label {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: hsl(var(--muted));
+
+        .stat-desc {
+          font-size: 0.88rem;
+          color: #94a3b8;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          font-weight: 600;
         }
-        
-        /* Features Section Styling */
+
+        .stat-divider {
+          width: 1px;
+          height: 50px;
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* How It Works (Steps) */
+        .how-it-works-section {
+          padding: 5rem 0;
+        }
+
+        .steps-grid {
+          display: grid;
+          grid-template-columns: 1fr auto 1fr auto 1fr;
+          gap: 1.5rem;
+          align-items: center;
+          margin-top: 3.5rem;
+        }
+
+        .step-item {
+          padding: 36px 28px;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          border-radius: 18px;
+          height: 100%;
+        }
+
+        .step-icon-wrapper {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.45rem;
+          font-weight: 800;
+          color: #001b3d;
+          box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .step-title {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .step-desc {
+          font-size: 0.92rem;
+          color: #94a3b8;
+          line-height: 1.6;
+        }
+
+        .step-connector {
+          width: 50px;
+          height: 2px;
+          background: linear-gradient(90deg, rgba(245, 158, 11, 0.8), rgba(56, 189, 248, 0.8));
+          opacity: 0.4;
+        }
+
+        /* Features Section */
         .features-section {
           padding: 5rem 0;
         }
-        
+
         .section-header {
           text-align: center;
           max-width: 700px;
           margin: 0 auto 3rem auto;
         }
-        
+
         .section-title {
-          font-size: 2rem;
+          font-size: 2.2rem;
           font-weight: 800;
           letter-spacing: -0.02em;
-          margin-bottom: 0.75rem;
+          margin-bottom: 0.85rem;
+          color: #ffffff;
         }
-        
+
         .section-subtitle {
-          color: hsl(var(--muted));
-          font-size: 1rem;
-          line-height: 1.5;
+          color: #94a3b8;
+          font-size: 1.05rem;
+          line-height: 1.6;
         }
-        
+
         .features-tabs-wrapper {
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 2.5rem;
         }
-        
+
         .features-tabs {
           display: flex;
-          background-color: hsl(var(--secondary) / 0.8);
-          border: 1px solid hsl(var(--border));
-          padding: 0.4rem;
-          border-radius: 12px;
-          gap: 0.25rem;
+          padding: 6px;
+          border-radius: 14px;
+          gap: 8px;
         }
-        
+
         .tab-btn {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          padding: 0.6rem 1.25rem;
+          gap: 8px;
+          padding: 10px 22px;
           border: none;
           background: none;
-          border-radius: 8px;
-          font-size: 0.875rem;
+          border-radius: 10px;
+          font-size: 0.95rem;
           font-weight: 600;
           cursor: pointer;
-          color: hsl(var(--muted));
-          transition: all 0.2s;
+          color: #94a3b8;
+          transition: all 0.25s;
         }
-        
+
         .tab-btn:hover {
-          color: hsl(var(--foreground));
+          color: #ffffff;
         }
-        
+
         .tab-btn.active {
-          background-color: hsl(var(--card));
-          color: hsl(var(--primary));
-          box-shadow: var(--shadow-sm);
+          background: rgba(245, 158, 11, 0.2) !important;
+          color: #f59e0b !important;
+          border: 1px solid rgba(245, 158, 11, 0.45) !important;
+          box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2) !important;
         }
-        
+
         .features-content-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
           gap: 2rem;
           width: 100%;
         }
-        
+
         .feature-card {
-          padding: 2rem;
+          padding: 32px 28px;
+          border-radius: 18px;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .feature-card::before {
-          content: "";
-          position: absolute;
-          top: 0; left: -100%;
-          width: 50%; height: 100%;
-          background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
-          transform: skewX(-20deg);
-          transition: 0.5s;
-        }
-        
-        .feature-card:hover::before {
-          left: 150%;
-        }
-        
-        .feature-card:hover {
-          transform: translateY(-8px) scale(1.03);
-          box-shadow: 0 15px 30px -5px rgba(0,0,0,0.1), 0 0 15px hsl(var(--primary)/0.25);
-          border-color: hsl(var(--primary) / 0.5);
-        }
-        
-        .feature-card:hover .feature-icon-wrapper {
-          transform: scale(1.15) rotate(5deg);
-          background-color: hsl(var(--primary));
-          color: white;
         }
 
         .feature-icon-wrapper {
-          width: 3.2rem;
-          height: 3.2rem;
-          border-radius: 12px;
-          background-color: hsl(var(--primary) / 0.1);
-          color: hsl(var(--primary));
+          width: 3.4rem;
+          height: 3.4rem;
+          border-radius: 14px;
+          background: rgba(245, 158, 11, 0.15);
+          color: #f59e0b;
           display: flex;
           align-items: center;
           justify-content: center;
           margin-bottom: 1.5rem;
-          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        
+
         .feature-card-title {
-          font-size: 1.15rem;
+          font-size: 1.25rem;
           font-weight: 700;
           margin-bottom: 0.75rem;
+          color: #ffffff;
         }
-        
+
         .feature-card-desc {
-          font-size: 0.875rem;
-          color: hsl(var(--muted));
-          line-height: 1.6;
+          font-size: 0.92rem;
+          color: #94a3b8;
+          line-height: 1.65;
         }
-        
-        /* Departments Styling */
+
+        /* Departments */
         .departments-section {
           padding: 5rem 0;
-          background-color: hsl(var(--secondary) / 0.3);
-          border-top: 1px solid hsl(var(--border));
-          border-bottom: 1px solid hsl(var(--border));
         }
-        
+
         .departments-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
           gap: 2rem;
         }
-        
+
         .dept-card {
-          padding: 1.75rem;
+          padding: 28px;
+          border-radius: 18px;
           display: flex;
           flex-direction: column;
           height: 100%;
-          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .dept-card::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          padding: 2px;
-          background: linear-gradient(135deg, transparent, hsl(var(--accent)/0.6), transparent);
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          opacity: 0;
-          transition: opacity 0.4s ease;
-        }
-        
-        .dept-card:hover::after {
-          opacity: 1;
-        }
-        
-        .dept-card:hover {
-          transform: translateY(-8px) scale(1.03);
-          box-shadow: 0 15px 30px -5px rgba(0,0,0,0.1), 0 0 20px hsl(var(--accent)/0.2);
-          border-color: transparent;
-        }
-
-        .dept-card:hover .dept-badge {
-          background-color: hsl(var(--accent));
-          color: white;
-          transform: scale(1.08);
         }
 
         .dept-badge {
-          background-color: hsl(var(--accent) / 0.1);
-          color: hsl(var(--accent));
-          padding: 0.2rem 0.6rem;
-          border-radius: 6px;
-          font-size: 0.7rem;
+          background: rgba(56, 189, 248, 0.15);
+          color: #38bdf8;
+          padding: 4px 12px;
+          border-radius: 8px;
+          font-size: 0.78rem;
           font-weight: 700;
           width: fit-content;
-          margin-bottom: 1rem;
-          text-transform: uppercase;
-          transition: all 0.3s ease;
+          margin-bottom: 1.2rem;
+          border: 1px solid rgba(56, 189, 248, 0.3);
         }
-        
+
         .dept-name {
-          font-size: 1.2rem;
+          font-size: 1.25rem;
           font-weight: 750;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.6rem;
+          color: #ffffff;
         }
-        
+
         .dept-desc {
-          font-size: 0.85rem;
-          color: hsl(var(--muted));
-          line-height: 1.5;
-          margin-bottom: 1.5rem;
+          font-size: 0.9rem;
+          color: #94a3b8;
+          line-height: 1.6;
+          margin-bottom: 1.8rem;
           flex-grow: 1;
         }
-        
+
         .dept-footer {
-          border-top: 1px solid hsl(var(--border) / 0.5);
-          padding-top: 1rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          padding-top: 1.2rem;
         }
-        
+
         .dept-link {
-          font-size: 0.85rem;
+          font-size: 0.9rem;
           font-weight: 600;
-          color: hsl(var(--primary));
+          color: #f59e0b;
           display: flex;
           align-items: center;
-          gap: 0.25rem;
+          gap: 4px;
           cursor: pointer;
+          transition: gap 0.2s;
         }
-        
+
         .dept-link:hover {
-          text-decoration: underline;
+          gap: 8px;
         }
-        
-        /* FAQ Section Styling */
+
+        /* FAQ Section */
         .faq-section {
           padding: 5rem 0;
         }
-        
+
         .faq-container {
           display: grid;
           grid-template-columns: 0.9fr 1.1fr;
           gap: 4rem;
         }
-        
-        @media (max-width: 900px) {
-          .faq-container {
-            grid-template-columns: 1fr;
-            gap: 3rem;
-          }
+
+        .faq-intro-icon-box {
+          width: 56px;
+          height: 56px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.5rem;
         }
-        
-        .faq-intro-icon {
-          color: hsl(var(--primary));
-          margin-bottom: 1rem;
-        }
-        
+
         .faq-title {
-          font-size: 2rem;
+          font-size: 2.2rem;
           font-weight: 800;
-          letter-spacing: -0.025em;
+          letter-spacing: -0.02em;
           margin-bottom: 1rem;
+          color: #ffffff;
         }
-        
+
         .faq-subtitle {
-          color: hsl(var(--muted));
-          line-height: 1.6;
+          color: #94a3b8;
+          line-height: 1.65;
           margin-bottom: 2rem;
+          font-size: 1rem;
         }
-        
+
         .faq-support-card {
-          padding: 1.25rem;
-          background-color: hsl(var(--card));
+          padding: 24px;
+          border-radius: 16px;
         }
-        
+
         .faq-accordion {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 1.2rem;
         }
-        
+
         .faq-item {
-          padding: 0 !important;
+          border-radius: 14px;
+          overflow: hidden;
           transition: all 0.3s;
-          border-radius: 10px !important;
         }
-        
+
         .faq-question {
-          padding: 1.25rem;
+          padding: 1.4rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
           font-weight: 600;
+          font-size: 1.02rem;
+          color: #ffffff;
           cursor: pointer;
           user-select: none;
         }
-        
+
         .faq-chevron {
-          transition: transform 0.2s;
-          color: hsl(var(--muted));
+          transition: transform 0.3s;
+          color: #94a3b8;
+          flex-shrink: 0;
         }
-        
+
         .faq-answer {
           max-height: 0;
           overflow: hidden;
-          transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), padding 0.3s;
-          padding: 0 1.25rem;
-          font-size: 0.875rem;
-          color: hsl(var(--muted));
-          line-height: 1.6;
+          transition: max-height 0.35s cubic-bezier(0, 1, 0, 1), padding 0.35s;
+          padding: 0 1.4rem;
+          font-size: 0.92rem;
+          color: #94a3b8;
+          line-height: 1.65;
         }
-        
+
         .faq-item.open .faq-chevron {
           transform: rotate(90deg);
-          color: hsl(var(--primary));
+          color: #f59e0b;
         }
-        
+
         .faq-item.open .faq-answer {
-          max-height: 200px;
-          padding: 0 1.25rem 1.25rem 1.25rem;
-          border-top: 1px solid hsl(var(--border) / 0.5);
+          max-height: 250px;
+          padding: 0 1.4rem 1.4rem 1.4rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
           padding-top: 1rem;
         }
-        
+
         /* CTA Banner */
         .cta-banner-section {
-          padding: 2rem 0 5rem 0;
+          padding: 3rem 0 6rem 0;
         }
-        
+
         .cta-banner-card {
-          background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent) / 0.85));
-          border-radius: 20px;
-          padding: 3.5rem;
+          border-radius: 24px;
+          padding: 4rem 3.5rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
           gap: 3rem;
-          color: white;
-          box-shadow: var(--shadow-lg);
+          border-color: rgba(245, 158, 11, 0.3) !important;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(245, 158, 11, 0.2) !important;
         }
-        
-        .cta-banner-content h2 {
-          font-size: 2rem;
-          font-weight: 800;
-          margin-bottom: 0.75rem;
-        }
-        
-        .cta-banner-content p {
-          opacity: 0.9;
-          font-size: 1.05rem;
-          max-width: 550px;
-          line-height: 1.5;
-        }
-        
+
         .cta-banner-actions {
           display: flex;
-          gap: 1rem;
+          gap: 1.2rem;
           flex-shrink: 0;
         }
-        
-        @media (max-width: 820px) {
-          .cta-banner-card {
-            flex-direction: column;
-            text-align: center;
-            padding: 2.5rem;
-          }
-          .cta-banner-actions {
-            justify-content: center;
-            width: 100%;
-          }
-        }
-        
-        /* Footer Styling */
+
+        /* Footer */
         .landing-footer {
-          background-color: hsl(var(--card));
-          border-top: 1px solid hsl(var(--border));
-          padding: 4rem 0 2rem 0;
+          padding: 4.5rem 0 2rem 0;
         }
-        
+
         .footer-grid {
           display: grid;
-          grid-template-columns: 1.5fr repeat(3, 1fr);
+          grid-template-columns: 1.6fr repeat(3, 1fr);
           gap: 3rem;
-          margin-bottom: 3rem;
+          margin-bottom: 3.5rem;
         }
-        
-        @media (max-width: 768px) {
-          .footer-grid {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-          }
-        }
-        
+
         .footer-links-col {
           display: flex;
           flex-direction: column;
-          gap: 0.75rem;
+          gap: 0.85rem;
         }
-        
+
         .footer-links-col h4 {
           font-size: 0.95rem;
           font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.06em;
+          color: #ffffff;
           margin-bottom: 0.5rem;
         }
-        
+
         .footer-links-col a {
-          font-size: 0.85rem;
-          color: hsl(var(--muted));
+          font-size: 0.9rem;
+          color: #94a3b8;
           text-decoration: none;
           transition: color 0.2s;
         }
-        
+
         .footer-links-col a:hover {
-          color: hsl(var(--primary));
-        }
-        
-        .footer-bottom {
-          border-top: 1px solid hsl(var(--border));
-          padding-top: 1.5rem;
-          text-align: center;
-          font-size: 0.8rem;
-          color: hsl(var(--muted));
+          color: #f59e0b;
         }
 
-        /* Mobile Adjustments */
-        @media (max-width: 600px) {
-          .hero-section {
-            padding: 4rem 0 3rem 0;
+        .footer-bottom {
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          padding-top: 1.8rem;
+          font-size: 0.85rem;
+          color: #64748b;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 992px) {
+          .hero-container {
+            grid-template-columns: 1fr;
+            text-align: center;
+            gap: 3.5rem;
           }
+
+          .hero-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .hero-actions {
+            justify-content: center;
+          }
+
+          .trust-marks {
+            justify-content: center;
+          }
+
+          .hero-card-2 {
+            margin-left: 0;
+          }
+
+          .steps-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+          }
+
+          .step-connector {
+            display: none;
+          }
+
+          .faq-container {
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+          }
+
+          .cta-banner-card {
+            flex-direction: column;
+            text-align: center;
+            padding: 3rem 2rem;
+          }
+
+          .cta-banner-actions {
+            justify-content: center;
+            width: 100%;
+          }
+
+          .footer-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .hero-section {
+            padding: 4.5rem 0 3rem 0;
+          }
+
           .hero-title {
             font-size: 2.2rem;
           }
+
           .hero-actions {
             flex-direction: column;
             width: 100%;
           }
+
           .hero-actions .btn {
             width: 100%;
           }
+
+          .stats-banner {
+            padding: 24px 16px;
+            gap: 24px;
+          }
+
+          .stat-divider {
+            display: none;
+          }
+
+          .stat-box {
+            min-width: 130px;
+          }
+
+          .stat-num {
+            font-size: 2rem;
+          }
+
           .features-tabs {
             flex-direction: column;
             width: 100%;
-            gap: 0.5rem;
           }
-          .stats-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+
+          .tab-btn {
+            justify-content: center;
+            width: 100%;
           }
-          .stat-value {
-            font-size: 2rem;
-          }
-          .departments-grid {
-            grid-template-columns: 1fr;
-          }
-          .cta-banner-card {
-            padding: 2rem 1.5rem;
-          }
+
           .cta-banner-actions {
             flex-direction: column;
-            width: 100%;
           }
+
           .cta-banner-actions .btn {
             width: 100%;
+          }
+
+          .footer-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
           }
         }
       `}</style>

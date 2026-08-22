@@ -12,6 +12,11 @@ import FacultyManagement from './FacultyManagement';
 import AnnouncementsManagement from './AnnouncementsManagement';
 import StudentsManagement from './StudentsManagement';
 import NotificationMenu from '../../components/Shared/NotificationMenu';
+import studentAvatar from '../../assets/student-avatar.png';
+import facultyAvatar from '../../assets/faculty-avatar.png';
+import requestIcon from '../../assets/request-icon.png';
+import announcementIcon from '../../assets/announcement-icon.png';
+import notesIcon from '../../assets/notes-icon.png';
 
 export default function AdminDashboard() {
   const { authFetch, token, user } = useAuth();
@@ -34,6 +39,8 @@ export default function AdminDashboard() {
   // Modals state
   const [showStudentsModal, setShowStudentsModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
+  const [showFacultyModal, setShowFacultyModal] = useState(false);
+  const [showAnnouncementsModal, setShowAnnouncementsModal] = useState(false);
 
   const [studentsList, setStudentsList] = useState([]);
   const [notesList, setNotesList] = useState([]);
@@ -221,31 +228,33 @@ export default function AdminDashboard() {
   return (
     <>
       <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        {/* Header Banner */}
+        <div className="admin-top-header-banner" style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem', background: 'linear-gradient(135deg, #002d62 0%, #001f3f 100%)', border: '1px solid rgba(255, 255, 255, 0.16)', borderRadius: '20px', padding: '28px 32px', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)' }}>
           <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>{headingText}</h1>
-            <p style={{ color: 'hsl(var(--muted))' }}>{subheadingText}</p>
+            <h1 style={{ fontSize: '2.1rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>{headingText}</h1>
+            <p style={{ color: '#94a3b8', margin: '0.4rem 0 0 0', fontSize: '0.95rem' }}>{subheadingText}</p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <NotificationMenu />
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="admin-desktop-banner-notif">
+              <NotificationMenu />
+            </div>
             <button
               onClick={() => {
                 const attendanceUrl = import.meta.env.VITE_ATTENDANCE_APP_URL || 'http://localhost:5174';
                 window.open(`${attendanceUrl}?token=${token}&role=${user?.adminRole || 'admin'}`, '_blank');
               }}
-              className="btn btn-primary"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: 'hsl(var(--primary))' }}
+              className="btn btn-primary pulse-primary"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.25rem' }}
             >
-              <Calendar size={16} /> Attendance Portal
+              <Calendar size={18} /> Attendance Portal
             </button>
             {selectedDept && (
               <button
                 onClick={() => setSelectedDept(null)}
                 className="btn btn-secondary"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, padding: '0.65rem 1.25rem' }}
               >
-                <ArrowLeft size={16} /> Exit {selectedDept} Portal
+                <ArrowLeft size={18} /> Exit {selectedDept} Portal
               </button>
             )}
           </div>
@@ -271,27 +280,27 @@ export default function AdminDashboard() {
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     minHeight: '130px',
-                    background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--secondary) / 0.4) 100%)',
-                    border: '1px solid hsl(var(--border) / 0.8)',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e2e8f0',
                     transition: 'all 0.2s',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.6)';
-                    e.currentTarget.style.boxShadow = '0 12px 28px -6px rgba(245, 158, 11, 0.35), 0 0 18px rgba(245, 158, 11, 0.2)';
+                    e.currentTarget.style.borderColor = '#f59e0b';
+                    e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.12), 0 0 14px rgba(245, 158, 11, 0.25)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor = 'hsl(var(--border) / 0.8)';
+                    e.currentTarget.style.borderColor = '#e2e8f0';
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.3rem', color: 'hsl(var(--primary))' }}>{dept}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'hsl(var(--muted))', marginTop: '0.25rem' }}>Administration Portal</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.3rem', color: '#0f172a' }}>{dept}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Administration Portal</div>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                    <span className="btn btn-secondary" style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem', fontWeight: 600 }}>
+                    <span className="btn btn-secondary" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', fontWeight: 600 }}>
                       Enter Portal →
                     </span>
                   </div>
@@ -380,14 +389,28 @@ export default function AdminDashboard() {
                 className="card"
                 style={{ cursor: 'pointer', transition: 'all 0.2s' }}
               >
-                <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Total Students</span>
-                  <span style={{ fontSize: '0.7rem', color: 'hsl(var(--primary))', fontWeight: 600 }}>Click to view details</span>
+                <div className="card-title">
+                  Total Students
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                   <div className="card-value">{stats?.totalStudents || 0}</div>
-                  <div style={{ color: 'hsl(var(--primary))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--primary) / 0.1)' }}>
-                    <GraduationCap size={24} />
+                  <div style={{ 
+                    width: '52px', 
+                    height: '52px', 
+                    borderRadius: '14px', 
+                    backgroundColor: '#eff6ff', 
+                    border: '1.5px solid #dbeafe',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.12)'
+                  }}>
+                    <img 
+                      src={studentAvatar} 
+                      alt="Student" 
+                      style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '10px' }} 
+                    />
                   </div>
                 </div>
               </div>
@@ -397,106 +420,131 @@ export default function AdminDashboard() {
                 onClick={() => {
                   if (selectedDept) {
                     setActiveSubTab('faculty');
+                  } else {
+                    setShowFacultyModal(true);
                   }
                 }}
                 className="card"
-                style={selectedDept ? { cursor: 'pointer' } : {}}
+                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
               >
                 {!selectedDept ? (
-                  <Link to="/admin/faculty" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div>
                     <div className="card-title">Total Faculty</div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                       <div className="card-value">{stats?.totalFaculty || 0}</div>
-                      <div style={{ color: 'hsl(var(--accent))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--accent) / 0.1)' }}>
-                        <Users size={24} />
+                      <div style={{ 
+                        width: '52px', 
+                        height: '52px', 
+                        borderRadius: '14px', 
+                        backgroundColor: '#f0fdf4', 
+                        border: '1.5px solid #bbf7d0',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 12px rgba(22, 163, 74, 0.12)'
+                      }}>
+                        <img 
+                          src={facultyAvatar} 
+                          alt="Faculty" 
+                          style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '10px' }} 
+                        />
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ) : (
                   <>
-                    <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>Total Faculty</span>
-                      <span style={{ fontSize: '0.7rem', color: 'hsl(var(--accent))', fontWeight: 600 }}>Click to manage</span>
+                    <div className="card-title">
+                      Total Faculty
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                       <div className="card-value">{stats?.totalFaculty || 0}</div>
-                      <div style={{ color: 'hsl(var(--accent))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--accent) / 0.1)' }}>
-                        <Users size={24} />
+                      <div style={{ 
+                        width: '52px', 
+                        height: '52px', 
+                        borderRadius: '14px', 
+                        backgroundColor: '#f0fdf4', 
+                        border: '1.5px solid #bbf7d0',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 12px rgba(22, 163, 74, 0.12)'
+                      }}>
+                        <img 
+                          src={facultyAvatar} 
+                          alt="Faculty" 
+                          style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '10px' }} 
+                        />
                       </div>
                     </div>
                   </>
                 )}
               </div>
 
-              {/* Pending Requests */}
-              <div
-                onClick={() => {
-                  if (selectedDept) {
-                    setActiveSubTab('requests');
-                  }
-                }}
-                className="card"
-                style={{
-                  borderLeft: stats?.totalPendingRequests > 0 ? '4px solid hsl(var(--warning))' : '1px solid hsl(var(--border))',
-                  cursor: selectedDept ? 'pointer' : 'default'
-                }}
-              >
-                {!selectedDept ? (
-                  <Link to="/admin/requests" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div className="card-title">Pending Requests</div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                      <div className="card-value">{stats?.totalPendingRequests || 0}</div>
-                      <div style={{ color: 'hsl(var(--warning))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--warning) / 0.1)' }}>
-                        <Clock size={24} />
-                      </div>
-                    </div>
-                  </Link>
-                ) : (
-                  <>
-                    <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>Pending Requests</span>
-                      <span style={{ fontSize: '0.7rem', color: 'hsl(var(--warning))', fontWeight: 600 }}>Click to review</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                      <div className="card-value">{stats?.totalPendingRequests || 0}</div>
-                      <div style={{ color: 'hsl(var(--warning))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--warning) / 0.1)' }}>
-                        <Clock size={24} />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+
 
               {/* Total Announcements */}
               <div
                 onClick={() => {
                   if (selectedDept) {
                     setActiveSubTab('announcements');
+                  } else {
+                    setShowAnnouncementsModal(true);
                   }
                 }}
                 className="card"
-                style={selectedDept ? { cursor: 'pointer' } : {}}
+                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
               >
                 {!selectedDept ? (
-                  <Link to="/admin/announcements" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div>
                     <div className="card-title">Total Announcements</div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                       <div className="card-value">{stats?.totalAnnouncements || 0}</div>
-                      <div style={{ color: 'hsl(var(--primary))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--primary) / 0.1)' }}>
-                        <Megaphone size={24} />
+                      <div style={{ 
+                        width: '52px', 
+                        height: '52px', 
+                        borderRadius: '14px', 
+                        backgroundColor: '#fffbeb', 
+                        border: '1.5px solid #fde68a',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 12px rgba(245, 158, 11, 0.15)'
+                      }}>
+                        <img 
+                          src={announcementIcon} 
+                          alt="Announcements" 
+                          style={{ width: '46px', height: '46px', objectFit: 'contain' }} 
+                        />
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ) : (
                   <>
-                    <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>Total Announcements</span>
-                      <span style={{ fontSize: '0.7rem', color: 'hsl(var(--primary))', fontWeight: 600 }}>Click to manage</span>
+                    <div className="card-title">
+                      Total Announcements
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                       <div className="card-value">{stats?.totalAnnouncements || 0}</div>
-                      <div style={{ color: 'hsl(var(--primary))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--primary) / 0.1)' }}>
-                        <Megaphone size={24} />
+                      <div style={{ 
+                        width: '52px', 
+                        height: '52px', 
+                        borderRadius: '14px', 
+                        backgroundColor: '#fffbeb', 
+                        border: '1.5px solid #fde68a',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 12px rgba(245, 158, 11, 0.15)'
+                      }}>
+                        <img 
+                          src={announcementIcon} 
+                          alt="Announcements" 
+                          style={{ width: '46px', height: '46px', objectFit: 'contain' }} 
+                        />
                       </div>
                     </div>
                   </>
@@ -509,14 +557,28 @@ export default function AdminDashboard() {
                 className="card"
                 style={{ cursor: 'pointer', transition: 'all 0.2s' }}
               >
-                <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Total Notes Uploaded</span>
-                  <span style={{ fontSize: '0.7rem', color: 'hsl(var(--success))', fontWeight: 600 }}>Click to view details</span>
+                <div className="card-title">
+                  Total Notes Uploaded
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                   <div className="card-value">{stats?.totalNotes || 0}</div>
-                  <div style={{ color: 'hsl(var(--success))', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'hsl(var(--success) / 0.1)' }}>
-                    <FileText size={24} />
+                  <div style={{ 
+                    width: '52px', 
+                    height: '52px', 
+                    borderRadius: '14px', 
+                    backgroundColor: '#fefce8', 
+                    border: '1.5px solid #fef08a',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 12px rgba(202, 138, 4, 0.12)'
+                  }}>
+                    <img 
+                      src={notesIcon} 
+                      alt="Notes Uploaded" 
+                      style={{ width: '46px', height: '46px', objectFit: 'contain' }} 
+                    />
                   </div>
                 </div>
               </div>
@@ -524,14 +586,7 @@ export default function AdminDashboard() {
 
             {/* Visual Charts section */}
             {user?.adminRole === 'main_admin' && !selectedDept && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '2rem' }} className="charts-grid">
-                <div className="card">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.5rem' }}>
-                    <BarChart3 size={20} color="hsl(var(--primary))" />
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Notes per Department</h3>
-                  </div>
-                  <SVGChart type="bar" data={stats?.chartData?.notesPerDept || []} title="Faculty Upload Statistics" />
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', marginTop: '2rem' }} className="charts-grid">
 
                 <div className="card">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.5rem' }}>
@@ -571,6 +626,64 @@ export default function AdminDashboard() {
               department={selectedDept || user?.department}
               insideModal={true}
               onMutation={fetchStats}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 1.5: Faculty Members details list */}
+      {showFacultyModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem'
+        }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users color="hsl(var(--success))" />
+                Faculty Members Register
+              </h3>
+              <button
+                onClick={() => { setShowFacultyModal(false); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <FacultyManagement
+              department={selectedDept || user?.department}
+              insideModal={true}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 1.75: Announcements Modal */}
+      {showAnnouncementsModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem'
+        }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Megaphone color="hsl(var(--warning))" />
+                Announcements & Notices
+              </h3>
+              <button
+                onClick={() => { setShowAnnouncementsModal(false); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <AnnouncementsManagement
+              department={selectedDept || user?.department}
+              insideModal={true}
             />
           </div>
         </div>

@@ -4,8 +4,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, UserPlus, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
-export default function FacultyManagement({ department: propDepartment }) {
+export default function FacultyManagement({ department: propDepartment, insideModal }) {
   const { authFetch } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -21,11 +22,10 @@ export default function FacultyManagement({ department: propDepartment }) {
   const [email, setEmail] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [department, setDepartment] = useState('');
-  const [employeeId, setEmployeeId] = useState('');
-  const [password, setPassword] = useState(''); // Only for adding
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchFaculty = async () => {
-    setLoading(true);
+  const fetchFaculty = async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     try {
       const url = propDepartment ? `/admin/faculty?department=${propDepartment}` : '/admin/faculty';
       const res = await authFetch(url);
@@ -39,7 +39,7 @@ export default function FacultyManagement({ department: propDepartment }) {
       console.error(err);
       showToast('Network error loading faculty.', 'error');
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
@@ -68,8 +68,6 @@ export default function FacultyManagement({ department: propDepartment }) {
     setEmail('');
     setMobileNumber('');
     setDepartment(propDepartment || '');
-    setEmployeeId('');
-    setPassword('');
     setShowForm(true);
   };
 
@@ -79,15 +77,24 @@ export default function FacultyManagement({ department: propDepartment }) {
     setEmail(f.email);
     setMobileNumber(f.mobile_number);
     setDepartment(f.department);
-    setEmployeeId(f.employee_id);
     setShowForm(true);
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
 
-    if (!fullName || !email || !mobileNumber || !department || !employeeId) {
+    if (!fullName || !email || !mobileNumber || !department) {
       showToast('Please fill all fields.', 'warning');
+      return;
+    }
+
+    if (!/^\d{10}$/.test(mobileNumber)) {
+      showToast('Mobile Number must be exactly 10 digits.', 'warning');
+      return;
+    }
+
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      showToast('Invalid Gmail. Please use a valid @gmail.com address.', 'warning');
       return;
     }
 
@@ -100,10 +107,11 @@ export default function FacultyManagement({ department: propDepartment }) {
       email,
       mobileNumber,
       department,
-      employeeId,
-      ...(isEditing ? {} : { password })
+      employeeId: mobileNumber,
+      ...(isEditing ? {} : { password: mobileNumber })
     };
 
+    setIsSubmitting(true);
     try {
       const res = await authFetch(url, {
         method,
@@ -114,13 +122,15 @@ export default function FacultyManagement({ department: propDepartment }) {
       if (res.ok) {
         showToast(data.message || 'Faculty account saved successfully!', 'success');
         setShowForm(false);
-        fetchFaculty(); // Reload list
+        fetchFaculty(false); // Reload list silently
       } else {
         showToast(data.message || 'Failed to save faculty.', 'error');
       }
     } catch (err) {
       console.error(err);
       showToast('Network error saving faculty data.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -150,31 +160,45 @@ export default function FacultyManagement({ department: propDepartment }) {
     return (
       f.full_name.toLowerCase().includes(search.toLowerCase()) ||
       f.email.toLowerCase().includes(search.toLowerCase()) ||
-      f.department.toLowerCase().includes(search.toLowerCase()) ||
-      f.employee_id.toLowerCase().includes(search.toLowerCase())
+      f.department.toLowerCase().includes(search.toLowerCase())
     );
   });
 
 
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
+    <div className={insideModal ? '' : "container animate-fade-in"} style={insideModal ? {} : { padding: '2rem 1.5rem' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
-            {propDepartment ? `${propDepartment} ` : ''}Faculty Management
-          </h1>
-          <p style={{ color: 'hsl(var(--muted))' }}>
-            Add, update, or remove approved college faculty members{propDepartment ? ` for ${propDepartment}` : ''}.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {!propDepartment && (
-            <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <ArrowLeft size={16} /> Back to Dashboard
+      {!insideModal && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
+              {propDepartment ? `${propDepartment} ` : ''}Faculty Management
+            </h1>
+            <p style={{ color: 'hsl(var(--muted))' }}>
+              Add, update, or remove approved college faculty members{propDepartment ? ` for ${propDepartment}` : ''}.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {!propDepartment && (
+              <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <ArrowLeft size={16} /> Back to Dashboard
+              </button>
+            )}
+            <button onClick={openAddModal} className="btn btn-primary">
+              <Plus size={16} />
+              Add Faculty
             </button>
-          )}
+            <button onClick={fetchFaculty} className="btn btn-secondary">
+              <RefreshCw size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal Actions when inside modal */}
+      {insideModal && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem', gap: '0.5rem' }}>
           <button onClick={openAddModal} className="btn btn-primary">
             <Plus size={16} />
             Add Faculty
@@ -183,7 +207,7 @@ export default function FacultyManagement({ department: propDepartment }) {
             <RefreshCw size={16} />
           </button>
         </div>
-      </div>
+      )}
 
       {/* Search Filter */}
       <div className="search-controls" style={{ marginBottom: '1.5rem' }}>
@@ -194,7 +218,7 @@ export default function FacultyManagement({ department: propDepartment }) {
           <input
             type="text"
             className="form-control"
-            placeholder="Search faculty name, department, faculty ID..."
+            placeholder="Search faculty name, department..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ paddingLeft: '2.5rem' }}
@@ -216,7 +240,6 @@ export default function FacultyManagement({ department: propDepartment }) {
           <table>
             <thead>
               <tr>
-                <th>Faculty ID</th>
                 <th>Full Name</th>
                 <th>Email</th>
                 <th>Mobile</th>
@@ -229,7 +252,6 @@ export default function FacultyManagement({ department: propDepartment }) {
             <tbody>
               {filteredFaculty.map((f) => (
                 <tr key={f.id}>
-                  <td style={{ fontWeight: 700 }}>{f.employee_id}</td>
                   <td style={{ fontWeight: 600 }}>{f.full_name}</td>
                   <td>{f.email}</td>
                   <td>{f.mobile_number}</td>
@@ -268,7 +290,7 @@ export default function FacultyManagement({ department: propDepartment }) {
       )}
 
       {/* Add / Edit Form Modal (CSS Dialog Overlay style) */}
-      {showForm && (
+      {showForm && createPortal(
         <div style={{
           position: 'fixed',
           top: 0,
@@ -283,7 +305,7 @@ export default function FacultyManagement({ department: propDepartment }) {
           zIndex: 1000,
           padding: '1rem'
         }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', alignSelf: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
                 {editingId ? 'Edit Faculty Account' : 'Add New Faculty'}
@@ -328,8 +350,10 @@ export default function FacultyManagement({ department: propDepartment }) {
                   className="form-control"
                   placeholder="10 digit number"
                   pattern="[0-9]{10}"
+                  maxLength="10"
+                  minLength="10"
                   value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
+                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   required
                 />
               </div>
@@ -358,31 +382,6 @@ export default function FacultyManagement({ department: propDepartment }) {
                 )}
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Faculty ID</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="e.g. FAC4002"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  required
-                />
-              </div>
-
-              {!editingId && (
-                <div className="form-group">
-                  <label className="form-label">Default Password</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    placeholder="Enter default login password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              )}
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.75rem' }}>
                 <button 
@@ -397,14 +396,16 @@ export default function FacultyManagement({ department: propDepartment }) {
                   type="submit" 
                   className="btn btn-primary" 
                   style={{ flex: 1 }}
+                  disabled={isSubmitting}
                 >
                   <Save size={16} />
-                  {editingId ? 'Update Faculty' : 'Create Faculty'}
+                  {isSubmitting ? 'Saving...' : (editingId ? 'Update Faculty' : 'Create Faculty')}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

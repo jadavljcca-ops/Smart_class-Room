@@ -88,11 +88,12 @@ function AppLayout() {
   const { user } = useAuth();
   const location = useLocation();
   const isAdminPage = user?.role === 'admin' && location.pathname.startsWith('/admin');
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   
   return (
     <div className={isAdminPage ? 'admin-sidebar-layout' : 'standard-layout'}>
-      <Navbar />
-      <main className={isAdminPage ? 'admin-main-content' : ''} style={{ minHeight: 'calc(100vh - 4.5rem)', width: '100%' }}>
+      {!isAuthPage && <Navbar />}
+      <main className={isAdminPage ? 'admin-main-content' : ''} style={{ minHeight: isAuthPage ? '100vh' : 'calc(100vh - 4.5rem)', width: '100%' }}>
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />

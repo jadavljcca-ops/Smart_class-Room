@@ -46,10 +46,7 @@ export const confirmDelete = async ({ entityName = 'item', customTitle, customTe
     },
     buttonsStyling: false,
     reverseButtons: true,
-    backdrop: `
-      rgba(0,0,0,0.7)
-      backdrop-filter: blur(5px)
-    `,
+    backdrop: `rgba(255,255,255,0.4)`,
   });
   
   return result.isConfirmed;

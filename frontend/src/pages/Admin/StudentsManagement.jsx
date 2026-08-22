@@ -24,7 +24,6 @@ export default function StudentsManagement({ department: propDepartment, insideM
   const [mobileNumber, setMobileNumber] = useState('');
   const [department, setDepartment] = useState('');
   const [semester, setSemester] = useState('');
-  const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   // Bulk Upload Modal state
@@ -35,8 +34,8 @@ export default function StudentsManagement({ department: propDepartment, insideM
 
   const [departments, setDepartments] = useState([]);
 
-  const fetchStudents = async () => {
-    setLoading(true);
+  const fetchStudents = async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     try {
       const url = propDepartment ? `/admin/students?department=${propDepartment}` : '/admin/students';
       const res = await authFetch(url);
@@ -50,7 +49,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
       console.error(err);
       showToast('Network error loading students.', 'error');
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   };
 
@@ -78,7 +77,6 @@ export default function StudentsManagement({ department: propDepartment, insideM
     setMobileNumber('');
     setDepartment(propDepartment || '');
     setSemester('');
-    setPassword('');
     setShowForm(true);
   };
 
@@ -87,8 +85,23 @@ export default function StudentsManagement({ department: propDepartment, insideM
 
     const targetDept = propDepartment || department;
 
-    if (!fullName || !email || !mobileNumber || !targetDept || !semester || !enrollmentNumber || !password) {
+    if (!fullName || !email || !mobileNumber || !targetDept || !semester || !enrollmentNumber) {
       showToast('Please fill all required fields.', 'warning');
+      return;
+    }
+
+    if (!/^\d{10}$/.test(mobileNumber)) {
+      showToast('Mobile Number must be exactly 10 digits.', 'warning');
+      return;
+    }
+
+    if (!/^\d{10}$/.test(enrollmentNumber)) {
+      showToast('Enrollment Number must be exactly 10 digits.', 'warning');
+      return;
+    }
+
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      showToast('Invalid Gmail. Please use a valid @gmail.com address.', 'warning');
       return;
     }
 
@@ -103,7 +116,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
           department: targetDept,
           semester,
           enrollmentNumber,
-          password
+          password: mobileNumber
         })
       });
       const data = await res.json();
@@ -111,7 +124,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
       if (res.ok) {
         showToast(data.message || 'Student account created successfully!', 'success');
         setShowForm(false);
-        fetchStudents();
+        fetchStudents(false); // Silent background refresh for instant UI update
         if (onMutation) onMutation();
       } else {
         showToast(data.message || 'Failed to save student.', 'error');
@@ -246,14 +259,15 @@ export default function StudentsManagement({ department: propDepartment, insideM
         return foundKey ? row[foundKey] : '';
       };
 
+      const mobile = getVal(['mobile', 'mobilenumber', 'phone', 'contact', 'mobile number', 'phone number', 'mob']);
       return {
         fullName: getVal(['fullname', 'name', 'studentname', 'full name', 'student name']),
         email: getVal(['email', 'emailaddress', 'email address']),
-        mobileNumber: getVal(['mobile', 'mobilenumber', 'phone', 'contact', 'mobile number', 'phone number', 'mob']),
+        mobileNumber: mobile,
         department: getVal(['department', 'dept', 'departments']) || defaultDept,
         semester: getVal(['semester', 'sem']),
         enrollmentNumber: getVal(['enrollment', 'enrollmentnumber', 'enrollments number', 'enrollment no', 'enrollment number', 'enrollments', 'enrollno', 'rollno', 'roll number']),
-        password: getVal(['password', 'pass', 'defaultpassword']) || 'student123'
+        password: mobile
       };
     });
 
@@ -343,9 +357,9 @@ export default function StudentsManagement({ department: propDepartment, insideM
   // Download Sample CSV Helper
   const downloadSampleCSV = () => {
     const defaultDept = propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : 'BCA');
-    const headers = 'Enrollment Number,Full Name,Email,Mobile Number,Department,Semester,Password\n';
-    const row1 = `22BCA2001,Amit Patel,amit@edumark.com,9876543210,${defaultDept},3,patel123\n`;
-    const row2 = `22BCA2002,Neha Shah,neha@edumark.com,9876543211,${defaultDept},3,shah123\n`;
+    const headers = 'Enrollment Number,Full Name,Email,Mobile Number,Department,Semester\n';
+    const row1 = `22BCA2001,Amit Patel,amit@edumark.com,9876543210,${defaultDept},3\n`;
+    const row2 = `22BCA2002,Neha Shah,neha@edumark.com,9876543211,${defaultDept},3\n`;
     
     const blob = new Blob([headers + row1 + row2], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -465,7 +479,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
             onChange={(e) => setFilterSem(e.target.value)}
           >
             <option value="">All Semesters</option>
-            {[1, 2, 3, 4, 5, 6].map(sem => (
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
               <option key={sem} value={sem}>Sem {sem}</option>
             ))}
           </select>
@@ -550,9 +564,11 @@ export default function StudentsManagement({ department: propDepartment, insideM
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="e.g. 22BCA2099"
+                  placeholder="10 digit number"
+                  maxLength="10"
+                  minLength="10"
                   value={enrollmentNumber}
-                  onChange={(e) => setEnrollmentNumber(e.target.value)}
+                  onChange={(e) => setEnrollmentNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   required
                 />
               </div>
@@ -588,8 +604,10 @@ export default function StudentsManagement({ department: propDepartment, insideM
                   className="form-control"
                   placeholder="10 digit number"
                   pattern="[0-9]{10}"
+                  maxLength="10"
+                  minLength="10"
                   value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
+                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   required
                 />
               </div>
@@ -623,23 +641,11 @@ export default function StudentsManagement({ department: propDepartment, insideM
                     required
                   >
                     <option value="">Select Sem</option>
-                    {[1, 2, 3, 4, 5, 6].map(s => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
                       <option key={s} value={s}>Sem {s}</option>
                     ))}
                   </select>
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Login Password</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Set login password for student"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.75rem' }}>
@@ -684,7 +690,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
                 <p style={{ fontSize: '0.8rem', color: 'hsl(var(--muted))', lineHeight: '1.4' }}>
                   Your sheet must contain the following headers: <strong>Enrollment Number, Full Name, Email, Mobile Number, Semester</strong>. 
                   {!propDepartment && <span> You should also include a <strong>Department</strong> column (e.g. BCA, BBA).</span>} 
-                  &nbsp;If a <strong>Password</strong> column is omitted, the default password <code>student123</code> is assigned.
+                  &nbsp;The student's Mobile Number will automatically be assigned as their default password.
                 </p>
                 <button onClick={downloadSampleCSV} className="btn btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', marginTop: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
                   <Download size={12} />
@@ -741,7 +747,6 @@ export default function StudentsManagement({ department: propDepartment, insideM
                         <th>Mobile</th>
                         <th>Dept</th>
                         <th style={{ textAlign: 'center' }}>Sem</th>
-                        <th>Password</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -757,7 +762,6 @@ export default function StudentsManagement({ department: propDepartment, insideM
                             <td>{s.mobileNumber ? s.mobileNumber : <span style={{ color: 'hsl(var(--danger))' }}>Missing</span>}</td>
                             <td>{s.department ? s.department : <span style={{ color: 'hsl(var(--danger))' }}>Missing</span>}</td>
                             <td style={{ textAlign: 'center' }}>{s.semester ? s.semester : <span style={{ color: 'hsl(var(--danger))' }}>Missing</span>}</td>
-                            <td>{s.password}</td>
                           </tr>
                         );
                       })}

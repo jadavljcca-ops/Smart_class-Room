@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Bell, X } from 'lucide-react';
 
@@ -154,7 +155,7 @@ export default function NotificationMenu() {
           {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
         </button>
 
-        {showNotifications && (
+        {showNotifications && createPortal(
           <>
             <div style={{
               position: 'fixed',
@@ -162,10 +163,12 @@ export default function NotificationMenu() {
               backgroundColor: 'rgba(0,0,0,0.5)',
               zIndex: 999
             }} onClick={() => setShowNotifications(false)} />
-            <div className="card dropdown-menu" style={{
-              position: 'absolute',
-              top: '35px',
+            <div className="card notification-dropdown animate-fade-in" style={{
+              position: 'fixed',
+              top: '30px',
+              left: 0,
               right: 0,
+              margin: '0 auto',
               width: '90vw',
               maxWidth: '400px',
               maxHeight: '400px',
@@ -244,7 +247,8 @@ export default function NotificationMenu() {
                 ))
               )}
             </div>
-          </>
+          </>,
+          document.body
         )}
       </div>
 

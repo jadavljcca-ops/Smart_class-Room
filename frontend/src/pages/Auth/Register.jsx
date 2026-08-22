@@ -29,11 +29,6 @@ export default function Register() {
   const [department, setDepartment] = useState('');
   const [semester, setSemester] = useState('1'); // Students only
   const [enrollmentNumber, setEnrollmentNumber] = useState(''); // Students only
-  const [employeeId, setEmployeeId] = useState(''); // Faculty only
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [departments, setDepartments] = useState([]);
@@ -61,13 +56,8 @@ export default function Register() {
       return;
     }
 
-    if (password !== confirmPassword) {
-      showToast('Passwords do not match.', 'error');
-      return;
-    }
-
-    if (password.length < 6) {
-      showToast('Password must be at least 6 characters.', 'warning');
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      showToast('Invalid Gmail. Please use a valid @gmail.com address.', 'warning');
       return;
     }
 
@@ -77,8 +67,8 @@ export default function Register() {
       email,
       mobileNumber,
       department,
-      password,
-      ...(role === 'student' ? { semester, enrollmentNumber } : { employeeId })
+      password: mobileNumber,
+      ...(role === 'student' ? { semester, enrollmentNumber } : { employeeId: mobileNumber })
     };
 
     setSubmitting(true);
@@ -108,7 +98,7 @@ export default function Register() {
             </svg>
           </div>
           <div className="auth-logo" style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-            <span style={{ color: 'white' }}>Edu</span><span style={{ color: 'hsl(var(--primary))' }}>Mark</span>
+            <span style={{ color: '#0f172a' }}>Edu</span><span style={{ color: 'hsl(var(--primary))' }}>Mark</span>
           </div>
           <p style={{ color: 'hsl(var(--muted))', fontSize: '0.85rem' }}>
             Register as a Student or Faculty member
@@ -254,103 +244,6 @@ export default function Register() {
             </div>
           )}
 
-          {/* Faculty Fields */}
-          {role === 'faculty' && (
-            <div className="form-group">
-              <label className="form-label">Faculty ID</label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(var(--muted))' }}>
-                  <Briefcase size={16} />
-                </span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="e.g. FAC4029"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  style={{ paddingLeft: '2.5rem' }}
-                  required
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Passwords */}
-          <div className="auth-row-grid grid-passwords">
-            <div className="form-group">
-              <label className="form-label">Password</label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(var(--muted))' }}>
-                  <Lock size={14} />
-                </span>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  className="form-control"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ paddingLeft: '2.2rem', paddingRight: '2.2rem' }}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '0.8rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'hsl(var(--muted))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: 0
-                  }}
-                >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Confirm Password</label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(var(--muted))' }}>
-                  <Lock size={14} />
-                </span>
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  className="form-control"
-                  placeholder="Confirm"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  style={{ paddingLeft: '2.2rem', paddingRight: '2.2rem' }}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '0.8rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'hsl(var(--muted))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: 0
-                  }}
-                >
-                  {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-            </div>
-          </div>
 
           {/* Submit */}
           <button 

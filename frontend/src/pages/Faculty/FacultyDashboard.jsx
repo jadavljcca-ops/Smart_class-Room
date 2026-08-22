@@ -324,10 +324,21 @@ export default function FacultyDashboard() {
     <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
       
       {/* Welcome banner */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Faculty Dashboard</h1>
-        <p style={{ color: 'hsl(var(--muted))' }}>
-          Welcome, Prof. {user?.fullName} ({user?.department})
+      <div 
+        className="card" 
+        style={{ 
+          marginBottom: '2.5rem', 
+          background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', 
+          color: '#ffffff',
+          border: 'none',
+          boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.4)',
+          padding: '24px 32px',
+          borderRadius: '16px'
+        }}
+      >
+        <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Faculty Dashboard</h1>
+        <p style={{ color: 'rgba(255, 255, 255, 0.85)', margin: '0.4rem 0 0 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          Welcome, Prof. {user?.fullName} <span style={{ fontSize: '1.4rem' }}>👋</span>
         </p>
       </div>
 

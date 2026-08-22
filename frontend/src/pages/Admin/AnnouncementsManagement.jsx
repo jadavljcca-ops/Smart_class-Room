@@ -5,7 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, Paperclip, Download, Calendar, ArrowLeft } from 'lucide-react';
 
-export default function AnnouncementsManagement({ department: propDepartment }) {
+export default function AnnouncementsManagement({ department: propDepartment, insideModal }) {
   const { authFetch, token } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -198,23 +198,38 @@ export default function AnnouncementsManagement({ department: propDepartment }) 
 
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
+    <div className={insideModal ? '' : "container animate-fade-in"} style={insideModal ? {} : { padding: '2rem 1.5rem' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
-            {propDepartment ? `${propDepartment} ` : ''}Announcements & Notices
-          </h1>
-          <p style={{ color: 'hsl(var(--muted))' }}>
-            Publish important alerts, events, and notices to college students and faculty{propDepartment ? ` in ${propDepartment}` : ''}.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {!propDepartment && (
-            <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <ArrowLeft size={16} /> Back to Dashboard
+      {!insideModal && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
+              {propDepartment ? `${propDepartment} ` : ''}Announcements & Notices
+            </h1>
+            <p style={{ color: 'hsl(var(--muted))' }}>
+              Publish important alerts, events, and notices to college students and faculty{propDepartment ? ` in ${propDepartment}` : ''}.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {!propDepartment && (
+              <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <ArrowLeft size={16} /> Back to Dashboard
+              </button>
+            )}
+            <button onClick={openAddModal} className="btn btn-primary">
+              <Plus size={16} />
+              Add Announcement
             </button>
-          )}
+            <button onClick={fetchAnnouncements} className="btn btn-secondary">
+              <RefreshCw size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Actions when inside modal */}
+      {insideModal && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem', gap: '0.5rem' }}>
           <button onClick={openAddModal} className="btn btn-primary">
             <Plus size={16} />
             Add Announcement
@@ -223,7 +238,7 @@ export default function AnnouncementsManagement({ department: propDepartment }) 
             <RefreshCw size={16} />
           </button>
         </div>
-      </div>
+      )}
 
       {/* Search filters */}
       <div className="search-controls" style={{ marginBottom: '1.5rem' }}>

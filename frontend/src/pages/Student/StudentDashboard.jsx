@@ -168,10 +168,26 @@ export default function StudentDashboard() {
     <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
 
       {/* Welcome banner */}
-      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <div 
+        className="card" 
+        style={{ 
+          marginBottom: '2.5rem', 
+          background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', 
+          color: '#ffffff',
+          border: 'none',
+          boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.4)',
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          flexWrap: 'wrap', 
+          gap: '1.25rem',
+          padding: '24px 32px',
+          borderRadius: '16px'
+        }}
+      >
         <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 800 }}>Student Dashboard</h1>
-          <p style={{ color: 'hsl(var(--muted))', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Student Dashboard</h1>
+          <p style={{ color: 'rgba(255, 255, 255, 0.85)', margin: '0.4rem 0 0 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span>Welcome, {user?.fullName}</span>
             <span>•</span>
             <span>Sem {user?.semester}</span>

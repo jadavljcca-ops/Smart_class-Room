@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { LogIn, Mail, Lock, User, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
-
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, GraduationCap } from 'lucide-react';
 
 export default function Login() {
   const { login } = useAuth();
@@ -14,8 +13,6 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,13 +25,11 @@ export default function Login() {
     try {
       const user = await login(identifier, password);
       showToast(`Welcome back, ${user.fullName}!`, 'success');
-      setLoggedInUser(user);
 
       if (user.role === 'admin' || user.role === 'faculty') {
         if (user.role === 'admin') navigate('/admin');
         if (user.role === 'faculty') navigate('/faculty');
       } else {
-        // Navigate immediately without popup for all users
         if (user.role === 'student') navigate('/student');
       }
     } catch (err) {
@@ -45,62 +40,132 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-card animate-fade-in">
-        <div className="auth-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ backgroundColor: 'hsl(var(--primary))', color: '#020617', borderRadius: '1.25rem', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '4.5rem', height: '4.5rem', marginBottom: '0.75rem', boxShadow: '0 10px 25px -5px rgba(245,158,11,0.3)' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
-              <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-            </svg>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#001a35', /* Base dark navy */
+      backgroundImage: 'radial-gradient(circle at 10% 40%, #1e133c 0%, #001a35 45%, #001a35 100%)', /* Added subtle purple glow on left */
+      padding: '1.5rem',
+      fontFamily: 'var(--font-family)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <div style={{
+        position: 'relative',
+        zIndex: 1,
+        width: '100%',
+        maxWidth: '420px',
+        background: '#032042', /* Card specific navy blue */
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        borderRadius: '24px',
+        padding: '2.5rem',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        color: 'white'
+      }}>
+        <div style={{ position: 'absolute', top: '24px', left: '24px' }}>
+          <Link to="/" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            width: '36px', 
+            height: '36px', 
+            background: 'rgba(255, 255, 255, 0.06)', 
+            borderRadius: '50%',
+            color: '#8a9bb3',
+            textDecoration: 'none',
+            transition: 'background 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}>
+            <ArrowLeft size={18} />
+          </Link>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem', marginTop: '1rem' }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #ffb300, #ff8c00)',
+            borderRadius: '14px', 
+            padding: '0.85rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            marginBottom: '1rem',
+            boxShadow: '0 8px 20px rgba(255, 140, 0, 0.3)'
+          }}>
+            <GraduationCap size={32} color="#000" strokeWidth={2.5} />
           </div>
-          <div className="auth-logo" style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-            <span style={{ color: 'white' }}>Edu</span><span style={{ color: 'hsl(var(--primary))' }}>Mark</span>
-          </div>
-          <p style={{ color: 'hsl(var(--muted))', fontSize: '0.9rem' }}>
-            College Classroom Management System
+          
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
+            <span style={{ color: 'white' }}>Edu</span><span style={{ color: '#ff9900' }}>Mark</span>
+          </h1>
+          <p style={{ color: '#8a9bb3', fontSize: '0.9rem', margin: 0 }}>
+            Sign in to access your academic dashboard
           </p>
         </div>
 
-        <h3 style={{ marginBottom: '1.5rem', fontWeight: 700, fontSize: '1.25rem', textAlign: 'center' }}>
-          Secure Login
-        </h3>
-
-        <form onSubmit={handleSubmit}>
-          {/* Identifier input */}
-          <div className="form-group">
-            <label className="form-label">ID / Enrollment No. / Email</label>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem', color: '#ffffff' }}>
+              Email ID (Gmail) <span style={{ color: '#ff9900' }}>*</span>
+            </label>
             <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(var(--muted))' }}>
-                <User size={16} />
+              <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#8a9bb3' }}>
+                <Mail size={18} />
               </span>
               <input
                 type="text"
-                className="form-control"
-                placeholder="Enter your ID or Email"
+                placeholder="Enter Your Email ID (Gmail)"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                style={{ paddingLeft: '2.5rem' }}
                 required
+                style={{
+                  width: '100%',
+                  padding: '0.85rem 1rem 0.85rem 2.75rem',
+                  background: '#02152b', /* Very dark input background */
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  color: 'white',
+                  fontSize: '0.9rem',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#ff9900'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)'}
               />
             </div>
           </div>
 
-          {/* Password input */}
-          <div className="form-group">
-            <label className="form-label">Password</label>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem', color: '#ffffff' }}>
+              Password <span style={{ color: '#ff9900' }}>*</span>
+            </label>
             <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(var(--muted))' }}>
-                <Lock size={16} />
+              <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#8a9bb3' }}>
+                <Lock size={18} />
               </span>
               <input
                 type={showPassword ? 'text' : 'password'}
-                className="form-control"
-                placeholder="Enter password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                 required
+                style={{
+                  width: '100%',
+                  padding: '0.85rem 2.75rem',
+                  background: '#02152b',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  color: 'white',
+                  fontSize: '0.9rem',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#ff9900'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)'}
               />
               <button
                 type="button"
@@ -112,92 +177,58 @@ export default function Login() {
                   transform: 'translateY(-50%)',
                   background: 'none',
                   border: 'none',
+                  color: '#8a9bb3',
                   cursor: 'pointer',
-                  color: 'hsl(var(--muted))',
                   display: 'flex',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  padding: 0
                 }}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
-          {/* Submit button */}
           <button
             type="submit"
-            className="btn btn-primary"
-            style={{ 
-              width: '100%', 
-              padding: '0.85rem', 
-              marginTop: '0.5rem',
-              opacity: submitting ? 0.7 : 1,
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              pointerEvents: submitting ? 'none' : 'auto'
-            }}
             disabled={submitting}
+            style={{
+              width: '100%',
+              padding: '0.9rem',
+              marginTop: '1rem',
+              background: 'linear-gradient(to right, #f6a011, #ea8200)', /* Exact orange from image */
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '1rem',
+              fontWeight: 600,
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              opacity: submitting ? 0.8 : 1,
+              boxShadow: '0 4px 15px rgba(234, 130, 0, 0.2)',
+              transition: 'all 0.2s ease',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => { if(!submitting) e.currentTarget.style.transform = 'translateY(-2px)' }}
+            onMouseLeave={(e) => { if(!submitting) e.currentTarget.style.transform = 'translateY(0)' }}
           >
             {submitting ? 'Signing In...' : (
               <>
-                <LogIn size={18} />
-                Sign In
+                Sign In <ArrowRight size={18} />
               </>
             )}
           </button>
         </form>
 
-        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem' }}>
-          <span style={{ color: 'hsl(var(--muted))' }}>New to class room? </span>
-          <Link to="/register" style={{ color: 'hsl(var(--primary))', fontWeight: 600, textDecoration: 'none' }}>
-            Create an Account
-          </Link>
-        </div>
+        {/* Removed 'New to class room?' link to strictly match the provided photo exactly. */}
 
-        <div style={{ marginTop: '1.25rem', textAlign: 'center', borderTop: '1px solid hsl(var(--border) / 0.6)', paddingTop: '1.25rem' }}>
-          <Link to="/" style={{ color: 'hsl(var(--muted))', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }} className="hover-text-primary">
-            <ArrowLeft size={16} /> Back to Homepage
-          </Link>
+        <div style={{ marginTop: '3.5rem', textAlign: 'center', fontSize: '0.75rem', color: '#8a9bb3' }}>
+          EduMark © 2026 • <span style={{ color: '#ff9900' }}>This Module Built and Designed By Team</span>
         </div>
       </div>
-
-      {/* Success Popup Overlay */}
-      {showSuccessPopup && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem'
-        }}>
-          <div className="animate-fade-in" style={{
-            background: 'hsl(var(--card))',
-            padding: '2.5rem 1.5rem',
-            borderRadius: 'var(--radius)',
-            boxShadow: 'var(--shadow-lg)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '90%',
-            maxWidth: '400px',
-            border: '1px solid hsl(var(--border))',
-            textAlign: 'center',
-            margin: '0 auto'
-          }}>
-            <CheckCircle size={60} style={{ color: 'hsl(var(--success))', marginBottom: '1rem' }} />
-            <h2 style={{ marginBottom: '0.5rem', color: 'hsl(var(--foreground))', fontSize: '1.5rem', fontWeight: 700 }}>Login Successful 🎉</h2>
-            <p style={{ color: 'hsl(var(--muted))', fontSize: '0.95rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
-              Welcome back, {loggedInUser?.fullName || 'User'}!
-            </p>
-            <p style={{ color: 'hsl(var(--muted))', fontSize: '0.85rem', lineHeight: 1.5, marginTop: '0.5rem' }}>
-              Redirecting to your dashboard...
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

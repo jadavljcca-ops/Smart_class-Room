@@ -175,10 +175,10 @@ router.post('/faculty', async (req, res) => {
     const adminCheck = await get('SELECT id FROM admins WHERE email = ?', [email]);
     const facultyCheck = await get('SELECT id FROM faculty WHERE email = ?', [email]);
     const studentCheck = await get('SELECT id FROM students WHERE email = ?', [email]);
-    const requestCheck = await get('SELECT id FROM registration_requests WHERE email = ?', [email]);
+    const requestCheck = await get("SELECT id FROM registration_requests WHERE email = ? AND status = 'Pending'", [email]);
 
     if (adminCheck || facultyCheck || studentCheck || requestCheck) {
-      return res.status(400).json({ message: 'Email already registered.' });
+      return res.status(400).json({ message: 'This email ID is no longer in use.' });
     }
 
     const empCheck = await get('SELECT id FROM faculty WHERE employee_id = ?', [employeeId]);
@@ -554,10 +554,10 @@ router.post('/sub-admins', async (req, res) => {
     const adminCheck = await get('SELECT id FROM admins WHERE email = ?', [email]);
     const facultyCheck = await get('SELECT id FROM faculty WHERE email = ?', [email]);
     const studentCheck = await get('SELECT id FROM students WHERE email = ?', [email]);
-    const requestCheck = await get('SELECT id FROM registration_requests WHERE email = ?', [email]);
+    const requestCheck = await get("SELECT id FROM registration_requests WHERE email = ? AND status = 'Pending'", [email]);
 
     if (adminCheck || facultyCheck || studentCheck || requestCheck) {
-      return res.status(400).json({ message: 'Email already registered.' });
+      return res.status(400).json({ message: 'This email ID is no longer in use.' });
     }
 
     const bcrypt = require('bcryptjs');
@@ -597,9 +597,10 @@ router.put('/sub-admins/:id', async (req, res) => {
     const adminCheck = await get('SELECT id FROM admins WHERE email = ? AND id != ?', [email, id]);
     const facultyCheck = await get('SELECT id FROM faculty WHERE email = ?', [email]);
     const studentCheck = await get('SELECT id FROM students WHERE email = ?', [email]);
+    const requestCheck = await get("SELECT id FROM registration_requests WHERE email = ? AND status = 'Pending'", [email]);
 
-    if (adminCheck || facultyCheck || studentCheck) {
-      return res.status(400).json({ message: 'Email already registered.' });
+    if (adminCheck || facultyCheck || studentCheck || requestCheck) {
+      return res.status(400).json({ message: 'This email ID is no longer in use.' });
     }
 
     const bcrypt = require('bcryptjs');
@@ -654,10 +655,10 @@ router.post('/students', async (req, res) => {
     const adminCheck = await get('SELECT id FROM admins WHERE email = ?', [email]);
     const facultyCheck = await get('SELECT id FROM faculty WHERE email = ?', [email]);
     const studentCheck = await get('SELECT id FROM students WHERE email = ?', [email]);
-    const requestCheck = await get('SELECT id FROM registration_requests WHERE email = ?', [email]);
+    const requestCheck = await get("SELECT id FROM registration_requests WHERE email = ? AND status = 'Pending'", [email]);
 
     if (adminCheck || facultyCheck || studentCheck || requestCheck) {
-      return res.status(400).json({ message: 'Email already registered.' });
+      return res.status(400).json({ message: 'This email ID is no longer in use.' });
     }
 
     const enrollCheck = await get('SELECT id FROM students WHERE enrollment_number = ?', [enrollmentNumber]);
@@ -665,6 +666,7 @@ router.post('/students', async (req, res) => {
       return res.status(400).json({ message: 'Enrollment Number already registered.' });
     }
 
+    const bcrypt = require('bcryptjs');
     const hash = await bcrypt.hash(password, 10);
     await run(
       `INSERT INTO students (full_name, email, mobile_number, department, semester, enrollment_number, password_hash, raw_password, status)
@@ -710,7 +712,7 @@ router.post('/students/bulk', async (req, res) => {
       const adminCheck = await get('SELECT id FROM admins WHERE email = ?', [email]);
       const facultyCheck = await get('SELECT id FROM faculty WHERE email = ?', [email]);
       const studentCheck = await get('SELECT id FROM students WHERE email = ?', [email]);
-      const requestCheck = await get('SELECT id FROM registration_requests WHERE email = ?', [email]);
+      const requestCheck = await get("SELECT id FROM registration_requests WHERE email = ? AND status = 'Pending'", [email]);
 
       if (adminCheck || facultyCheck || studentCheck || requestCheck) {
         duplicateCount++;

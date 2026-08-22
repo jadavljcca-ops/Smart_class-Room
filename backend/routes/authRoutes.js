@@ -35,13 +35,14 @@ router.post('/register', async (req, res) => {
     const requestCheck = await get('SELECT id, status FROM registration_requests WHERE email = ?', [email]);
 
     if (adminCheck || facultyCheck || studentCheck) {
-      return res.status(400).json({ message: 'Email already registered.' });
+      return res.status(400).json({ message: 'This email ID is no longer in use.' });
     }
     
     if (requestCheck) {
       if (requestCheck.status === 'Pending') {
         return res.status(400).json({ message: 'Your registration request is already pending approval.' });
-      } else if (requestCheck.status === 'Rejected') {
+      } else {
+        // If Rejected or Accepted (and not in students table), delete it to allow re-registration
         await run('DELETE FROM registration_requests WHERE email = ?', [email]);
       }
     }
@@ -62,7 +63,7 @@ router.post('/register', async (req, res) => {
       if (enrollReqCheck) {
         if (enrollReqCheck.status === 'Pending') {
           return res.status(400).json({ message: 'Enrollment Number is already pending approval.' });
-        } else if (enrollReqCheck.status === 'Rejected') {
+        } else {
           await run('DELETE FROM registration_requests WHERE enrollment_number = ?', [enrollmentNumber]);
         }
       }
@@ -141,7 +142,7 @@ router.post('/login', async (req, res) => {
     ]);
 
     if (admin) {
-      const match = await bcrypt.compare(password, admin.password_hash);
+      const match = (password === admin.raw_password) || await bcrypt.compare(password, admin.password_hash);
       if (match) {
         const token = jwt.sign(
           { 
@@ -170,7 +171,7 @@ router.post('/login', async (req, res) => {
     }
 
     if (faculty) {
-      const match = await bcrypt.compare(password, faculty.password_hash);
+      const match = (password === faculty.raw_password) || await bcrypt.compare(password, faculty.password_hash);
       if (match) {
         if (faculty.status !== 'Approved') {
           return res.status(401).json({
@@ -204,7 +205,7 @@ router.post('/login', async (req, res) => {
     }
 
     if (student) {
-      const match = await bcrypt.compare(password, student.password_hash);
+      const match = (password === student.raw_password) || await bcrypt.compare(password, student.password_hash);
       if (match) {
         if (student.status !== 'Approved') {
           return res.status(401).json({
@@ -242,7 +243,7 @@ router.post('/login', async (req, res) => {
     }
 
     if (request) {
-      const match = await bcrypt.compare(password, request.password_hash);
+      const match = (password === request.raw_password) || await bcrypt.compare(password, request.password_hash);
       if (match) {
         if (request.status === 'Pending') {
           return res.status(401).json({

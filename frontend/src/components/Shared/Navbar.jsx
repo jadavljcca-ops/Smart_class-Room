@@ -82,7 +82,6 @@ export default function Navbar() {
               {user.role === 'admin' && (
                 <>
                   <Link to="/admin" className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
-                  <Link to="/admin/requests" className={`nav-link ${location.pathname === '/admin/requests' ? 'active' : ''}`}>Requests</Link>
                   <Link to="/admin/faculty" className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
                   <Link to="/admin/students" className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
                   <Link to="/admin/announcements" className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
@@ -174,96 +173,67 @@ export default function Navbar() {
 
           {user ? (
             <>
-              {/* Notifications Trigger - Hidden inside /admin routes as it's in their dashboard */}
-              {!location.pathname.startsWith('/admin') && (
+              {/* Notifications Trigger - Hidden on desktop admin routes, shown on mobile */}
+              <div className={location.pathname.startsWith('/admin') ? "admin-mobile-nav-notif" : ""}>
                 <NotificationMenu />
-              )}
+              </div>
 
-              {/* Profile Dropdown */}
-              <div style={{ position: 'relative' }} ref={profileMenuRef} className="desktop-only-block">
+              {/* Profile Info & Actions (Fixed at bottom of sidebar) */}
+              <div className="desktop-only-block" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                {user.role !== 'student' && (
+                  <Link 
+                    to="/change-password" 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.45rem 0.5rem',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: '#cbd5e1',
+                      fontSize: '0.9rem',
+                      transition: 'all 0.2s',
+                      fontWeight: 500
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#ffffff'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#cbd5e1'; }}
+                  >
+                    <Key size={16} />
+                    Change Password
+                  </Link>
+                )}
+
                 <button 
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="btn btn-secondary"
+                  onClick={handleLogout}
                   style={{
-                    padding: '0.4rem 0.8rem',
-                    fontSize: '0.85rem',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem'
+                    gap: '0.5rem',
+                    padding: '0.45rem 0.5rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'none',
+                    color: '#f87171',
+                    fontSize: '0.9rem',
+                    width: '100%',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    fontWeight: 500
                   }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fca5a5'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#f87171'; }}
                 >
-                  <User size={16} />
-                  <span style={{ display: 'none', md: 'inline' }}>{user.fullName}</span>
-                  <ChevronDown size={14} />
+                  <LogOut size={16} />
+                  Logout
                 </button>
 
-                {showProfileMenu && (
-                  <div className="card dropdown-menu" style={{
-                    position: 'absolute',
-                    top: '2.5rem',
-                    right: 0,
-                    width: '220px',
-                    zIndex: 1000,
-                    padding: '0.75rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.25rem',
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))'
-                  }}>
-                    {/* User info details */}
-                    <div style={{ padding: '0.5rem 0.5rem 0.75rem 0.5rem', borderBottom: '1px solid hsl(var(--border))', marginBottom: '0.5rem' }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{user.fullName}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'hsl(var(--muted))', textTransform: 'capitalize' }}>
-                        {user.role} {user.department ? `| ${user.department}` : ''}
-                      </div>
-                    </div>
-
-                    {user.role !== 'student' && (
-                      <Link 
-                        to="/change-password" 
-                        onClick={() => setShowProfileMenu(false)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          padding: '0.5rem',
-                          borderRadius: '6px',
-                          textDecoration: 'none',
-                          color: 'inherit',
-                          fontSize: '0.85rem',
-                          cursor: 'pointer'
-                        }}
-                        className="dropdown-item"
-                      >
-                        <Key size={14} />
-                        Change Password
-                      </Link>
-                    )}
-
-                    <button 
-                      onClick={handleLogout}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.5rem',
-                        borderRadius: '6px',
-                        border: 'none',
-                        background: 'none',
-                        color: 'hsl(var(--danger))',
-                        fontSize: '0.85rem',
-                        width: '100%',
-                        textAlign: 'left',
-                        cursor: 'pointer'
-                      }}
-                      className="dropdown-item"
-                    >
-                      <LogOut size={14} />
-                      Logout
-                    </button>
+                <div style={{ padding: '0.5rem 0.5rem 0.4rem 0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', marginTop: '0.25rem' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#ffffff' }}>{user.fullName}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize', marginTop: '0.15rem' }}>
+                    {user.role} {user.department ? `| ${user.department}` : ''}
                   </div>
-                )}
+                </div>
               </div>
             </>
           ) : (
@@ -295,18 +265,123 @@ export default function Navbar() {
 
         </div>
       </div>
+    </nav>
 
+      {/* Mobile Menu Drawer */}
+      {isOpen && (
+        <>
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 9990
+          }} onClick={() => setIsOpen(false)} className="animate-fade-in" />
+          <div className="mobile-menu-drawer animate-fade-in" style={{
+            position: 'fixed',
+            top: '4.5rem',
+            left: 0,
+            right: 0,
+            maxHeight: 'calc(100vh - 4.5rem)',
+            overflowY: 'auto',
+            backgroundColor: '#001c3d',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
+            padding: '1.25rem 1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            zIndex: 9991,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+            color: '#ffffff'
+          }}>
+          {location.pathname !== '/' && user ? (
+            <>
+              {user.role === 'admin' && (
+                <>
+                  <Link to="/admin" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
+                  <Link to="/admin/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
+                  <Link to="/admin/students" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
+                  <Link to="/admin/announcements" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
+                  {user.adminRole === 'main_admin' && (
+                    <>
+                      <Link to="/admin/departments" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>Departments</Link>
+                      <Link to="/admin/sub-admins" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>Sub Admins</Link>
+                    </>
+                  )}
+                </>
+              )}
 
+              {user.role === 'faculty' && (
+                <>
+                  <Link to="/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>Dashboard & Notes</Link>
+                </>
+              )}
 
+              {user.role === 'student' && (
+                <>
+                  <Link to="/student" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>Dashboard</Link>
+                </>
+              )}
 
-      
+              {/* Profile options inside mobile drawer */}
+              <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ padding: '0 0.5rem' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#ffffff' }}>{user.fullName}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize' }}>
+                    {user.role} {user.department ? `| ${user.department}` : ''}
+                  </div>
+                </div>
+                {user.role !== 'student' && (
+                  <Link to="/change-password" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}>
+                    <Key size={15} /> Change Password
+                  </Link>
+                )}
+                <button onClick={() => { handleLogout(); setIsOpen(false); }} className="btn btn-danger" style={{ width: '100%', justifyContent: 'flex-start', border: 'none', padding: '0.6rem 1rem' }}>
+                  <LogOut size={15} /> Logout
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <a href="/#features" onClick={() => setIsOpen(false)} className="nav-link">Features</a>
+              <a href="/#stats" onClick={() => setIsOpen(false)} className="nav-link">Statistics</a>
+              <a href="/#how-it-works" onClick={() => setIsOpen(false)} className="nav-link">How It Works</a>
+              <a href="/#departments" onClick={() => setIsOpen(false)} className="nav-link">Departments</a>
+              <a href="/#faq" onClick={() => setIsOpen(false)} className="nav-link">FAQ</a>
+              
+              {/* Login / Register inside mobile drawer */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
+                <Link to="/login" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%' }}>Login</Link>
+                <Link to="/register" onClick={() => setIsOpen(false)} className="btn btn-primary" style={{ width: '100%' }}>Register</Link>
+              </div>
+            </>
+          )}
+        </div>
+        </>
+      )}
 
+      {/* Floating Circular Mobile Hamburger Toggle Button (Hidden on laptop/desktop view, visible ONLY on mobile) */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="mobile-floating-toggle"
+        aria-label="Toggle navigation menu"
+        title="Menu"
+      >
+        {isOpen ? <X size={20} color="#ffffff" strokeWidth={2.4} /> : <Menu size={20} color="#ffffff" strokeWidth={2.4} />}
+      </button>
 
-      {/* CSS overrides specifically for hover navigation links */}
+      {/* CSS rules for navigation links & responsive displays */}
       <style>{`
+        .mobile-floating-toggle {
+          display: none !important;
+        }
         .nav-link {
           text-decoration: none;
-          color: hsl(var(--muted));
+          color: #94a3b8;
           font-weight: 500;
           font-size: 0.925rem;
           transition: color 0.2s;
@@ -314,10 +389,10 @@ export default function Navbar() {
           border-radius: 4px;
         }
         .nav-link:hover, .nav-link.active {
-          color: hsl(var(--primary));
+          color: #f59e0b !important;
         }
         .dropdown-item:hover {
-          background-color: hsl(var(--secondary)) !important;
+          background-color: rgba(255, 255, 255, 0.08) !important;
         }
         @keyframes slideInRight {
           from { transform: translateX(110%); opacity: 0; }
@@ -349,8 +424,26 @@ export default function Navbar() {
           .desktop-only-block {
             display: none !important;
           }
-          .mobile-toggle {
+          .mobile-floating-toggle {
             display: flex !important;
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 50% !important;
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%) !important;
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 6px 18px rgba(245, 158, 11, 0.5), 0 3px 10px rgba(0, 0, 0, 0.35) !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            z-index: 9999 !important;
+            touch-action: manipulation !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+          }
+          .mobile-floating-toggle:active {
+            transform: scale(0.92) !important;
           }
         }
         @media (max-width: 480px) {
@@ -359,117 +452,6 @@ export default function Navbar() {
           }
         }
       `}</style>
-      </nav>
-
-      {/* Mobile Menu Drawer */}
-      {isOpen && (
-        <>
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            zIndex: 9990
-          }} onClick={() => setIsOpen(false)} className="animate-fade-in" />
-          <div className="mobile-menu-drawer animate-fade-in" style={{
-            position: 'fixed',
-            top: '4.5rem',
-            left: 0,
-            right: 0,
-            maxHeight: 'calc(100vh - 4.5rem)',
-            overflowY: 'auto',
-            backgroundColor: 'hsl(var(--card))',
-            borderBottom: '1px solid hsl(var(--border))',
-            padding: '1.25rem 1.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            zIndex: 9991,
-            boxShadow: 'var(--shadow-md)'
-          }}>
-          {location.pathname !== '/' && user ? (
-            <>
-              {user.role === 'admin' && (
-                <>
-                  <Link to="/admin" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
-                  <Link to="/admin/requests" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/requests' ? 'active' : ''}`}>Requests</Link>
-                  <Link to="/admin/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
-                  <Link to="/admin/students" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
-                  <Link to="/admin/announcements" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
-                  {user.adminRole === 'main_admin' && (
-                    <>
-                      <Link to="/admin/departments" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>Departments</Link>
-                      <Link to="/admin/sub-admins" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>Sub Admins</Link>
-                    </>
-                  )}
-                </>
-              )}
-
-              {user.role === 'faculty' && (
-                <>
-                  <Link to="/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>Dashboard & Notes</Link>
-                </>
-              )}
-
-              {user.role === 'student' && (
-                <>
-                  <Link to="/student" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>Dashboard</Link>
-                </>
-              )}
-
-              {/* Profile options inside mobile drawer */}
-              <div style={{ marginTop: '0.5rem', borderTop: '1px solid hsl(var(--border) / 0.5)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ padding: '0 0.5rem' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{user.fullName}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'hsl(var(--muted))', textTransform: 'capitalize' }}>
-                    {user.role} {user.department ? `| ${user.department}` : ''}
-                  </div>
-                </div>
-                {user.role !== 'student' && (
-                  <Link to="/change-password" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}>
-                    <Key size={15} /> Change Password
-                  </Link>
-                )}
-                <button onClick={() => { handleLogout(); setIsOpen(false); }} className="btn btn-danger" style={{ width: '100%', justifyContent: 'flex-start', border: 'none', padding: '0.6rem 1rem' }}>
-                  <LogOut size={15} /> Logout
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <a href="/#features" onClick={() => setIsOpen(false)} className="nav-link">Features</a>
-              <a href="/#stats" onClick={() => setIsOpen(false)} className="nav-link">Statistics</a>
-              <a href="/#departments" onClick={() => setIsOpen(false)} className="nav-link">Departments</a>
-              <a href="/#faq" onClick={() => setIsOpen(false)} className="nav-link">FAQ</a>
-              
-              {/* Login / Register inside mobile drawer */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid hsl(var(--border) / 0.5)', paddingTop: '1rem' }}>
-                <Link to="/login" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%' }}>Login</Link>
-                <Link to="/register" onClick={() => setIsOpen(false)} className="btn btn-primary" style={{ width: '100%' }}>Register</Link>
-              </div>
-            </>
-          )}
-        </div>
-        </>
-      )}
-
-      {/* Mobile Menu Icon Toggle */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
-        className="mobile-toggle fab-button"
-        style={{
-          cursor: 'pointer',
-          color: '#020617',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        {isOpen ? <X size={22} /> : <Menu size={22} />}
-      </button>
     </>
   );
 }

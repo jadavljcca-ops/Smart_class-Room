@@ -20,10 +20,7 @@ export default function SubAdminsManagement() {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // Department creation inline modal state
-  const [showAddDeptModal, setShowAddDeptModal] = useState(false);
-  const [newDeptName, setNewDeptName] = useState('');
-  const [addingDept, setAddingDept] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
 
   const fetchSubAdmins = async () => {
@@ -111,37 +108,7 @@ export default function SubAdminsManagement() {
     setDepartment(admin.department);
   };
 
-  const handleCreateDepartmentInline = async () => {
-    if (!newDeptName || newDeptName.trim() === '') {
-      showToast('Please enter a department name.', 'warning');
-      return;
-    }
 
-    setAddingDept(true);
-    try {
-      const res = await authFetch('/admin/departments', {
-        method: 'POST',
-        body: JSON.stringify({ name: newDeptName })
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        showToast(data.message || 'Department added successfully!', 'success');
-        const addedDeptName = newDeptName.trim();
-        setNewDeptName('');
-        setShowAddDeptModal(false);
-        await fetchDepartments();
-        setDepartment(addedDeptName);
-      } else {
-        showToast(data.message || 'Failed to add department.', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Network error adding department.', 'error');
-    } finally {
-      setAddingDept(false);
-    }
-  };
 
   const handleDeleteSubAdmin = async (id, name) => {
     const isConfirmed = await confirmDelete({ 
@@ -189,10 +156,10 @@ export default function SubAdminsManagement() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '2rem' }} className="sub-admins-layout">
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 1fr) 1fr', gap: '2rem' }} className="sub-admins-layout">
         
         {/* Left Column: Create Sub Admin */}
-        <div>
+        <div className="scrollable-col">
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -283,33 +250,22 @@ export default function SubAdminsManagement() {
               {/* Department Dropdown */}
               <div className="form-group">
                 <label className="form-label">Department</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <div style={{ position: 'relative', flex: 1 }}>
-                    <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(var(--muted))' }}>
-                      <School size={16} />
-                    </span>
-                    <select
-                      className="form-control"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      style={{ paddingLeft: '2.5rem' }}
-                      required
-                    >
-                      <option value="">Select Department</option>
-                      {departments.map((dept, idx) => (
-                        <option key={idx} value={dept.name}>{dept.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddDeptModal(true)}
-                    className="btn btn-secondary"
-                    style={{ padding: '0 0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    title="Add New Department"
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(var(--muted))' }}>
+                    <School size={16} />
+                  </span>
+                  <select
+                    className="form-control"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    style={{ paddingLeft: '2.5rem' }}
+                    required
                   >
-                    <Plus size={18} />
-                  </button>
+                    <option value="">Select Department</option>
+                    {departments.map((dept, idx) => (
+                      <option key={idx} value={dept.name}>{dept.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -326,7 +282,7 @@ export default function SubAdminsManagement() {
         </div>
 
         {/* Right Column: Sub Admins list */}
-        <div>
+        <div className="scrollable-col">
           {loading ? (
             <div style={{ textAlign: 'center', padding: '3rem' }}>
               <h3 style={{ color: 'hsl(var(--muted))' }}>Loading Sub Admins...</h3>
@@ -336,64 +292,62 @@ export default function SubAdminsManagement() {
               No department sub-admins registered yet.
             </div>
           ) : (
-            <div className="table-container" style={{ marginTop: 0 }}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Sub-Admin Name</th>
-                    <th>Email Address</th>
-                    <th>Department</th>
-                    <th>Password</th>
-                    <th>Date Registered</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subAdmins.map((admin) => (
-                    <tr key={admin.id}>
-                      <td style={{ fontWeight: 600 }}>{admin.full_name}</td>
-                      <td>{admin.email}</td>
-                      <td>
-                        <span className="badge" style={{ backgroundColor: 'hsl(var(--primary) / 0.1)', color: 'hsl(var(--primary))', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
-                          {admin.department}
-                        </span>
-                      </td>
-                      <td style={{ fontWeight: 600, color: 'hsl(var(--primary))' }}>
-                        {admin.raw_password || 'N/A'}
-                      </td>
-                      <td style={{ fontSize: '0.85rem', color: 'hsl(var(--muted))' }}>
-                        {new Date(admin.created_at).toLocaleDateString()}
-                      </td>
-                      <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                        <button
-                          onClick={() => handleEditClick(admin)}
-                          className="btn btn-secondary"
-                          style={{ 
-                            padding: '0.4rem', 
-                            color: 'hsl(var(--primary))',
-                            borderColor: 'transparent'
-                          }}
-                          title="Edit Sub-Admin"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSubAdmin(admin.id, admin.full_name)}
-                          className="btn btn-secondary"
-                          style={{ 
-                            padding: '0.4rem', 
-                            color: 'hsl(var(--danger))',
-                            borderColor: 'transparent'
-                          }}
-                          title="Delete Sub-Admin Account"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', width: '100%' }}>
+              {subAdmins.map((admin) => (
+                <div key={admin.id} className="card animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                    <div style={{ overflow: 'hidden' }}>
+                      <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{admin.full_name}</h4>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'hsl(var(--muted))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={admin.email}>{admin.email}</p>
+                    </div>
+                    <span className="badge" style={{ backgroundColor: 'hsl(var(--primary) / 0.1)', color: 'hsl(var(--primary))', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0 }}>
+                      {admin.department}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'hsl(var(--background))', padding: '0.75rem', borderRadius: '8px' }}>
+                    <Lock size={14} color="hsl(var(--muted))" />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--primary))' }}>{admin.raw_password || 'N/A'}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid hsl(var(--border) / 0.5)' }}>
+                    <button
+                      onClick={() => handleEditClick(admin)}
+                      className="btn btn-secondary"
+                      style={{ 
+                        padding: '0.4rem 0.75rem', 
+                        color: 'hsl(var(--primary))',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        fontSize: '0.85rem',
+                        border: 'none',
+                        backgroundColor: 'transparent'
+                      }}
+                      title="Edit Sub-Admin"
+                    >
+                      <Edit2 size={14} /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSubAdmin(admin.id, admin.full_name)}
+                      className="btn btn-secondary"
+                      style={{ 
+                        padding: '0.4rem 0.75rem', 
+                        color: 'hsl(var(--danger))',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        fontSize: '0.85rem',
+                        border: 'none',
+                        backgroundColor: 'transparent'
+                      }}
+                      title="Delete Sub-Admin Account"
+                    >
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -405,48 +359,16 @@ export default function SubAdminsManagement() {
             grid-template-columns: 1fr !important;
           }
         }
+        @media (min-width: 901px) {
+          .scrollable-col {
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+            padding-right: 0.5rem;
+          }
+        }
       `}</style>
 
-      {/* Inline Modal for adding department */}
-      {showAddDeptModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '1rem'
-        }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '1.75rem' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem' }}>Add New Department</h3>
-            <div className="form-group">
-              <label className="form-label">Department Name</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="e.g. BCA, BBA, B.Com"
-                value={newDeptName}
-                onChange={(e) => setNewDeptName(e.target.value)}
-                required
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
-              <button
-                type="button"
-                onClick={() => { setShowAddDeptModal(false); setNewDeptName(''); }}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateDepartmentInline}
-                className="btn btn-primary"
-                disabled={addingDept}
-              >
-                {addingDept ? 'Adding...' : 'Add'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
