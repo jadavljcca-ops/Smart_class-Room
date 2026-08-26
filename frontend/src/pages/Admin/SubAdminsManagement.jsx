@@ -1,4 +1,4 @@
-import { confirmDelete } from '../../utils/alerts';
+import { confirmDelete, showProfileUpdatedAlert } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -78,7 +78,11 @@ export default function SubAdminsManagement() {
       const data = await res.json();
 
       if (res.ok) {
-        showToast(data.message || `Sub Admin ${editingId ? 'updated' : 'created'} successfully!`, 'success');
+        if (editingId) {
+          await showProfileUpdatedAlert('Your profail has been Updated.');
+        } else {
+          showToast('Sub Admin created successfully!', 'success');
+        }
         resetForm();
         fetchSubAdmins();
       } else {
@@ -136,25 +140,37 @@ export default function SubAdminsManagement() {
   };
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
+    <div className="container animate-fade-in" style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
       
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Manage Sub-Admins</h1>
-          <p style={{ color: 'hsl(var(--muted))' }}>
-            Register new department admins or delete existing ones.
-          </p>
+
+      {/* Header Card — sticky */}
+      <div className="sticky-header-wrapper">
+        <div className="admin-header-card" style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: '1rem',
+          background: 'linear-gradient(135deg, #002d62 0%, #001f3f 100%)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          borderRadius: '20px', padding: '22px 28px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.4)'
+        }}>
+          <div>
+            <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Manage Sub-Admins</h1>
+            <p style={{ color: '#94a3b8', margin: '0.3rem 0 0 0', fontSize: '0.9rem' }}>
+              Register new department admins or delete existing ones.
+            </p>
+          </div>
+          <button 
+            onClick={fetchSubAdmins} 
+            className="btn btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
         </div>
-        <button 
-          onClick={fetchSubAdmins} 
-          className="btn btn-secondary"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <RefreshCw size={16} />
-          Refresh
-        </button>
       </div>
+
+
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 1fr) 1fr', gap: '2rem' }} className="sub-admins-layout">
         

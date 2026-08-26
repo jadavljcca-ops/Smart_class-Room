@@ -321,26 +321,31 @@ export default function FacultyDashboard() {
   });
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
+    <div className="container animate-fade-in" style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
       
-      {/* Welcome banner */}
-      <div 
-        className="card" 
-        style={{ 
-          marginBottom: '2.5rem', 
-          background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', 
-          color: '#ffffff',
-          border: 'none',
-          boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.4)',
-          padding: '24px 32px',
-          borderRadius: '16px'
-        }}
-      >
-        <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Faculty Dashboard</h1>
-        <p style={{ color: 'rgba(255, 255, 255, 0.85)', margin: '0.4rem 0 0 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          Welcome, Prof. {user?.fullName} <span style={{ fontSize: '1.4rem' }}>👋</span>
-        </p>
+
+      {/* Welcome banner — wrapped in sticky-header-wrapper-white to mask top scrolling gap */}
+      <div className="sticky-header-wrapper-white">
+        <div 
+          className="card" 
+          style={{ 
+            background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', 
+            color: '#ffffff',
+            border: 'none',
+            boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.4)',
+            padding: '24px 32px',
+            borderRadius: '16px',
+            marginBottom: 0
+          }}
+        >
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Faculty Dashboard</h1>
+          <p style={{ color: 'rgba(255, 255, 255, 0.85)', margin: '0.4rem 0 0 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            Welcome, Prof. {user?.fullName} <span style={{ fontSize: '1.4rem' }}>👋</span>
+          </p>
+        </div>
       </div>
+
+
 
       {/* Stats row */}
       <div className="dashboard-grid" style={{ marginBottom: '2.5rem' }}>
@@ -531,16 +536,24 @@ export default function FacultyDashboard() {
 
       {/* Note Form Modal */}
       {showNoteForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '2rem 1rem', overflowY: 'auto'
-        }}>
-          <div className="card animate-fade-in" style={{ margin: 'auto', width: '100%', maxWidth: '520px', padding: '2rem', backgroundColor: 'hsl(var(--card))' }}>
+        <div 
+          onClick={() => setShowNoteForm(false)}
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '2rem 1rem', overflowY: 'auto'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="card animate-fade-in" 
+            style={{ margin: 'auto', width: '100%', maxWidth: '520px', padding: '2rem', backgroundColor: 'hsl(var(--card))' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+
                 {editingNoteId ? 'Update Lecture Note' : 'Upload Lecture Note'}
               </h3>
               <button 
@@ -688,16 +701,24 @@ export default function FacultyDashboard() {
 
       {/* Announcement Form Modal */}
       {showAnnForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '1rem'
-        }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))' }}>
+        <div 
+          onClick={() => setShowAnnForm(false)}
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '1rem'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="card animate-fade-in" 
+            style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Create New Announcement</h3>
+
               <button 
                 onClick={() => setShowAnnForm(false)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}

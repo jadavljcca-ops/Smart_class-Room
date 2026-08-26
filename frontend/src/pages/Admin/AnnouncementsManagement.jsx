@@ -198,34 +198,46 @@ export default function AnnouncementsManagement({ department: propDepartment, in
 
 
   return (
-    <div className={insideModal ? '' : "container animate-fade-in"} style={insideModal ? {} : { padding: '2rem 1.5rem' }}>
-      {/* Header */}
+    <div className={insideModal ? '' : "container animate-fade-in"} style={insideModal ? {} : { padding: '0 1.5rem 2rem 1.5rem' }}>
+      {/* Header Card — sticky */}
+
       {!insideModal && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
-              {propDepartment ? `${propDepartment} ` : ''}Announcements & Notices
-            </h1>
-            <p style={{ color: 'hsl(var(--muted))' }}>
-              Publish important alerts, events, and notices to college students and faculty{propDepartment ? ` in ${propDepartment}` : ''}.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {!propDepartment && (
-              <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <ArrowLeft size={16} /> Back to Dashboard
+        <div className="sticky-header-wrapper">
+          <div className="admin-header-card" style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            flexWrap: 'wrap', gap: '1rem',
+            background: 'linear-gradient(135deg, #002d62 0%, #001f3f 100%)',
+            border: '1px solid rgba(255,255,255,0.16)',
+            borderRadius: '20px', padding: '22px 28px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.4)'
+          }}>
+            <div>
+              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                {propDepartment ? `${propDepartment} ` : ''}Announcements & Notices
+              </h1>
+              <p style={{ color: '#94a3b8', margin: '0.3rem 0 0 0', fontSize: '0.9rem' }}>
+                Publish important alerts, events, and notices to college students and faculty{propDepartment ? ` in ${propDepartment}` : ''}.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {!propDepartment && (
+                <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <ArrowLeft size={16} /> Back to Dashboard
+                </button>
+              )}
+              <button onClick={openAddModal} className="btn btn-primary">
+                <Plus size={16} />
+                Add Announcement
               </button>
-            )}
-            <button onClick={openAddModal} className="btn btn-primary">
-              <Plus size={16} />
-              Add Announcement
-            </button>
-            <button onClick={fetchAnnouncements} className="btn btn-secondary">
-              <RefreshCw size={16} />
-            </button>
+              <button onClick={fetchAnnouncements} className="btn btn-secondary">
+                <RefreshCw size={16} />
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+
 
       {/* Modal Actions when inside modal */}
       {insideModal && (
@@ -348,16 +360,24 @@ export default function AnnouncementsManagement({ department: propDepartment, in
 
       {/* Add / Edit notice Modal */}
       {showForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '1rem'
-        }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '600px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))' }}>
+        <div 
+          onClick={() => setShowForm(false)}
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, padding: '1rem'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="card animate-fade-in" 
+            style={{ width: '100%', maxWidth: '600px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+
                 {editingId ? 'Edit Announcement' : 'Create New Announcement'}
               </h3>
               <button 

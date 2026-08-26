@@ -127,8 +127,32 @@ export const AuthProvider = ({ children }) => {
     return response;
   };
 
+  const updateProfile = async (profileData) => {
+    const response = await fetch(`${API_BASE_URL}/admin/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Profile update failed.');
+    }
+
+    // If backend returns a new token (after name/password change), update it
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+    }
+    return data.message;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, changePassword, authFetch }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, changePassword, authFetch, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

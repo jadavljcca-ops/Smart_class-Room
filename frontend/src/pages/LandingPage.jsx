@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
 import {
   BookOpen, Users, Award, ShieldCheck, Megaphone,
   Download, Upload, ChevronRight, CheckCircle,
   HelpCircle, Layers, Activity, FileText, ArrowRight,
-  Sparkles, Check, Globe, Zap, Smartphone, X, Bell
+  Sparkles, Check, Globe, Zap, Smartphone, X, Bell, GraduationCap
 } from 'lucide-react';
 
 const CountUp = ({ end, duration = 2000, suffix = "", isFloat = false }) => {
@@ -30,6 +32,31 @@ export default function LandingPage() {
   const [activeTab, setActiveTab] = useState('student');
   const [openFaq, setOpenFaq] = useState(null);
   const [stats, setStats] = useState({ students: 5000, faculty: 120, materials: 1500, uptime: 99.9 });
+  const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setShowInstallBanner(false);
+      }
+    } else {
+      // Direct user / trigger install
+      alert('To install the app, click the install/download icon in your browser address bar or select "Install App" from browser menu.');
+    }
+  };
 
   useEffect(() => {
     fetch('http://localhost:5000/api/public/stats')
@@ -41,6 +68,7 @@ export default function LandingPage() {
       })
       .catch(err => console.error('Failed to load stats', err));
   }, []);
+
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -88,8 +116,108 @@ export default function LandingPage() {
       <div className="abstract-blob blob-orb-2 animate-orb-pulse delay-2"></div>
       <div className="abstract-blob blob-orb-3 animate-orb-pulse delay-4"></div>
 
+      {/* Install App Floating Screen Bottom Banner (strictly on Landing Page) */}
+      {showInstallBanner && createPortal(
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'calc(100% - 2.5rem)',
+          maxWidth: '720px',
+          zIndex: 99999,
+          pointerEvents: 'auto'
+        }}>
+          <div className="animate-fade-in-up" style={{
+            background: 'linear-gradient(135deg, #001f3f 0%, #001224 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            borderRadius: '16px',
+            padding: '10px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1, minWidth: 0 }}>
+              {/* Compact yellow rounded square icon badge */}
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+                flexShrink: 0,
+                boxShadow: '0 2px 10px rgba(245, 158, 11, 0.35)'
+              }}>
+                <GraduationCap size={22} strokeWidth={2.2} />
+              </div>
+
+              {/* Compact Text */}
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{ fontWeight: 800, fontSize: '0.96rem', color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Install Smart Attendance App
+                </div>
+                <div style={{ color: '#94a3b8', fontSize: '0.78rem', marginTop: '0.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Install as an app for fast offline access & native experience.
+                </div>
+              </div>
+            </div>
+
+            {/* Actions: Compact Install button + Close cross */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
+              <button
+                onClick={handleInstallClick}
+                className="btn btn-primary pulse-primary"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.45rem 1.15rem',
+                  borderRadius: '9999px',
+                  fontWeight: 700,
+                  fontSize: '0.85rem'
+                }}
+              >
+                <Download size={15} />
+                Install App
+              </button>
+
+              <button
+                onClick={() => setShowInstallBanner(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '0.3rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
+                onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
+                title="Dismiss"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+
+
       {/* Hero Section */}
       <section className="hero-section" style={{ position: 'relative', zIndex: 2 }}>
+
         <div className="container hero-container">
           
           {/* Left Text Column */}

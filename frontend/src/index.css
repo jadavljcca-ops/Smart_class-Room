@@ -863,15 +863,23 @@ tr:hover td {
 .admin-sidebar-layout h4,
 .admin-sidebar-layout h5,
 .admin-sidebar-layout h6 {
-  color: #0f172a !important;
+  color: #0f172a;
 }
 
 .admin-sidebar-layout .admin-top-header-banner h1,
 .admin-sidebar-layout .admin-top-header-banner h2,
 .admin-sidebar-layout .admin-top-header-banner h3,
-.admin-sidebar-layout .admin-top-header-banner p {
+.admin-sidebar-layout .admin-top-header-banner p,
+.admin-sidebar-layout .admin-header-card h1,
+.admin-sidebar-layout .admin-header-card h2,
+.admin-sidebar-layout .admin-header-card h3,
+.admin-sidebar-layout .admin-header-card p,
+.admin-sidebar-layout div[style*="linear-gradient"] h1,
+.admin-sidebar-layout div[style*="linear-gradient"] h2,
+.admin-sidebar-layout div[style*="linear-gradient"] h3 {
   color: #ffffff !important;
 }
+
 
 .admin-sidebar-layout .card p,
 .admin-sidebar-layout .card span,
@@ -1275,3 +1283,47 @@ tr:hover td {
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
 }
+
+.swal-custom-white-popup {
+  background: #ffffff !important;
+  border-radius: 24px !important;
+  padding: 1.75rem !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.swal-custom-white-popup .btn-primary {
+  border-radius: 9999px !important;
+  padding: 0.65rem 2rem !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  margin-top: 1rem !important;
+}
+
+/* Sticky Header Wrappers — masks top gap with strong frosted glass blur */
+.sticky-header-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: 14px;
+  padding-bottom: 8px;
+  background-color: rgba(248, 250, 252, 0.85) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  margin-bottom: 1.5rem;
+}
+
+.sticky-header-wrapper-white {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: 14px;
+  padding-bottom: 8px;
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  margin-bottom: 1.5rem;
+}
+
+
+

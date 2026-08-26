@@ -8,6 +8,83 @@ const upload = require('../utils/uploader');
 // All routes here require Admin authentication
 router.use(authenticateToken, requireAdmin);
 
+// PUT /api/admin/profile  — Admin/Sub-Admin update own profile (name + optional password)
+// Sub-admin cannot change email — only main admin can do so via sub-admins management
+router.put('/profile', async (req, res) => {
+  const { id, role: tokenRole, adminRole, department, email: tokenEmail } = req.user;
+  const { fullName, currentPassword, newPassword } = req.body;
+
+  if (!fullName || !fullName.trim()) {
+    return res.status(400).json({ message: 'Full name is required.' });
+  }
+
+  try {
+    const admin = await get('SELECT * FROM admins WHERE id = ?', [id]);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin account not found.' });
+    }
+
+    let passwordHash = admin.password_hash;
+    let rawPassword = admin.raw_password;
+
+    // If user wants to change password
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: 'Current password is required to set a new password.' });
+      }
+      const match = await bcrypt.compare(currentPassword, admin.password_hash) || (currentPassword === admin.raw_password);
+      if (!match) {
+        return res.status(400).json({ message: 'Current password is incorrect.' });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: 'New password must be at least 6 characters.' });
+      }
+      passwordHash = await bcrypt.hash(newPassword, 10);
+      rawPassword = newPassword;
+    }
+
+    // Update name and password (email stays the same — sub-admin cannot change it)
+    await run(
+      `UPDATE admins SET full_name = ?, password_hash = ?, raw_password = ? WHERE id = ?`,
+      [fullName.trim(), passwordHash, rawPassword, id]
+    );
+
+    // Issue a new JWT with updated fullName so the navbar reflects the change immediately
+    const jwt = require('jsonwebtoken');
+    const { JWT_SECRET } = require('../middleware/auth');
+    const newToken = jwt.sign(
+      {
+        id,
+        email: tokenEmail,
+        role: 'admin',
+        adminRole: adminRole || 'sub_admin',
+        department: department || null,
+        fullName: fullName.trim()
+      },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    return res.json({
+      message: 'Profile updated successfully.',
+      token: newToken,
+      user: {
+        id,
+        email: tokenEmail,
+        role: 'admin',
+        adminRole: adminRole || 'sub_admin',
+        department: department || null,
+        fullName: fullName.trim()
+      }
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
+
 // GET /api/admin/stats
 router.get('/stats', async (req, res) => {
   try {
@@ -773,6 +850,92 @@ router.delete('/students/:id', async (req, res) => {
     res.json({ message: 'Student deleted successfully.' });
   } catch (error) {
     console.error('Delete student error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// POST /api/admin/students/bulk-delete
+router.post('/students/bulk-delete', async (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'No student IDs provided.' });
+  }
+
+  let deletedCount = 0;
+  let failedCount = 0;
+
+  try {
+    for (const id of ids) {
+      const student = await get('SELECT id, department FROM students WHERE id = ?', [id]);
+      if (!student) { failedCount++; continue; }
+      if (req.user.adminRole !== 'main_admin' && student.department !== req.user.department) { failedCount++; continue; }
+      await run('DELETE FROM students WHERE id = ?', [id]);
+      deletedCount++;
+    }
+    res.json({ message: `Deleted ${deletedCount} student(s). ${failedCount > 0 ? `${failedCount} could not be deleted.` : ''}` });
+  } catch (error) {
+    console.error('Bulk delete students error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// PUT /api/admin/students/:id  (Edit student details)
+router.put('/students/:id', async (req, res) => {
+  const { id } = req.params;
+  let { fullName, email, mobileNumber, department, semester, enrollmentNumber } = req.body;
+
+  if (req.user.adminRole !== 'main_admin') {
+    const existingStudent = await get('SELECT id, department FROM students WHERE id = ?', [id]);
+    if (!existingStudent || existingStudent.department !== req.user.department) {
+      return res.status(403).json({ message: 'Forbidden. You can only manage students in your own department.' });
+    }
+    department = req.user.department;
+  }
+
+  if (!fullName || !email || !mobileNumber || !department || !semester || !enrollmentNumber) {
+    return res.status(400).json({ message: 'Please provide all required fields.' });
+  }
+
+  try {
+    const emailCheck = await get('SELECT id FROM students WHERE email = ? AND id != ?', [email, id]);
+    if (emailCheck) return res.status(400).json({ message: 'Email is already taken by another user.' });
+
+    const enrollCheck = await get('SELECT id FROM students WHERE enrollment_number = ? AND id != ?', [enrollmentNumber, id]);
+    if (enrollCheck) return res.status(400).json({ message: 'Enrollment number is already taken.' });
+
+    await run(
+      `UPDATE students SET full_name = ?, email = ?, mobile_number = ?, department = ?, semester = ?, enrollment_number = ? WHERE id = ?`,
+      [fullName, email, mobileNumber, department, semester, enrollmentNumber, id]
+    );
+
+    res.json({ message: 'Student updated successfully.' });
+  } catch (error) {
+    console.error('Update student error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// POST /api/admin/faculty/bulk-delete
+router.post('/faculty/bulk-delete', async (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'No faculty IDs provided.' });
+  }
+
+  let deletedCount = 0;
+  let failedCount = 0;
+
+  try {
+    for (const id of ids) {
+      const faculty = await get('SELECT id, department FROM faculty WHERE id = ?', [id]);
+      if (!faculty) { failedCount++; continue; }
+      if (req.user.adminRole !== 'main_admin' && faculty.department !== req.user.department) { failedCount++; continue; }
+      await run('DELETE FROM faculty WHERE id = ?', [id]);
+      deletedCount++;
+    }
+    res.json({ message: `Deleted ${deletedCount} faculty member(s). ${failedCount > 0 ? `${failedCount} could not be deleted.` : ''}` });
+  } catch (error) {
+    console.error('Bulk delete faculty error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });

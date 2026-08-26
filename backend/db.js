@@ -188,7 +188,7 @@ async function initializeTables() {
       name TEXT UNIQUE NOT NULL
     )`);
 
-    // Seed default admin if no admins exist
+    // Seed default admin if no admins exist (only runs once on first start)
     const adminCount = await client.query("SELECT COUNT(*) as count FROM admins");
     if (parseInt(adminCount.rows[0].count) === 0) {
       const salt = bcrypt.genSaltSync(10);
@@ -198,9 +198,9 @@ async function initializeTables() {
       );
       console.log('Seeded default main admin user (admin@ljcca.edu / admin123)');
     } else {
-      const salt = bcrypt.genSaltSync(10);
-      const hash = bcrypt.hashSync('admin123', salt);
-      await client.query("UPDATE admins SET role = 'main_admin', password_hash = $1, raw_password = 'admin123' WHERE email = 'admin@ljcca.edu'", [hash]);
+      // Only ensure the main_admin role is set correctly; do NOT reset the password.
+      // Admin's password should only change when admin explicitly changes it.
+      await client.query("UPDATE admins SET role = 'main_admin' WHERE email = 'admin@ljcca.edu' AND role != 'main_admin'");
     }
 
     // Seed default departments if none exist or if 'BCA' is missing

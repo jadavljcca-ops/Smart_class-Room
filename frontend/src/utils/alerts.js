@@ -51,3 +51,36 @@ export const confirmDelete = async ({ entityName = 'item', customTitle, customTe
   
   return result.isConfirmed;
 };
+
+export const showProfileUpdatedAlert = async (customMessage = 'Your profail has been Updated.') => {
+  return await Swal.fire({
+    html: `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0.75rem 0.5rem 0.25rem;">
+        <div style="background: #dcfce7; border: 2px solid #86efac; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #16a34a; margin-bottom: 1.25rem; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.2);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h2 style="margin: 0 0 0.5rem 0; font-size: 1.45rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">Success!</h2>
+        <div style="color: #334155; font-size: 1.05rem; line-height: 1.5; font-weight: 600;">
+          ${customMessage}
+        </div>
+      </div>
+    `,
+    showConfirmButton: true,
+    confirmButtonText: 'OK',
+    background: '#ffffff',
+    customClass: {
+      popup: 'swal-custom-white-popup',
+      confirmButton: 'btn btn-primary',
+    },
+    buttonsStyling: false,
+    allowOutsideClick: true,
+    timer: 3500,
+    timerProgressBar: true,
+    backdrop: `rgba(15, 23, 42, 0.65)`,
+  });
+};
+
+
+

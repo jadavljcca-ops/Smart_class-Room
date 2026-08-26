@@ -14,6 +14,10 @@ export default function FacultyManagement({ department: propDepartment, insideMo
   const [faculty, setFaculty] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   
   // Modal / Form state
   const [showForm, setShowForm] = useState(false);
@@ -32,6 +36,7 @@ export default function FacultyManagement({ department: propDepartment, insideMo
       if (res.ok) {
         const data = await res.json();
         setFaculty(data);
+        setSelectedIds(new Set()); // Reset selection on reload
       } else {
         showToast('Failed to load faculty list.', 'error');
       }
@@ -147,12 +152,59 @@ export default function FacultyManagement({ department: propDepartment, insideMo
       if (res.ok) {
         showToast(data.message || 'Faculty deleted successfully.', 'success');
         setFaculty((prev) => prev.filter((f) => f.id !== id));
+        setSelectedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
       } else {
         showToast(data.message || 'Failed to delete faculty.', 'error');
       }
     } catch (err) {
       console.error(err);
       showToast('Network error deleting faculty.', 'error');
+    }
+  };
+
+  // --- Multi-select handlers ---
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredFaculty.length && filteredFaculty.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredFaculty.map(f => f.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    const isConfirmed = await confirmDelete({
+      entityName: 'records',
+      customText: `Are you sure you want to permanently delete ${selectedIds.size} selected faculty member(s)? All their uploaded notes will also be deleted.`
+    });
+    if (!isConfirmed) return;
+
+    setBulkDeleting(true);
+    try {
+      const res = await authFetch('/admin/faculty/bulk-delete', {
+        method: 'POST',
+        body: JSON.stringify({ ids: Array.from(selectedIds) })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'Selected faculty deleted.', 'success');
+        fetchFaculty(false);
+      } else {
+        showToast(data.message || 'Bulk delete failed.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error during bulk delete.', 'error');
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -164,37 +216,49 @@ export default function FacultyManagement({ department: propDepartment, insideMo
     );
   });
 
-
+  const allSelected = filteredFaculty.length > 0 && selectedIds.size === filteredFaculty.length;
 
   return (
-    <div className={insideModal ? '' : "container animate-fade-in"} style={insideModal ? {} : { padding: '2rem 1.5rem' }}>
-      {/* Header */}
+    <div className={insideModal ? '' : "container animate-fade-in"} style={insideModal ? {} : { padding: '0 1.5rem 2rem 1.5rem' }}>
+      {/* Header Card — sticky */}
+
       {!insideModal && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
-              {propDepartment ? `${propDepartment} ` : ''}Faculty Management
-            </h1>
-            <p style={{ color: 'hsl(var(--muted))' }}>
-              Add, update, or remove approved college faculty members{propDepartment ? ` for ${propDepartment}` : ''}.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {!propDepartment && (
-              <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <ArrowLeft size={16} /> Back to Dashboard
+        <div className="sticky-header-wrapper">
+          <div className="admin-header-card" style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            flexWrap: 'wrap', gap: '1rem',
+            background: 'linear-gradient(135deg, #002d62 0%, #001f3f 100%)',
+            border: '1px solid rgba(255,255,255,0.16)',
+            borderRadius: '20px', padding: '22px 28px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.4)'
+          }}>
+            <div>
+              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                {propDepartment ? `${propDepartment} ` : ''}Faculty Management
+              </h1>
+              <p style={{ color: '#94a3b8', margin: '0.3rem 0 0 0', fontSize: '0.9rem' }}>
+                Add, update, or remove approved college faculty members{propDepartment ? ` for ${propDepartment}` : ''}.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {!propDepartment && (
+                <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <ArrowLeft size={16} /> Back to Dashboard
+                </button>
+              )}
+              <button onClick={openAddModal} className="btn btn-primary">
+                <Plus size={16} />
+                Add Faculty
               </button>
-            )}
-            <button onClick={openAddModal} className="btn btn-primary">
-              <Plus size={16} />
-              Add Faculty
-            </button>
-            <button onClick={fetchFaculty} className="btn btn-secondary">
-              <RefreshCw size={16} />
-            </button>
+              <button onClick={fetchFaculty} className="btn btn-secondary">
+                <RefreshCw size={16} />
+              </button>
+            </div>
           </div>
         </div>
       )}
+
+
       
       {/* Modal Actions when inside modal */}
       {insideModal && (
@@ -206,6 +270,30 @@ export default function FacultyManagement({ department: propDepartment, insideMo
           <button onClick={fetchFaculty} className="btn btn-secondary">
             <RefreshCw size={16} />
           </button>
+        </div>
+      )}
+
+      {/* Bulk Delete Bar — shows when items are selected */}
+      {selectedIds.size > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          backgroundColor: 'hsl(var(--danger) / 0.08)', border: '1px solid hsl(var(--danger) / 0.3)',
+          borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem',
+          flexWrap: 'wrap', gap: '0.5rem'
+        }}>
+          <span style={{ fontWeight: 600, color: 'hsl(var(--danger))' }}>
+            {selectedIds.size} faculty member{selectedIds.size > 1 ? 's' : ''} selected
+          </span>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={() => setSelectedIds(new Set())} className="btn btn-secondary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>
+              Deselect All
+            </button>
+            <button onClick={handleBulkDelete} className="btn btn-secondary" disabled={bulkDeleting}
+              style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', color: 'hsl(var(--danger))', borderColor: 'hsl(var(--danger) / 0.4)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Trash2 size={14} />
+              {bulkDeleting ? 'Deleting...' : `Delete Selected (${selectedIds.size})`}
+            </button>
+          </div>
         </div>
       )}
 
@@ -240,6 +328,16 @@ export default function FacultyManagement({ department: propDepartment, insideMo
           <table>
             <thead>
               <tr>
+                {/* Select All Checkbox */}
+                <th style={{ width: '40px', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    title={allSelected ? 'Deselect All' : 'Select All'}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'hsl(var(--danger))' }}
+                  />
+                </th>
                 <th>Full Name</th>
                 <th>Email</th>
                 <th>Mobile</th>
@@ -251,7 +349,15 @@ export default function FacultyManagement({ department: propDepartment, insideMo
             </thead>
             <tbody>
               {filteredFaculty.map((f) => (
-                <tr key={f.id}>
+                <tr key={f.id} style={{ backgroundColor: selectedIds.has(f.id) ? 'hsl(var(--danger) / 0.05)' : undefined }}>
+                  <td style={{ textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(f.id)}
+                      onChange={() => toggleSelect(f.id)}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'hsl(var(--danger))' }}
+                    />
+                  </td>
                   <td style={{ fontWeight: 600 }}>{f.full_name}</td>
                   <td>{f.email}</td>
                   <td>{f.mobile_number}</td>
@@ -291,23 +397,31 @@ export default function FacultyManagement({ department: propDepartment, insideMo
 
       {/* Add / Edit Form Modal (CSS Dialog Overlay style) */}
       {showForm && createPortal(
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '1rem'
-        }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', alignSelf: 'center' }}>
+        <div 
+          onClick={() => setShowForm(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="card animate-fade-in" 
+            style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', alignSelf: 'center' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+
                 {editingId ? 'Edit Faculty Account' : 'Add New Faculty'}
               </h3>
               <button 
@@ -336,7 +450,7 @@ export default function FacultyManagement({ department: propDepartment, insideMo
                 <input
                   type="email"
                   className="form-control"
-                  placeholder="e.g. rajesh@edumark.com"
+                  placeholder="e.g. rajesh@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

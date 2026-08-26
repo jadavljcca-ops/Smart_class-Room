@@ -97,25 +97,37 @@ export default function DepartmentsManagement() {
   };
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
+    <div className="container animate-fade-in" style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
       
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Manage Departments</h1>
-          <p style={{ color: 'hsl(var(--muted))' }}>
-            Add new academic departments or delete unused ones.
-          </p>
+
+      {/* Header Card — sticky */}
+      <div className="sticky-header-wrapper">
+        <div className="admin-header-card" style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: '1rem',
+          background: 'linear-gradient(135deg, #002d62 0%, #001f3f 100%)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          borderRadius: '20px', padding: '22px 28px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.4)'
+        }}>
+          <div>
+            <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Manage Departments</h1>
+            <p style={{ color: '#94a3b8', margin: '0.3rem 0 0 0', fontSize: '0.9rem' }}>
+              Add new academic departments or delete unused ones.
+            </p>
+          </div>
+          <button 
+            onClick={fetchDepartments} 
+            className="btn btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
         </div>
-        <button 
-          onClick={fetchDepartments} 
-          className="btn btn-secondary"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <RefreshCw size={16} />
-          Refresh
-        </button>
       </div>
+
+
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '2rem' }} className="dept-layout">
         

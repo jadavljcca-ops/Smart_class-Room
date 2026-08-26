@@ -82,33 +82,45 @@ export default function RegistrationRequests({ department: propDepartment }) {
   });
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
-            {propDepartment ? `${propDepartment} ` : ''}Registration Requests
-          </h1>
-          <p style={{ color: 'hsl(var(--muted))' }}>
-            Review and approve student and faculty registrations{propDepartment ? ` for ${propDepartment}` : ''}. Users cannot log in until approved.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {!propDepartment && (
-            <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <ArrowLeft size={16} /> Back to Dashboard
+    <div className="container animate-fade-in" style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
+      {/* Header Card — sticky */}
+
+      <div className="sticky-header-wrapper">
+        <div className="admin-header-card" style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: '1rem',
+          background: 'linear-gradient(135deg, #002d62 0%, #001f3f 100%)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          borderRadius: '20px', padding: '22px 28px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.4)'
+        }}>
+          <div>
+            <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+              {propDepartment ? `${propDepartment} ` : ''}Registration Requests
+            </h1>
+            <p style={{ color: '#94a3b8', margin: '0.3rem 0 0 0', fontSize: '0.9rem' }}>
+              Review and approve student and faculty registrations{propDepartment ? ` for ${propDepartment}` : ''}. Users cannot log in until approved.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {!propDepartment && (
+              <button onClick={() => navigate('/admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <ArrowLeft size={16} /> Back to Dashboard
+              </button>
+            )}
+            <button 
+              onClick={fetchRequests} 
+              className="btn btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <RefreshCw size={16} />
+              Refresh
             </button>
-          )}
-          <button 
-            onClick={fetchRequests} 
-            className="btn btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <RefreshCw size={16} />
-            Refresh
-          </button>
+          </div>
         </div>
       </div>
+
+
 
       {/* Search & Filter Row */}
       <div className="search-controls" style={{ marginBottom: '1.5rem' }}>

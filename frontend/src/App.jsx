@@ -20,6 +20,7 @@ import AnnouncementsManagement from './pages/Admin/AnnouncementsManagement';
 import DepartmentsManagement from './pages/Admin/DepartmentsManagement';
 import SubAdminsManagement from './pages/Admin/SubAdminsManagement';
 import StudentsManagement from './pages/Admin/StudentsManagement';
+import AdminProfile from './pages/Admin/AdminProfile';
 
 // Faculty Pages
 import FacultyDashboard from './pages/Faculty/FacultyDashboard';
@@ -167,6 +168,14 @@ function AppLayout() {
                 <RequireMainAdmin>
                   <SubAdminsManagement />
                 </RequireMainAdmin>
+              </RequireAuth>
+            } 
+          />
+          <Route 
+            path="/admin/profile" 
+            element={
+              <RequireAuth allowedRoles={['admin']}>
+                <AdminProfile />
               </RequireAuth>
             } 
           />

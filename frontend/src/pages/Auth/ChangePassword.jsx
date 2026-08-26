@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { showProfileUpdatedAlert } from '../../utils/alerts';
 import { Lock, ShieldCheck, Key, Eye, EyeOff } from 'lucide-react';
+
 
 export default function ChangePassword() {
   const { changePassword, user } = useAuth();
@@ -42,13 +44,14 @@ export default function ChangePassword() {
     setSubmitting(true);
     try {
       const msg = await changePassword(oldPassword, newPassword);
-      showToast(msg || 'Password updated successfully!', 'success');
+      await showProfileUpdatedAlert('Your profail has been Updated.');
       
       // Redirect back to dashboard based on role
       if (user?.role === 'admin') navigate('/admin');
       else if (user?.role === 'faculty') navigate('/faculty');
       else if (user?.role === 'student') navigate('/student');
     } catch (err) {
+
       console.error(err);
       showToast(err.message || 'Failed to change password. Make sure old password is correct.', 'error');
     } finally {

@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { 
-  Bell, Sun, Moon, LogOut, Key, User, Menu, X, 
+import {
+  Bell, Sun, Moon, LogOut, Key, User, Menu, X,
   ChevronDown, BookOpen, Megaphone, UserCheck, Users, ShieldAlert,
-  Home, Download
+  Home, Download, Settings
 } from 'lucide-react';
 import NotificationMenu from './NotificationMenu';
 
@@ -14,11 +14,11 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  
+
   const profileMenuRef = useRef(null);
 
   // Close menus on clicking outside
@@ -56,216 +56,343 @@ export default function Navbar() {
     navigate('/login');
   };
 
+  // Is this an admin page? (used to show Profile & Settings in nav)
+  const isAdminPage = user?.role === 'admin' && location.pathname.startsWith('/admin');
+
   return (
     <>
       <nav className="navbar">
         <div className="container navbar-inner">
-        {/* Brand Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ backgroundColor: 'hsl(var(--primary))', color: '#020617', borderRadius: '12px', padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.6rem', height: '2.6rem' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/>
-              <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
-            </svg>
-          </div>
-          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>
-              <span style={{ color: 'white' }}>Edu</span><span style={{ color: 'hsl(var(--primary))' }}>Mark</span>
-            </span>
-          </Link>
-        </div>
-
-        {/* Desktop Menu links based on auth state & current page */}
-        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          {location.pathname !== '/' && user ? (
-            <>
-              {user.role === 'admin' && (
-                <>
-                  <Link to="/admin" className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
-                  <Link to="/admin/faculty" className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
-                  <Link to="/admin/students" className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
-                  <Link to="/admin/announcements" className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
-                  {user.adminRole === 'main_admin' && (
-                    <>
-                      <Link to="/admin/departments" className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>Departments</Link>
-                      <Link to="/admin/sub-admins" className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>Sub Admins</Link>
-                    </>
-                  )}
-                </>
-              )}
-
-              {user.role === 'faculty' && (
-                <>
-                  <Link to="/faculty" className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>Dashboard & Notes</Link>
-                </>
-              )}
-
-              {user.role === 'student' && (
-                <>
-                  <Link to="/student" className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>Dashboard</Link>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <a href="/#features" className="nav-link">Features</a>
-              <a href="/#stats" className="nav-link">Statistics</a>
-              <a href="/#departments" className="nav-link">Departments</a>
-              <a href="/#faq" className="nav-link">FAQ</a>
-              {user && (
-                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="nav-link" style={{ fontWeight: 700, color: 'hsl(var(--primary))' }}>
-                  Go to Dashboard →
-                </Link>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Right side controls (theme, notifications, profile/auth actions) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {/* PWA Install Button */}
-          {deferredPrompt && user?.role !== 'admin' && (
-            <button
-              onClick={handleInstallClick}
-              className="btn btn-primary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.4rem 0.8rem',
-                fontSize: '0.85rem',
-                borderRadius: 'var(--radius)'
-              }}
-              title="Install App"
-            >
-              <Download size={15} />
-              <span className="desktop-only-btn">Install App</span>
-            </button>
-          )}
-
-
-          {/* Go to Home Page Button (next to theme toggle on auth pages) */}
-          {!user && (location.pathname === '/login' || location.pathname === '/register') && (
-            <Link 
-              to="/" 
-              className="desktop-only-btn"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                textDecoration: 'none',
-                color: 'inherit',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                padding: '0.4rem 0.8rem',
-                borderRadius: 'var(--radius)',
-                border: '1px solid hsl(var(--border))',
-                backgroundColor: 'hsl(var(--secondary) / 0.5)',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(var(--border))'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(var(--secondary) / 0.5)'}
-            >
-              <Home size={15} />
-              <span>Home</span>
+          {/* Brand Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ backgroundColor: 'hsl(var(--primary))', color: '#020617', borderRadius: '12px', padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.6rem', height: '2.6rem' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+                <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+              </svg>
+            </div>
+            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>
+                <span style={{ color: 'white' }}>Edu</span><span style={{ color: 'hsl(var(--primary))' }}>Mark</span>
+              </span>
             </Link>
-          )}
+          </div>
 
-          {user ? (
-            <>
-              {/* Notifications Trigger - Hidden on desktop admin routes, shown on mobile */}
-              <div className={location.pathname.startsWith('/admin') ? "admin-mobile-nav-notif" : ""}>
-                <NotificationMenu />
-              </div>
+          {/* Desktop Menu links based on auth state & current page */}
+          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            {location.pathname !== '/' && user ? (
+              <>
+                {user.role === 'admin' && (
+                  <>
+                    <Link to="/admin" className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
+                    <Link to="/admin/faculty" className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
+                    <Link to="/admin/students" className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
+                    <Link to="/admin/announcements" className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
+                    {user.adminRole === 'main_admin' && (
+                      <>
+                        <Link to="/admin/departments" className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>Departments</Link>
+                        <Link to="/admin/sub-admins" className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>Sub Admins</Link>
+                      </>
+                    )}
 
-              {/* Profile Info & Actions (Fixed at bottom of sidebar) */}
-              <div className="desktop-only-block" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                {user.role !== 'student' && (
-                  <Link 
-                    to="/change-password" 
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.45rem 0.5rem',
-                      borderRadius: '8px',
-                      textDecoration: 'none',
-                      color: '#cbd5e1',
-                      fontSize: '0.9rem',
-                      transition: 'all 0.2s',
-                      fontWeight: 500
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#ffffff'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#cbd5e1'; }}
-                  >
-                    <Key size={16} />
-                    Change Password
-                  </Link>
+                    {/* Profile & Settings dropdown for Admin */}
+                    <div ref={profileMenuRef} style={{ position: 'relative' }}>
+                      <button
+                        onClick={() => setShowProfileMenu(prev => !prev)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          background: showProfileMenu ? 'rgba(255,255,255,0.1)' : 'none',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          padding: '0.35rem 0.7rem',
+                          color: showProfileMenu ? '#f59e0b' : '#94a3b8',
+                          fontSize: '0.925rem',
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.color = '#f59e0b'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+                        onMouseLeave={e => { if (!showProfileMenu) { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'none'; } }}
+                      >
+                        {/* Avatar Circle */}
+                        <div style={{
+                          width: '26px', height: '26px', borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '0.7rem', fontWeight: 800, color: '#fff', flexShrink: 0
+                        }}>
+                          {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'A'}
+                        </div>
+                        <Settings size={14} />
+                        Profile & Settings
+                        <ChevronDown size={13} style={{ transition: 'transform 0.2s', transform: showProfileMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                      </button>
+
+                      {/* Dropdown Panel */}
+                      {showProfileMenu && (
+                        <div style={{
+                          position: 'absolute',
+                          top: 'calc(100% + 10px)',
+                          right: 0,
+                          minWidth: '230px',
+                          backgroundColor: '#001c3d',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          borderRadius: '12px',
+                          padding: '0.5rem',
+                          boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
+                          zIndex: 9999,
+                          animation: 'fadeInDown 0.18s ease',
+                        }}>
+                          {/* User Info Section */}
+                          <div style={{
+                            padding: '0.75rem 0.75rem 0.6rem',
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            marginBottom: '0.4rem',
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                              <div style={{
+                                width: '38px', height: '38px', borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '1rem', fontWeight: 800, color: '#fff', flexShrink: 0
+                              }}>
+                                {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'A'}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#ffffff' }}>{user.fullName}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize', marginTop: '0.1rem' }}>
+                                  {user.adminRole === 'main_admin' ? 'Main Admin' : 'Admin'}{user.department ? ` | ${user.department}` : ''}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Edit Profile */}
+                          <Link
+                            to="/admin/profile"
+                            onClick={() => setShowProfileMenu(false)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '0.6rem',
+                              padding: '0.55rem 0.75rem', borderRadius: '8px',
+                              textDecoration: 'none', color: '#cbd5e1',
+                              fontSize: '0.9rem', fontWeight: 500,
+                              transition: 'all 0.15s',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#ffffff'; }}
+                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#cbd5e1'; }}
+                          >
+                            <User size={15} style={{ color: 'hsl(var(--primary))' }} />
+                            Edit Profile
+                          </Link>
+
+
+                          {/* Logout */}
+                          <button
+                            onClick={() => { setShowProfileMenu(false); handleLogout(); }}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '0.6rem',
+                              padding: '0.55rem 0.75rem', borderRadius: '8px',
+                              border: 'none', background: 'none',
+                              color: '#f87171', fontSize: '0.9rem',
+                              width: '100%', textAlign: 'left',
+                              cursor: 'pointer', transition: 'all 0.15s',
+                              fontWeight: 500,
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(248,113,113,0.1)'; e.currentTarget.style.color = '#fca5a5'; }}
+                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#f87171'; }}
+                          >
+                            <LogOut size={15} />
+                            Logout
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
 
-                <button 
-                  onClick={handleLogout}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.45rem 0.5rem',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: 'none',
-                    color: '#f87171',
-                    fontSize: '0.9rem',
-                    width: '100%',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    fontWeight: 500
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fca5a5'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#f87171'; }}
-                >
-                  <LogOut size={16} />
-                  Logout
-                </button>
+                {user.role === 'faculty' && (
+                  <>
+                    <Link to="/faculty" className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>Dashboard & Notes</Link>
+                  </>
+                )}
 
-                <div style={{ padding: '0.5rem 0.5rem 0.4rem 0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', marginTop: '0.25rem' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#ffffff' }}>{user.fullName}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize', marginTop: '0.15rem' }}>
-                    {user.role} {user.department ? `| ${user.department}` : ''}
-                  </div>
+              </>
+            ) : (
+              <>
+                <a href="/#features" className="nav-link">Features</a>
+                <a href="/#stats" className="nav-link">Statistics</a>
+                <a href="/#departments" className="nav-link">Departments</a>
+                <a href="/#faq" className="nav-link">FAQ</a>
+                {user && (
+                  <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="nav-link" style={{ fontWeight: 700, color: 'hsl(var(--primary))' }}>
+                    Go to Dashboard →
+                  </Link>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Right side controls (theme, notifications, profile/auth actions) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+
+
+            {/* Go to Home Page Button (next to theme toggle on auth pages) */}
+            {!user && (location.pathname === '/login' || location.pathname === '/register') && (
+              <Link
+                to="/"
+                className="desktop-only-btn"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: 'var(--radius)',
+                  border: '1px solid hsl(var(--border))',
+                  backgroundColor: 'hsl(var(--secondary) / 0.5)',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(var(--border))'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(var(--secondary) / 0.5)'}
+              >
+                <Home size={15} />
+                <span>Home</span>
+              </Link>
+            )}
+
+            {user ? (
+              <>
+                {/* Notifications Trigger - Hidden on desktop admin routes, shown on mobile */}
+                <div className={location.pathname.startsWith('/admin') ? "admin-mobile-nav-notif" : ""}>
+                  <NotificationMenu />
                 </div>
-              </div>
-            </>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }} className="desktop-only-flex">
-              <Link 
-                to="/login" 
-                className="btn btn-secondary" 
-                style={{ 
-                  padding: '0.4rem 0.9rem', 
-                  fontSize: '0.85rem',
-                  textDecoration: 'none'
-                }}
-              >
-                Login
-              </Link>
-              <Link 
-                to="/register" 
-                className="btn btn-primary" 
-                style={{ 
-                  padding: '0.4rem 0.9rem', 
-                  fontSize: '0.85rem',
-                  textDecoration: 'none'
-                }}
-              >
-                Register
-              </Link>
-            </div>
-          )}
 
+                {/* Unified Profile card at bottom of sidebar for Admin, Faculty, and Students */}
+                <div className="desktop-only-block" style={{ width: '100%', paddingTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {/* Photo-style User Card */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    padding: '0.6rem 0.5rem',
+                    borderRadius: '10px',
+                    cursor: (isAdminPage || user.role === 'faculty') ? 'pointer' : 'default',
+                    transition: 'background 0.2s',
+                    flex: 1,
+                    overflow: 'hidden'
+                  }}
+                    onClick={() => {
+                      if (isAdminPage) navigate('/admin/profile');
+                      else if (user.role === 'faculty') navigate('/change-password');
+                    }}
+                    onMouseEnter={e => {
+                      if (isAdminPage || user.role === 'faculty') e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+                    }}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    title={isAdminPage ? "Edit Profile" : user.role === 'faculty' ? "Change Password" : user.fullName}
+                  >
+                    {/* Avatar circle */}
+                    <div style={{
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      background: isAdminPage
+                        ? 'linear-gradient(135deg, #f59e0b, #ea580c)'
+                        : user.role === 'faculty'
+                          ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+                          : 'linear-gradient(135deg, #10b981, #059669)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.1rem', fontWeight: 800, color: '#fff',
+                      flexShrink: 0,
+                      boxShadow: isAdminPage
+                        ? '0 2px 8px rgba(245,158,11,0.4)'
+                        : user.role === 'faculty'
+                          ? '0 2px 8px rgba(59,130,246,0.4)'
+                          : '0 2px 8px rgba(16,185,129,0.4)',
+                    }}>
+                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.fullName}
+                      </div>
+                      <div style={{ fontSize: '0.73rem', color: '#94a3b8', textTransform: 'capitalize', marginTop: '0.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.role === 'admin'
+                          ? (user.adminRole === 'main_admin' ? 'Main Admin' : 'Admin')
+                          : (user.role.charAt(0).toUpperCase() + user.role.slice(1))}
+                        {user.department ? ` | ${user.department}` : ''}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Logout Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLogout();
+                    }}
+                    title="Logout"
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                      borderRadius: '10px',
+                      padding: '0.6rem',
+                      cursor: 'pointer',
+                      color: '#f87171',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)';
+                      e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+                      e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                  >
+                    <LogOut size={19} />
+                  </button>
+                </div>
+
+              </>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }} className="desktop-only-flex">
+                <Link
+                  to="/login"
+                  className="btn btn-secondary"
+                  style={{
+                    padding: '0.4rem 0.9rem',
+                    fontSize: '0.85rem',
+                    textDecoration: 'none'
+                  }}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="btn btn-primary"
+                  style={{
+                    padding: '0.4rem 0.9rem',
+                    fontSize: '0.85rem',
+                    textDecoration: 'none'
+                  }}
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
 
       {/* Mobile Menu Drawer */}
       {isOpen && (
@@ -298,75 +425,93 @@ export default function Navbar() {
             boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
             color: '#ffffff'
           }}>
-          {location.pathname !== '/' && user ? (
-            <>
-              {user.role === 'admin' && (
-                <>
-                  <Link to="/admin" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
-                  <Link to="/admin/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
-                  <Link to="/admin/students" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
-                  <Link to="/admin/announcements" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
-                  {user.adminRole === 'main_admin' && (
-                    <>
-                      <Link to="/admin/departments" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>Departments</Link>
-                      <Link to="/admin/sub-admins" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>Sub Admins</Link>
-                    </>
-                  )}
-                </>
-              )}
-
-              {user.role === 'faculty' && (
-                <>
-                  <Link to="/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>Dashboard & Notes</Link>
-                </>
-              )}
-
-              {user.role === 'student' && (
-                <>
-                  <Link to="/student" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>Dashboard</Link>
-                </>
-              )}
-
-              {/* Profile options inside mobile drawer */}
-              <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ padding: '0 0.5rem' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#ffffff' }}>{user.fullName}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize' }}>
-                    {user.role} {user.department ? `| ${user.department}` : ''}
-                  </div>
-                </div>
-                {user.role !== 'student' && (
-                  <Link to="/change-password" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}>
-                    <Key size={15} /> Change Password
-                  </Link>
+            {location.pathname !== '/' && user ? (
+              <>
+                {user.role === 'admin' && (
+                  <>
+                    <Link to="/admin" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
+                    <Link to="/admin/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
+                    <Link to="/admin/students" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
+                    <Link to="/admin/announcements" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
+                    {user.adminRole === 'main_admin' && (
+                      <>
+                        <Link to="/admin/departments" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>Departments</Link>
+                        <Link to="/admin/sub-admins" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>Sub Admins</Link>
+                      </>
+                    )}
+                  </>
                 )}
-                <button onClick={() => { handleLogout(); setIsOpen(false); }} className="btn btn-danger" style={{ width: '100%', justifyContent: 'flex-start', border: 'none', padding: '0.6rem 1rem' }}>
-                  <LogOut size={15} /> Logout
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <a href="/#features" onClick={() => setIsOpen(false)} className="nav-link">Features</a>
-              <a href="/#stats" onClick={() => setIsOpen(false)} className="nav-link">Statistics</a>
-              <a href="/#how-it-works" onClick={() => setIsOpen(false)} className="nav-link">How It Works</a>
-              <a href="/#departments" onClick={() => setIsOpen(false)} className="nav-link">Departments</a>
-              <a href="/#faq" onClick={() => setIsOpen(false)} className="nav-link">FAQ</a>
-              
-              {/* Login / Register inside mobile drawer */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
-                <Link to="/login" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%' }}>Login</Link>
-                <Link to="/register" onClick={() => setIsOpen(false)} className="btn btn-primary" style={{ width: '100%' }}>Register</Link>
-              </div>
-            </>
-          )}
-        </div>
+
+                {user.role === 'faculty' && (
+                  <>
+                    <Link to="/faculty" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>Dashboard & Notes</Link>
+                  </>
+                )}
+
+                {user.role === 'student' && (
+                  <>
+                    <Link to="/student" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>Dashboard</Link>
+                  </>
+                )}
+
+                {/* Profile & Settings section inside mobile drawer */}
+                <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {/* User Info Card */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    padding: '0.75rem', borderRadius: '10px',
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    marginBottom: '0.25rem'
+                  }}>
+                    <div style={{
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.1rem', fontWeight: 800, color: '#fff', flexShrink: 0
+                    }}>
+                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'A'}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#ffffff' }}>{user.fullName}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'capitalize' }}>
+                        {user.adminRole === 'main_admin' ? 'Main Admin' : user.role}{user.department ? ` | ${user.department}` : ''}
+                      </div>
+                    </div>
+                  </div>
+
+                  {user.role !== 'student' && (
+                    <Link to="/change-password" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', padding: '0.6rem 1rem' }}>
+                      <Key size={15} /> Change Password
+                    </Link>
+                  )}
+                  <button onClick={() => { handleLogout(); setIsOpen(false); }} className="btn btn-danger" style={{ width: '100%', justifyContent: 'flex-start', border: 'none', padding: '0.6rem 1rem' }}>
+                    <LogOut size={15} /> Logout
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <a href="/#features" onClick={() => setIsOpen(false)} className="nav-link">Features</a>
+                <a href="/#stats" onClick={() => setIsOpen(false)} className="nav-link">Statistics</a>
+                <a href="/#how-it-works" onClick={() => setIsOpen(false)} className="nav-link">How It Works</a>
+                <a href="/#departments" onClick={() => setIsOpen(false)} className="nav-link">Departments</a>
+                <a href="/#faq" onClick={() => setIsOpen(false)} className="nav-link">FAQ</a>
+
+                {/* Login / Register inside mobile drawer */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
+                  <Link to="/login" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%' }}>Login</Link>
+                  <Link to="/register" onClick={() => setIsOpen(false)} className="btn btn-primary" style={{ width: '100%' }}>Register</Link>
+                </div>
+              </>
+            )}
+          </div>
         </>
       )}
 
       {/* Floating Circular Mobile Hamburger Toggle Button (Hidden on laptop/desktop view, visible ONLY on mobile) */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
+      <button
+        onClick={() => setIsOpen(!isOpen)}
         className="mobile-floating-toggle"
         aria-label="Toggle navigation menu"
         title="Menu"
@@ -397,6 +542,10 @@ export default function Navbar() {
         @keyframes slideInRight {
           from { transform: translateX(110%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes bellRing {
           0%, 100% { transform: rotate(0deg); }

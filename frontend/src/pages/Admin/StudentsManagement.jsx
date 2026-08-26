@@ -2,7 +2,7 @@ import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Search, Plus, Trash2, X, Save, RefreshCw, Upload, Download, AlertCircle, FileText, CheckCircle, LogOut } from 'lucide-react';
+import { Search, Plus, Trash2, X, Save, RefreshCw, Upload, Download, AlertCircle, FileText, CheckCircle, LogOut, Edit, CheckSquare, Square } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 export default function StudentsManagement({ department: propDepartment, insideModal = false, onMutation }) {
@@ -16,8 +16,13 @@ export default function StudentsManagement({ department: propDepartment, insideM
   const [filterDept, setFilterDept] = useState('');
   const [filterSem, setFilterSem] = useState('');
 
-  // Form Modal state
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // Form Modal state (used for both Add and Edit)
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [enrollmentNumber, setEnrollmentNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,6 +47,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
       if (res.ok) {
         const data = await res.json();
         setStudents(data);
+        setSelectedIds(new Set()); // Reset selection on reload
       } else {
         showToast('Failed to load students list.', 'error');
       }
@@ -71,12 +77,24 @@ export default function StudentsManagement({ department: propDepartment, insideM
   }, [propDepartment]);
 
   const openAddModal = () => {
+    setEditingId(null);
     setEnrollmentNumber('');
     setFullName('');
     setEmail('');
     setMobileNumber('');
     setDepartment(propDepartment || '');
     setSemester('');
+    setShowForm(true);
+  };
+
+  const openEditModal = (s) => {
+    setEditingId(s.id);
+    setEnrollmentNumber(s.enrollment_number);
+    setFullName(s.full_name);
+    setEmail(s.email);
+    setMobileNumber(s.mobile_number);
+    setDepartment(s.department);
+    setSemester(s.semester.toString());
     setShowForm(true);
   };
 
@@ -95,7 +113,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
       return;
     }
 
-    if (!/^\d{10}$/.test(enrollmentNumber)) {
+    if (!editingId && !/^\d{10}$/.test(enrollmentNumber)) {
       showToast('Enrollment Number must be exactly 10 digits.', 'warning');
       return;
     }
@@ -107,24 +125,39 @@ export default function StudentsManagement({ department: propDepartment, insideM
 
     setSubmitting(true);
     try {
-      const res = await authFetch('/admin/students', {
-        method: 'POST',
-        body: JSON.stringify({
-          fullName,
-          email,
-          mobileNumber,
-          department: targetDept,
-          semester,
-          enrollmentNumber,
-          password: mobileNumber
-        })
-      });
+      let res;
+      if (editingId) {
+        res = await authFetch(`/admin/students/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            fullName,
+            email,
+            mobileNumber,
+            department: targetDept,
+            semester,
+            enrollmentNumber,
+          })
+        });
+      } else {
+        res = await authFetch('/admin/students', {
+          method: 'POST',
+          body: JSON.stringify({
+            fullName,
+            email,
+            mobileNumber,
+            department: targetDept,
+            semester,
+            enrollmentNumber,
+            password: mobileNumber
+          })
+        });
+      }
       const data = await res.json();
 
       if (res.ok) {
-        showToast(data.message || 'Student account created successfully!', 'success');
+        showToast(data.message || (editingId ? 'Student updated successfully!' : 'Student account created successfully!'), 'success');
         setShowForm(false);
-        fetchStudents(false); // Silent background refresh for instant UI update
+        fetchStudents(false);
         if (onMutation) onMutation();
       } else {
         showToast(data.message || 'Failed to save student.', 'error');
@@ -150,6 +183,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
       if (res.ok) {
         showToast(data.message || 'Student deleted successfully.', 'success');
         setStudents((prev) => prev.filter((s) => s.id !== id));
+        setSelectedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
         if (onMutation) onMutation();
       } else {
         showToast(data.message || 'Failed to delete student.', 'error');
@@ -157,6 +191,53 @@ export default function StudentsManagement({ department: propDepartment, insideM
     } catch (err) {
       console.error(err);
       showToast('Network error deleting student.', 'error');
+    }
+  };
+
+  // --- Multi-select handlers ---
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredStudents.length && filteredStudents.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredStudents.map(s => s.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    const isConfirmed = await confirmDelete({
+      entityName: 'records',
+      customText: `Are you sure you want to permanently delete ${selectedIds.size} selected student(s)? This action cannot be undone.`
+    });
+    if (!isConfirmed) return;
+
+    setBulkDeleting(true);
+    try {
+      const res = await authFetch('/admin/students/bulk-delete', {
+        method: 'POST',
+        body: JSON.stringify({ ids: Array.from(selectedIds) })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'Selected students deleted.', 'success');
+        fetchStudents(false);
+        if (onMutation) onMutation();
+      } else {
+        showToast(data.message || 'Bulk delete failed.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error during bulk delete.', 'error');
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -379,44 +460,101 @@ export default function StudentsManagement({ department: propDepartment, insideM
     return matchName && matchEnrollment && matchDept && matchSem;
   });
 
+  const allSelected = filteredStudents.length > 0 && selectedIds.size === filteredStudents.length;
+
   return (
-    <div className={insideModal ? "animate-fade-in" : "container animate-fade-in"} style={insideModal ? { padding: 0 } : { padding: '2rem 1.5rem' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        {!insideModal ? (
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>
-              {propDepartment ? `${propDepartment} ` : ''}Students Management
-            </h1>
-            <p style={{ color: 'hsl(var(--muted))' }}>
-              Add, delete, or upload student rosters to manage student accounts{propDepartment ? ` in ${propDepartment}` : ''}.
-            </p>
+    <div className={insideModal ? "animate-fade-in" : "container animate-fade-in"} style={insideModal ? { padding: 0 } : { padding: '0 1.5rem 2rem 1.5rem' }}>
+      {/* Header Card — sticky */}
+
+      {!insideModal ? (
+        <div className="sticky-header-wrapper">
+          <div className="admin-header-card" style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            flexWrap: 'wrap', gap: '1rem',
+            background: 'linear-gradient(135deg, #002d62 0%, #001f3f 100%)',
+            border: '1px solid rgba(255,255,255,0.16)',
+            borderRadius: '20px', padding: '22px 28px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.4)'
+          }}>
+            <div>
+              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                {propDepartment ? `${propDepartment} ` : ''}Students Management
+              </h1>
+              <p style={{ color: '#94a3b8', margin: '0.3rem 0 0 0', fontSize: '0.9rem' }}>
+                Add, edit, delete, or upload student rosters to manage student accounts{propDepartment ? ` in ${propDepartment}` : ''}.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button onClick={handleForceLogoutAll} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'hsl(var(--danger))', borderColor: 'hsl(var(--danger) / 0.3)' }} title="Forces all students in this scope to log in again next time they try to access the system.">
+                <LogOut size={16} />
+                {propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '') ? 'Logout Dept Students' : 'Logout All Students'}
+              </button>
+              <button onClick={() => setShowBulkModal(true)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Upload size={16} />
+                Bulk Import (.csv/.xlsx)
+              </button>
+              <button onClick={openAddModal} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Plus size={16} />
+                Add Student
+              </button>
+              <button onClick={fetchStudents} className="btn btn-secondary" style={{ padding: '0.75rem' }}>
+                <RefreshCw size={16} />
+              </button>
+            </div>
           </div>
-        ) : (
+        </div>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <p style={{ color: 'hsl(var(--muted))', margin: 0 }}>
               Directly add single students or upload spreadsheets to import students in bulk.
             </p>
           </div>
-        )}
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button onClick={handleForceLogoutAll} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'hsl(var(--danger))', borderColor: 'hsl(var(--danger) / 0.3)' }} title="Forces all students in this scope to log in again next time they try to access the system.">
-            <LogOut size={16} />
-            {propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '') ? 'Logout Dept Students' : 'Logout All Students'}
-          </button>
-          <button onClick={() => setShowBulkModal(true)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Upload size={16} />
-            Bulk Import (.csv/.xlsx)
-          </button>
-          <button onClick={openAddModal} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Plus size={16} />
-            Add Student
-          </button>
-          <button onClick={fetchStudents} className="btn btn-secondary" style={{ padding: '0.75rem' }}>
-            <RefreshCw size={16} />
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button onClick={handleForceLogoutAll} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'hsl(var(--danger))', borderColor: 'hsl(var(--danger) / 0.3)' }}>
+              <LogOut size={16} />
+              {propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '') ? 'Logout Dept Students' : 'Logout All Students'}
+            </button>
+            <button onClick={() => setShowBulkModal(true)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Upload size={16} />
+              Bulk Import
+            </button>
+            <button onClick={openAddModal} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Plus size={16} />
+              Add Student
+            </button>
+            <button onClick={fetchStudents} className="btn btn-secondary" style={{ padding: '0.75rem' }}>
+              <RefreshCw size={16} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
+
+
+      {/* Bulk Delete Bar — shows when items are selected */}
+      {selectedIds.size > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          backgroundColor: 'hsl(var(--danger) / 0.08)', border: '1px solid hsl(var(--danger) / 0.3)',
+          borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem',
+          flexWrap: 'wrap', gap: '0.5rem'
+        }}>
+          <span style={{ fontWeight: 600, color: 'hsl(var(--danger))' }}>
+            {selectedIds.size} student{selectedIds.size > 1 ? 's' : ''} selected
+          </span>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={() => setSelectedIds(new Set())} className="btn btn-secondary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>
+              Deselect All
+            </button>
+            <button onClick={handleBulkDelete} className="btn btn-secondary" disabled={bulkDeleting}
+              style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', color: 'hsl(var(--danger))', borderColor: 'hsl(var(--danger) / 0.4)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Trash2 size={14} />
+              {bulkDeleting ? 'Deleting...' : `Delete Selected (${selectedIds.size})`}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filters Bar */}
       <div style={{ 
@@ -500,6 +638,16 @@ export default function StudentsManagement({ department: propDepartment, insideM
           <table>
             <thead>
               <tr>
+                {/* Select All Checkbox */}
+                <th style={{ width: '40px', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    title={allSelected ? 'Deselect All' : 'Select All'}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'hsl(var(--danger))' }}
+                  />
+                </th>
                 <th>Enrollment No</th>
                 <th>Full Name</th>
                 <th>Email</th>
@@ -513,7 +661,15 @@ export default function StudentsManagement({ department: propDepartment, insideM
             </thead>
             <tbody>
               {filteredStudents.map((s) => (
-                <tr key={s.id}>
+                <tr key={s.id} style={{ backgroundColor: selectedIds.has(s.id) ? 'hsl(var(--danger) / 0.05)' : undefined }}>
+                  <td style={{ textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(s.id)}
+                      onChange={() => toggleSelect(s.id)}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'hsl(var(--danger))' }}
+                    />
+                  </td>
                   <td style={{ fontWeight: 700 }}>{s.enrollment_number}</td>
                   <td style={{ fontWeight: 600 }}>{s.full_name}</td>
                   <td>{s.email}</td>
@@ -527,14 +683,24 @@ export default function StudentsManagement({ department: propDepartment, insideM
                     {new Date(s.created_at).toLocaleDateString()}
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <button 
-                      onClick={() => handleDelete(s.id, s.full_name)}
-                      className="btn btn-secondary" 
-                      style={{ padding: '0.4rem', color: 'hsl(var(--danger))' }}
-                      title="Delete Student"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <div style={{ display: 'inline-flex', gap: '0.25rem' }}>
+                      <button 
+                        onClick={() => openEditModal(s)}
+                        className="btn btn-secondary" 
+                        style={{ padding: '0.4rem', color: 'hsl(var(--primary))' }}
+                        title="Edit Student"
+                      >
+                        <Edit size={14} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(s.id, s.full_name)}
+                        className="btn btn-secondary" 
+                        style={{ padding: '0.4rem', color: 'hsl(var(--danger))' }}
+                        title="Delete Student"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -543,16 +709,24 @@ export default function StudentsManagement({ department: propDepartment, insideM
         </div>
       )}
 
+      {/* Add / Edit Student Modal */}
       {showForm && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1200, padding: '1rem'
-        }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', alignSelf: 'center' }}>
+        <div 
+          onClick={() => setShowForm(false)}
+          style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1200, padding: '1rem'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="card animate-fade-in" 
+            style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', alignSelf: 'center' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add New Student</h3>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{editingId ? 'Edit Student' : 'Add New Student'}</h3>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}>
                 <X size={20} />
               </button>
@@ -570,7 +744,10 @@ export default function StudentsManagement({ department: propDepartment, insideM
                   value={enrollmentNumber}
                   onChange={(e) => setEnrollmentNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   required
+                  readOnly={!!editingId}
+                  style={editingId ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
                 />
+                {editingId && <small style={{ color: 'hsl(var(--muted))', fontSize: '0.75rem' }}>Enrollment number cannot be changed.</small>}
               </div>
 
               <div className="form-group">
@@ -590,7 +767,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
                 <input
                   type="email"
                   className="form-control"
-                  placeholder="e.g. amit@edumark.com"
+                  placeholder="e.g. amit@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -654,7 +831,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
                 </button>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={submitting}>
                   <Save size={16} />
-                  {submitting ? 'Adding...' : 'Create Account'}
+                  {submitting ? 'Saving...' : (editingId ? 'Update Student' : 'Create Account')}
                 </button>
               </div>
             </form>
@@ -665,13 +842,20 @@ export default function StudentsManagement({ department: propDepartment, insideM
 
       {/* Bulk Upload Modal */}
       {showBulkModal && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1200, padding: '1rem'
-        }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '750px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', alignSelf: 'center' }}>
+        <div 
+          onClick={() => { setShowBulkModal(false); setBulkFile(null); setParsedStudents([]); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1200, padding: '1rem'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="card animate-fade-in" 
+            style={{ width: '100%', maxWidth: '750px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', alignSelf: 'center' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Upload size={20} color="hsl(var(--primary))" />
@@ -681,6 +865,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
                 <X size={20} />
               </button>
             </div>
+
 
             {/* Instruction Banner */}
             <div className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', padding: '1rem', backgroundColor: 'hsl(var(--secondary) / 0.3)', border: '1px dashed hsl(var(--primary) / 0.4)', marginBottom: '1.5rem' }}>
