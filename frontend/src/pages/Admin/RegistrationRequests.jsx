@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { Check, X, Trash2, Search, Filter, RefreshCw, Calendar, Mail, Phone, Hash, Eye, EyeOff, Lock, ArrowLeft } from 'lucide-react';
+import { formatDate, formatDateTime } from '../../utils/dateUtils';
 
 export default function RegistrationRequests({ department: propDepartment }) {
   const { authFetch } = useAuth();
@@ -222,7 +223,7 @@ export default function RegistrationRequests({ department: propDepartment }) {
 
                   <div style={{ fontSize: '0.75rem', color: 'hsl(var(--muted))', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <Calendar size={12} />
-                    Requested on: {new Date(req.created_at).toLocaleString()}
+                    Requested on: {formatDateTime(req.created_at)}
                   </div>
                 </div>
 

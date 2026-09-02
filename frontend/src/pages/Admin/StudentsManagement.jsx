@@ -2,12 +2,16 @@ import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Search, Plus, Trash2, X, Save, RefreshCw, Upload, Download, AlertCircle, FileText, CheckCircle, LogOut, Edit, CheckSquare, Square } from 'lucide-react';
+import { Search, Plus, Trash2, X, Save, RefreshCw, Upload, Download, AlertCircle, FileText, CheckCircle, LogOut, Edit, CheckSquare, Square, TrendingUp } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { formatDate, formatDateTime } from '../../utils/dateUtils';
+import PromoteModal from '../../components/Admin/PromoteModal';
 
 export default function StudentsManagement({ department: propDepartment, insideModal = false, onMutation }) {
   const { authFetch, user } = useAuth();
   const { showToast } = useToast();
+
+  const [showPromoteModal, setShowPromoteModal] = useState(false);
 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -484,7 +488,32 @@ export default function StudentsManagement({ department: propDepartment, insideM
                 Add, edit, delete, or upload student rosters to manage student accounts{propDepartment ? ` in ${propDepartment}` : ''}.
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              {(user?.adminRole === 'main_admin' || user?.adminRole === 'sub_admin') && (
+                <button
+                  type="button"
+                  onClick={() => setShowPromoteModal(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '0.6rem 1.15rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  title="Promote Students to Next Semester & Archive Sem 8"
+                >
+                  <TrendingUp size={16} strokeWidth={2.5} />
+                  Promote
+                </button>
+              )}
               <button onClick={handleForceLogoutAll} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'hsl(var(--danger))', borderColor: 'hsl(var(--danger) / 0.3)' }} title="Forces all students in this scope to log in again next time they try to access the system.">
                 <LogOut size={16} />
                 {propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '') ? 'Logout Dept Students' : 'Logout All Students'}
@@ -506,11 +535,36 @@ export default function StudentsManagement({ department: propDepartment, insideM
       ) : (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <p style={{ color: 'hsl(var(--muted))', margin: 0 }}>
+            <p style={{ color: '#cbd5e1', margin: 0, fontSize: '0.95rem' }}>
               Directly add single students or upload spreadsheets to import students in bulk.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            {(user?.adminRole === 'main_admin' || user?.adminRole === 'sub_admin') && (
+              <button
+                type="button"
+                onClick={() => setShowPromoteModal(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.6rem 1.15rem',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Promote Students to Next Semester & Archive Sem 8"
+              >
+                <TrendingUp size={16} strokeWidth={2.5} />
+                Promote
+              </button>
+            )}
             <button onClick={handleForceLogoutAll} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'hsl(var(--danger))', borderColor: 'hsl(var(--danger) / 0.3)' }}>
               <LogOut size={16} />
               {propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '') ? 'Logout Dept Students' : 'Logout All Students'}
@@ -562,14 +616,14 @@ export default function StudentsManagement({ department: propDepartment, insideM
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
         gap: '0.75rem', 
         marginBottom: '1.5rem',
-        backgroundColor: 'hsl(var(--secondary) / 0.1)',
+        backgroundColor: insideModal ? 'rgba(255, 255, 255, 0.06)' : 'hsl(var(--secondary) / 0.1)',
         padding: '1rem',
         borderRadius: '8px',
-        border: '1px solid hsl(var(--border) / 0.5)'
+        border: insideModal ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid hsl(var(--border) / 0.5)'
       }}>
         {/* Name Filter */}
         <div className="form-group" style={{ margin: 0 }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Student Name</label>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: insideModal ? '#e2e8f0' : 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Student Name</label>
           <input
             type="text"
             className="form-control"
@@ -581,7 +635,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
 
         {/* Enrollment Filter */}
         <div className="form-group" style={{ margin: 0 }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Enrollment Number</label>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: insideModal ? '#e2e8f0' : 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Enrollment Number</label>
           <input
             type="text"
             className="form-control"
@@ -594,7 +648,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
         {/* Department Filter (Only show if not scoped to a specific department already) */}
         {!(propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '')) && (
           <div className="form-group" style={{ margin: 0 }}>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Department</label>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: insideModal ? '#e2e8f0' : 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Department</label>
             <select
               className="form-control"
               value={filterDept}
@@ -610,7 +664,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
 
         {/* Semester Filter */}
         <div className="form-group" style={{ margin: 0 }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Semester</label>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: insideModal ? '#e2e8f0' : 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Semester</label>
           <select
             className="form-control"
             value={filterSem}
@@ -680,7 +734,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
                   </td>
                   <td style={{ fontWeight: 600, color: 'hsl(var(--primary))' }}>{s.raw_password || 'N/A'}</td>
                   <td style={{ fontSize: '0.85rem', color: 'hsl(var(--muted))' }}>
-                    {new Date(s.created_at).toLocaleDateString()}
+                    {formatDate(s.created_at)}
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'inline-flex', gap: '0.25rem' }}>
@@ -969,6 +1023,17 @@ export default function StudentsManagement({ department: propDepartment, insideM
         </div>,
         document.body
       )}
+
+      {/* Student Semester Promotion & Sem 8 Graduation Modal */}
+      <PromoteModal
+        isOpen={showPromoteModal}
+        onClose={() => setShowPromoteModal(false)}
+        defaultDept={propDepartment || 'All'}
+        onSuccess={() => {
+          fetchStudents();
+          if (onMutation) onMutation();
+        }}
+      />
     </div>
   );
 }

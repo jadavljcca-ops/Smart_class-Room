@@ -1,9 +1,11 @@
 import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, Paperclip, Download, Calendar, ArrowLeft } from 'lucide-react';
+import { formatDate, formatDateTime } from '../../utils/dateUtils';
 
 export default function AnnouncementsManagement({ department: propDepartment, insideModal }) {
   const { authFetch, token } = useAuth();
@@ -333,11 +335,11 @@ export default function AnnouncementsManagement({ department: propDepartment, in
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <Calendar size={13} />
-                    Posted: {new Date(ann.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                    Posted: {formatDateTime(ann.created_at)}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <Calendar size={13} />
-                    Expiry: {ann.expiry_date}
+                    Expiry: {formatDate(ann.expiry_date)}
                   </span>
                 </div>
 
@@ -359,21 +361,32 @@ export default function AnnouncementsManagement({ department: propDepartment, in
       )}
 
       {/* Add / Edit notice Modal */}
-      {showForm && (
+      {showForm && createPortal(
         <div 
           onClick={() => setShowForm(false)}
           style={{
             position: 'fixed',
-            top: 0, left: 0, width: '100vw', height: '100vh',
-            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, padding: '1rem'
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '1rem',
+            boxSizing: 'border-box'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '600px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))' }}
+            style={{ width: '100%', maxWidth: '580px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))', margin: 'auto', borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
@@ -525,7 +538,8 @@ export default function AnnouncementsManagement({ department: propDepartment, in
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

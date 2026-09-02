@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Bell, X } from 'lucide-react';
+import { formatDateTime } from '../../utils/dateUtils';
 
 export default function NotificationMenu() {
   const { user, authFetch } = useAuth();
@@ -11,6 +12,7 @@ export default function NotificationMenu() {
   const [bellRinging, setBellRinging] = useState(false);
   
   const notificationMenuRef = useRef(null);
+  const dropdownRef = useRef(null);
   const audioRef = useRef(null);
   const lastKnownNotifId = useRef(null);
   const audioUnlocked = useRef(false);
@@ -53,9 +55,13 @@ export default function NotificationMenu() {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (notificationMenuRef.current && !notificationMenuRef.current.contains(event.target)) {
-        setShowNotifications(false);
+      if (
+        (notificationMenuRef.current && notificationMenuRef.current.contains(event.target)) ||
+        (dropdownRef.current && dropdownRef.current.contains(event.target))
+      ) {
+        return;
       }
+      setShowNotifications(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
@@ -121,17 +127,48 @@ export default function NotificationMenu() {
   };
 
   const handleDeleteNotification = async (id, e) => {
-    e.stopPropagation();
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    // 1. Instantly remove from UI
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    
+    // 2. Persist in localStorage to prevent resurfacing
     try {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
       const dismissedNotifs = JSON.parse(localStorage.getItem('dismissedNotifs') || '[]');
       if (!dismissedNotifs.includes(id)) {
         dismissedNotifs.push(id);
         localStorage.setItem('dismissedNotifs', JSON.stringify(dismissedNotifs));
       }
+    } catch (err) {}
+
+    // 3. Delete in database
+    try {
       await authFetch(`/notifications/${id}`, { method: 'DELETE' });
     } catch (err) {
       console.error('Error deleting notification:', err);
+    }
+  };
+
+  const handleClearAll = async (e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    const allIds = notifications.map(n => n.id);
+    setNotifications([]);
+
+    try {
+      const dismissedNotifs = JSON.parse(localStorage.getItem('dismissedNotifs') || '[]');
+      const updated = [...new Set([...dismissedNotifs, ...allIds])];
+      localStorage.setItem('dismissedNotifs', JSON.stringify(updated));
+    } catch (err) {}
+
+    try {
+      await authFetch('/notifications', { method: 'DELETE' });
+    } catch (err) {
+      console.error('Error clearing notifications:', err);
     }
   };
 
@@ -150,6 +187,7 @@ export default function NotificationMenu() {
             justifyContent: 'center',
             position: 'relative'
           }}
+          title="Notifications"
         >
           <Bell size={20} className={bellRinging ? 'bell-ring' : ''} />
           {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
@@ -157,38 +195,123 @@ export default function NotificationMenu() {
 
         {showNotifications && createPortal(
           <>
-            <div style={{
-              position: 'fixed',
-              top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              zIndex: 999
-            }} onClick={() => setShowNotifications(false)} />
-            <div className="card notification-dropdown animate-fade-in" style={{
-              position: 'fixed',
-              top: '30px',
-              left: 0,
-              right: 0,
-              margin: '0 auto',
-              width: '90vw',
-              maxWidth: '400px',
-              maxHeight: '400px',
-              overflowY: 'auto',
-              zIndex: 1000,
-              padding: '1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-              boxShadow: 'var(--shadow-lg)',
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))'
-            }}>
-              <div style={{ fontWeight: 700, fontSize: '0.95rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Notifications</span>
-                {unreadCount > 0 && <span style={{ fontSize: '0.75rem', color: 'hsl(var(--danger))', fontWeight: 600 }}>{unreadCount} unread</span>}
+            <div 
+              style={{
+                position: 'fixed',
+                top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                zIndex: 99998
+              }} 
+              onClick={() => setShowNotifications(false)} 
+            />
+            <div 
+              ref={dropdownRef}
+              className="card notification-dropdown animate-fade-in" 
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{
+                position: 'fixed',
+                top: '70px',
+                left: 0,
+                right: 0,
+                margin: '0 auto',
+                width: '90vw',
+                maxWidth: '430px',
+                maxHeight: '450px',
+                overflowY: 'auto',
+                zIndex: 99999,
+                padding: '1.25rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.6rem',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                backgroundColor: 'hsl(var(--card))',
+                borderRadius: '12px',
+                border: '1px solid hsl(var(--border))'
+              }}
+            >
+              <div style={{
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                borderBottom: '1px solid hsl(var(--border))',
+                paddingBottom: '0.6rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>Notifications</span>
+                  {unreadCount > 0 && (
+                    <span style={{
+                      fontSize: '0.75rem',
+                      color: 'hsl(var(--danger))',
+                      fontWeight: 600,
+                      backgroundColor: 'hsl(var(--danger) / 0.12)',
+                      padding: '0.1rem 0.4rem',
+                      borderRadius: '10px'
+                    }}>
+                      {unreadCount} unread
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {notifications.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleClearAll(e);
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        background: 'none',
+                        border: '1px solid hsl(var(--border))',
+                        color: 'hsl(var(--muted))',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '6px',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'hsl(var(--danger))';
+                        e.currentTarget.style.backgroundColor = 'hsl(var(--danger) / 0.1)';
+                        e.currentTarget.style.borderColor = 'hsl(var(--danger) / 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'hsl(var(--muted))';
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.borderColor = 'hsl(var(--border))';
+                      }}
+                    >
+                      Clear All
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowNotifications(false)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'hsl(var(--muted))',
+                      padding: '0.2rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '4px'
+                    }}
+                    title="Close"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
               
               {notifications.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '1.5rem', color: 'hsl(var(--muted))', fontSize: '0.85rem' }}>
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'hsl(var(--muted))', fontSize: '0.85rem' }}>
                   No notifications yet.
                 </div>
               ) : (
@@ -197,51 +320,78 @@ export default function NotificationMenu() {
                     key={notif.id} 
                     onClick={() => !notif.is_read && handleMarkAsRead(notif.id)}
                     style={{
-                      padding: '0.6rem 2.2rem 0.6rem 0.6rem',
-                      borderRadius: '6px',
+                      padding: '0.75rem 2.5rem 0.75rem 0.85rem',
+                      borderRadius: '8px',
                       backgroundColor: notif.is_read ? 'transparent' : 'hsl(var(--secondary) / 0.5)',
-                      borderBottom: '1px solid hsl(var(--border) / 0.5)',
+                      border: '1px solid hsl(var(--border) / 0.6)',
                       fontSize: '0.825rem',
                       cursor: notif.is_read ? 'default' : 'pointer',
                       transition: 'background 0.2s',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '0.2rem',
+                      gap: '0.35rem',
                       position: 'relative'
                     }}
                   >
-                    <div>{notif.message}</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      {notif.department && (
+                        <span style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          padding: '0.1rem 0.4rem',
+                          borderRadius: '4px',
+                          backgroundColor: notif.department === 'All' ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--primary) / 0.25)',
+                          color: 'hsl(var(--primary))',
+                          border: '1px solid hsl(var(--border))'
+                        }}>
+                          {notif.department}
+                        </span>
+                      )}
+                      <span style={{ flex: 1, paddingRight: '0.5rem', fontWeight: notif.is_read ? 400 : 600 }}>{notif.message}</span>
+                    </div>
                     <div style={{ fontSize: '0.7rem', color: 'hsl(var(--muted))' }}>
-                      {new Date(notif.created_at).toLocaleString()}
+                      {formatDateTime(notif.created_at)}
                     </div>
                     <button 
-                      onClick={(e) => handleDeleteNotification(notif.id, e)}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleDeleteNotification(notif.id, e);
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
                       style={{
                         position: 'absolute',
-                        top: '0.5rem',
-                        right: '0.5rem',
-                        background: 'none',
-                        border: 'none',
+                        top: '0.55rem',
+                        right: '0.55rem',
+                        background: 'hsl(var(--secondary) / 0.9)',
+                        border: '1px solid hsl(var(--border))',
                         cursor: 'pointer',
                         color: 'hsl(var(--muted))',
-                        padding: '0.15rem',
-                        borderRadius: '4px',
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '6px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        transition: 'color 0.2s, background-color 0.2s'
+                        zIndex: 20,
+                        transition: 'all 0.2s ease',
+                        padding: 0
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.color = 'hsl(var(--danger))';
-                        e.currentTarget.style.backgroundColor = 'hsl(var(--danger) / 0.1)';
+                        e.currentTarget.style.backgroundColor = 'hsl(var(--danger) / 0.15)';
+                        e.currentTarget.style.borderColor = 'hsl(var(--danger) / 0.4)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.color = 'hsl(var(--muted))';
-                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.backgroundColor = 'hsl(var(--secondary) / 0.9)';
+                        e.currentTarget.style.borderColor = 'hsl(var(--border))';
                       }}
-                      title="Delete Notification"
+                      title="Remove notification"
+                      aria-label="Remove notification"
                     >
-                      <X size={12} />
+                      <X size={14} />
                     </button>
                   </div>
                 ))

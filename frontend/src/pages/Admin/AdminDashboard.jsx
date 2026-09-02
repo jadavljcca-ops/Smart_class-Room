@@ -1,9 +1,11 @@
 import { confirmDelete } from '../../utils/alerts';
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth, API_BASE_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import SVGChart from '../../components/Shared/SVGChart';
 import { Users, GraduationCap, Clock, Megaphone, FileText, BarChart3, X, Search, Hash, FileDown, Eye, ArrowLeft, School, Trash2 } from 'lucide-react';
+import { formatDate, formatDateTime } from '../../utils/dateUtils';
 
 import { Link } from 'react-router-dom';
 
@@ -597,28 +599,29 @@ export default function AdminDashboard() {
       </div>
 
       {/* MODAL 1: Enrolled Students details list */}
-      {showStudentsModal && (
+      {showStudentsModal && createPortal(
         <div 
           onClick={() => setShowStudentsModal(false)}
           style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem'
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem', boxSizing: 'border-box'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none' }}
+            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none', margin: 'auto', borderRadius: '12px', color: '#ffffff' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.15)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
                 <GraduationCap color="hsl(var(--primary))" />
                 Approved Students Register
               </h3>
               <button
+                type="button"
                 onClick={() => { setShowStudentsModal(false); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <X size={20} />
               </button>
@@ -630,32 +633,34 @@ export default function AdminDashboard() {
               onMutation={fetchStats}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL 1.5: Faculty Members details list */}
-      {showFacultyModal && (
+      {showFacultyModal && createPortal(
         <div 
           onClick={() => setShowFacultyModal(false)}
           style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem'
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem', boxSizing: 'border-box'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none' }}
+            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none', margin: 'auto', borderRadius: '12px', color: '#ffffff' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.15)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
                 <Users color="hsl(var(--success))" />
                 Faculty Members Register
               </h3>
               <button
+                type="button"
                 onClick={() => { setShowFacultyModal(false); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <X size={20} />
               </button>
@@ -666,32 +671,34 @@ export default function AdminDashboard() {
               insideModal={true}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL 1.75: Announcements Modal */}
-      {showAnnouncementsModal && (
+      {showAnnouncementsModal && createPortal(
         <div 
           onClick={() => setShowAnnouncementsModal(false)}
           style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem'
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem', boxSizing: 'border-box'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none' }}
+            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none', margin: 'auto', borderRadius: '12px', color: '#ffffff' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.15)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
                 <Megaphone color="hsl(var(--warning))" />
                 Announcements & Notices
               </h3>
               <button
+                type="button"
                 onClick={() => { setShowAnnouncementsModal(false); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <X size={20} />
               </button>
@@ -702,32 +709,33 @@ export default function AdminDashboard() {
               insideModal={true}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL 2: Uploaded notes details list */}
-      {showNotesModal && (
+      {showNotesModal && createPortal(
         <div 
           onClick={() => { setShowNotesModal(false); setNotesSearch(''); }}
           style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem'
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem', boxSizing: 'border-box'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '950px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none' }}
+            style={{ width: '100%', maxWidth: '950px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none', margin: 'auto', borderRadius: '12px', color: '#ffffff' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.15)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
                 <FileText color="hsl(var(--success))" />
                 Uploaded Study Documents & Notes
               </h3>
               <button
                 onClick={() => { setShowNotesModal(false); setNotesSearch(''); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff' }}
               >
                 <X size={20} />
               </button>
@@ -781,7 +789,7 @@ export default function AdminDashboard() {
                         </td>
                         <td style={{ fontSize: '0.825rem', color: 'hsl(var(--muted))' }}>{note.file_name}</td>
                         <td style={{ fontWeight: 600, color: 'hsl(var(--primary))' }}>Prof. {note.faculty_name}</td>
-                        <td style={{ fontSize: '0.825rem' }}>{new Date(note.upload_date + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+                        <td style={{ fontSize: '0.825rem' }}>{formatDateTime(note.upload_date)}</td>
                         <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                           <button
                             onClick={() => handleDownloadNote(note)}
@@ -807,7 +815,8 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* CSS overrides for charts layout */}

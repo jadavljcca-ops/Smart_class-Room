@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { query, run, get, insertBatchNotifications } = require('../db');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const upload = require('../utils/uploader');
+const XLSX = require('xlsx');
 
 // All routes here require Admin authentication
 router.use(authenticateToken, requireAdmin);
@@ -88,14 +89,15 @@ router.put('/profile', async (req, res) => {
 // GET /api/admin/stats
 router.get('/stats', async (req, res) => {
   try {
-    const queryDept = req.query.department;
-    const isMainAdmin = req.user.adminRole === 'main_admin' && !queryDept;
-    const dept = queryDept || req.user.department;
+    const isMainAdmin = req.user.adminRole === 'main_admin';
+    const queryDept = isMainAdmin ? req.query.department : null;
+    const isGlobal = isMainAdmin && !queryDept;
+    const dept = isMainAdmin ? queryDept : req.user.department;
 
     let studentsCount, facultyCount, pendingCount, announcementsCount, notesCount;
     let notesPerDept, studentsPerDept, requestStats;
 
-    if (isMainAdmin) {
+    if (isGlobal) {
       studentsCount = await get("SELECT COUNT(*) as count FROM students WHERE status='Approved'");
       facultyCount = await get("SELECT COUNT(*) as count FROM faculty WHERE status='Approved'");
       pendingCount = await get("SELECT COUNT(*) as count FROM registration_requests WHERE status='Pending'");
@@ -139,11 +141,12 @@ router.get('/stats', async (req, res) => {
 router.get('/requests', async (req, res) => {
   try {
     let requests;
-    const queryDept = req.query.department;
-    if (req.user.adminRole === 'main_admin' && !queryDept) {
+    const isMainAdmin = req.user.adminRole === 'main_admin';
+    const queryDept = isMainAdmin ? req.query.department : null;
+    if (isMainAdmin && !queryDept) {
       requests = await query("SELECT id, role, full_name, email, mobile_number, department, semester, enrollment_number, employee_id, status, raw_password, created_at FROM registration_requests WHERE status='Pending' ORDER BY created_at DESC");
     } else {
-      const dept = queryDept || req.user.department;
+      const dept = isMainAdmin ? queryDept : req.user.department;
       requests = await query("SELECT id, role, full_name, email, mobile_number, department, semester, enrollment_number, employee_id, status, raw_password, created_at FROM registration_requests WHERE status='Pending' AND department = ? ORDER BY created_at DESC", [dept]);
     }
     res.json(requests);
@@ -183,8 +186,8 @@ router.post('/requests/:id/action', async (req, res) => {
         );
         // Create user-specific notification
         await run(
-          `INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`,
-          ['Student', result.id, 'Your registration request has been approved. You can now login.']
+          `INSERT INTO notifications (user_role, user_id, department, message) VALUES (?, ?, ?, ?)`,
+          ['Student', result.id, department, 'Your registration request has been approved. You can now login.']
         );
       } else if (role === 'faculty') {
         const result = await run(
@@ -194,8 +197,8 @@ router.post('/requests/:id/action', async (req, res) => {
         );
         // Create user-specific notification
         await run(
-          `INSERT INTO notifications (user_role, user_id, message) VALUES (?, ?, ?)`,
-          ['Faculty', result.id, 'Your registration request has been approved. You can now login and upload notes.']
+          `INSERT INTO notifications (user_role, user_id, department, message) VALUES (?, ?, ?, ?)`,
+          ['Faculty', result.id, department, 'Your registration request has been approved. You can now login and upload notes.']
         );
       }
 
@@ -222,11 +225,12 @@ router.post('/requests/:id/action', async (req, res) => {
 router.get('/faculty', async (req, res) => {
   try {
     let faculty;
-    const queryDept = req.query.department;
-    if (req.user.adminRole === 'main_admin' && !queryDept) {
+    const isMainAdmin = req.user.adminRole === 'main_admin';
+    const queryDept = isMainAdmin ? req.query.department : null;
+    if (isMainAdmin && !queryDept) {
       faculty = await query("SELECT id, full_name, email, mobile_number, department, employee_id, status, raw_password, created_at FROM faculty ORDER BY full_name ASC");
     } else {
-      const dept = queryDept || req.user.department;
+      const dept = isMainAdmin ? queryDept : req.user.department;
       faculty = await query("SELECT id, full_name, email, mobile_number, department, employee_id, status, raw_password, created_at FROM faculty WHERE department = ? ORDER BY full_name ASC", [dept]);
     }
     res.json(faculty);
@@ -341,11 +345,12 @@ router.delete('/faculty/:id', async (req, res) => {
 router.get('/announcements', async (req, res) => {
   try {
     let list;
-    const queryDept = req.query.department;
-    if (req.user.adminRole === 'main_admin' && !queryDept) {
+    const isMainAdmin = req.user.adminRole === 'main_admin';
+    const queryDept = isMainAdmin ? req.query.department : null;
+    if (isMainAdmin && !queryDept) {
       list = await query("SELECT * FROM announcements ORDER BY created_at DESC");
     } else {
-      const dept = queryDept || req.user.department;
+      const dept = isMainAdmin ? queryDept : req.user.department;
       list = await query("SELECT * FROM announcements WHERE department = ? OR department = 'All' ORDER BY created_at DESC", [dept]);
     }
     res.json(list);
@@ -377,27 +382,32 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
       [title, description, department || 'All', attachmentPath, attachmentName, publishDate, expiryDate, priority || 'Medium']
     );
 
-    // Send personalized notification to students and faculty via batch insert
+    // Send department-scoped notifications to students, faculty, and admins via batch insert
     const notifyMsg = `New Announcement: ${title}`;
     
     let targetStudents = [];
     let targetFaculty = [];
+    let targetAdmins = [];
     
     if (department && department !== 'All') {
-      [targetStudents, targetFaculty] = await Promise.all([
+      [targetStudents, targetFaculty, targetAdmins] = await Promise.all([
         query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]),
-        query("SELECT id FROM faculty WHERE department = ? AND status = 'Approved'", [department])
+        query("SELECT id FROM faculty WHERE department = ? AND status = 'Approved'", [department]),
+        query("SELECT id FROM admins WHERE role = 'main_admin' OR (role = 'sub_admin' AND department = ?)", [department])
       ]);
     } else {
-      [targetStudents, targetFaculty] = await Promise.all([
+      [targetStudents, targetFaculty, targetAdmins] = await Promise.all([
         query("SELECT id FROM students WHERE status = 'Approved'"),
-        query("SELECT id FROM faculty WHERE status = 'Approved'")
+        query("SELECT id FROM faculty WHERE status = 'Approved'"),
+        query("SELECT id FROM admins")
       ]);
     }
 
+    const targetDept = department || 'All';
     const notifs = [
-      ...targetStudents.map(s => ({ user_role: 'Student', user_id: s.id, message: notifyMsg })),
-      ...targetFaculty.map(f => ({ user_role: 'Faculty', user_id: f.id, message: notifyMsg }))
+      ...targetStudents.map(s => ({ user_role: 'Student', user_id: s.id, department: targetDept, message: notifyMsg })),
+      ...targetFaculty.map(f => ({ user_role: 'Faculty', user_id: f.id, department: targetDept, message: notifyMsg })),
+      ...targetAdmins.map(a => ({ user_role: 'Admin', user_id: a.id, department: targetDept, message: notifyMsg }))
     ];
     await insertBatchNotifications(notifs);
 
@@ -552,14 +562,15 @@ router.delete('/departments/:id', async (req, res) => {
 router.get('/students', async (req, res) => {
   try {
     let list;
-    const queryDept = req.query.department;
-    if (req.user.adminRole === 'main_admin' && !queryDept) {
+    const isMainAdmin = req.user.adminRole === 'main_admin';
+    const queryDept = isMainAdmin ? req.query.department : null;
+    if (isMainAdmin && !queryDept) {
       list = await query(
         `SELECT id, full_name, email, mobile_number, department, semester, enrollment_number, raw_password, created_at 
          FROM students WHERE status='Approved' ORDER BY created_at DESC`
       );
     } else {
-      const dept = queryDept || req.user.department;
+      const dept = isMainAdmin ? queryDept : req.user.department;
       list = await query(
         `SELECT id, full_name, email, mobile_number, department, semester, enrollment_number, raw_password, created_at 
          FROM students WHERE status='Approved' AND department = ? ORDER BY created_at DESC`,
@@ -988,6 +999,142 @@ router.post('/students/logout-all', async (req, res) => {
   } catch (error) {
     console.error('Logout all students error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// POST /api/admin/promote-students (Promote students to next semester & graduate/delete Sem 8)
+router.post('/promote-students', async (req, res) => {
+  const { adminRole, department: userDept, fullName: adminName } = req.user;
+
+  // Only Main Admin and Sub-Admins are authorized
+  if (adminRole !== 'main_admin' && adminRole !== 'sub_admin') {
+    return res.status(403).json({ message: 'Forbidden. Admin privileges required.' });
+  }
+
+  // If Sub-Admin, strictly restrict scope to their own department
+  let targetDept = req.body.department;
+  if (adminRole === 'sub_admin') {
+    targetDept = userDept;
+  }
+
+  const isSpecificDept = targetDept && targetDept !== 'All';
+
+  try {
+    // 1. Fetch Sem 8 students (Students graduating)
+    let sem8Query = `SELECT id, full_name, email, mobile_number, department, semester, enrollment_number, created_at 
+                     FROM students 
+                     WHERE (semester = '8' OR semester ILIKE '%8%')`;
+    let sem8Params = [];
+    if (isSpecificDept) {
+      sem8Query += ` AND department = ?`;
+      sem8Params.push(targetDept);
+    }
+    sem8Query += ` ORDER BY department ASC, enrollment_number ASC`;
+
+    const sem8Students = await query(sem8Query, sem8Params);
+
+    // 2. Generate Excel workbook for graduating Sem 8 students if any exist
+    let excelBase64 = null;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const fileName = `Graduated_Students_Sem8_${isSpecificDept ? targetDept + '_' : ''}${todayStr}.xlsx`;
+
+    if (sem8Students && sem8Students.length > 0) {
+      const excelRows = sem8Students.map((s, idx) => ({
+        'S.No': idx + 1,
+        'Enrollment Number': s.enrollment_number,
+        'Full Name': s.full_name,
+        'Department': s.department,
+        'Semester': 'Graduated (Sem 8)',
+        'Email Address': s.email,
+        'Mobile Number': s.mobile_number,
+        'Registration Date': s.created_at ? new Date(s.created_at).toLocaleDateString('en-GB') : '-',
+        'Graduation Date': new Date().toLocaleDateString('en-GB')
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(excelRows);
+      
+      // Auto-fit column widths
+      worksheet['!cols'] = [
+        { wch: 6 },  // S.No
+        { wch: 20 }, // Enrollment Number
+        { wch: 25 }, // Full Name
+        { wch: 15 }, // Department
+        { wch: 20 }, // Semester
+        { wch: 30 }, // Email Address
+        { wch: 16 }, // Mobile Number
+        { wch: 18 }, // Registration Date
+        { wch: 18 }  // Graduation Date
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Graduated Students');
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+      excelBase64 = buffer.toString('base64');
+
+      // 3. Delete all Sem 8 student records and their associated downloads/requests
+      for (const s of sem8Students) {
+        await run('DELETE FROM downloads WHERE student_id = ?', [s.id]);
+        await run('DELETE FROM registration_requests WHERE enrollment_number = ?', [s.enrollment_number]);
+        await run('DELETE FROM students WHERE id = ?', [s.id]);
+      }
+    }
+
+    // 4. Promote Semesters 1 through 7 in reverse order
+    // (Sem 7 -> 8, Sem 6 -> 7, Sem 5 -> 6, Sem 4 -> 5, Sem 3 -> 4, Sem 2 -> 3, Sem 1 -> 2)
+    let totalPromoted = 0;
+
+    for (let fromSem = 7; fromSem >= 1; fromSem--) {
+      const toSem = fromSem + 1;
+      let updateSql = `UPDATE students SET semester = ? WHERE (semester = ? OR semester = ? OR semester = ?)`;
+      let updateParams = [String(toSem), String(fromSem), `Sem ${fromSem}`, `Semester ${fromSem}`];
+
+      if (isSpecificDept) {
+        updateSql += ` AND department = ?`;
+        updateParams.push(targetDept);
+      }
+
+      const resUpdate = await run(updateSql, updateParams);
+      if (resUpdate && (resUpdate.rowCount || resUpdate.changes)) {
+        totalPromoted += (resUpdate.rowCount || resUpdate.changes);
+      }
+    }
+
+    // 5. Invalidate tokens for remaining students so their session refreshes cleanly
+    if (isSpecificDept) {
+      await run('UPDATE students SET token_version = COALESCE(token_version, 1) + 1 WHERE department = ?', [targetDept]);
+    } else {
+      await run('UPDATE students SET token_version = COALESCE(token_version, 1) + 1');
+    }
+
+    // 6. Send notifications
+    // If Sub-Admin executed promotion, specifically notify Main Admin + Department
+    if (adminRole === 'sub_admin') {
+      const mainAdminNotifMsg = `🎓 Promotion Notice: [${userDept}] Sub-Admin ${adminName || 'Admin'} has promoted ${totalPromoted} student(s) to next semester${sem8Students.length > 0 ? ` and graduated ${sem8Students.length} Semester 8 student(s)` : ''}.`;
+      await insertBatchNotifications([
+        // Sent with department = 'All' so Main Admin receives it across departments
+        { user_role: 'Admin', user_id: null, department: 'All', message: mainAdminNotifMsg },
+        { user_role: 'Admin', user_id: null, department: userDept, message: `Academic Promotion Executed: ${totalPromoted} student(s) promoted in ${userDept}.` }
+      ]);
+    } else {
+      // Main Admin executed
+      const notifMsg = `🎓 Academic Promotion Executed: ${totalPromoted} student(s) promoted to next semester${sem8Students.length > 0 ? `, and ${sem8Students.length} Semester 8 student(s) graduated and archived` : ''}.`;
+      await insertBatchNotifications([
+        { user_role: 'Admin', user_id: null, department: isSpecificDept ? targetDept : 'All', message: notifMsg }
+      ]);
+    }
+
+    res.json({
+      success: true,
+      promotedCount: totalPromoted,
+      graduatedCount: sem8Students ? sem8Students.length : 0,
+      excelBase64,
+      fileName,
+      message: `Successfully promoted ${totalPromoted} student(s)! ${sem8Students.length > 0 ? `${sem8Students.length} Semester 8 student(s) have graduated and their Excel archive file has been generated.` : ''}`
+    });
+
+  } catch (error) {
+    console.error('Promote students error:', error);
+    res.status(500).json({ message: 'Internal server error while promoting students.' });
   }
 });
 

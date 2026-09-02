@@ -177,10 +177,22 @@ async function initializeTables() {
       id SERIAL PRIMARY KEY,
       user_role TEXT NOT NULL,
       user_id INTEGER,
+      department TEXT,
       message TEXT NOT NULL,
       is_read INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Ensure department column exists in notifications table if created previously
+    await client.query(`DO $$ 
+    BEGIN 
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name='notifications' AND column_name='department'
+      ) THEN 
+        ALTER TABLE notifications ADD COLUMN department TEXT; 
+      END IF; 
+    END $$;`);
 
     // 9. Departments Table
     await client.query(`CREATE TABLE IF NOT EXISTS departments (
@@ -252,12 +264,12 @@ async function insertBatchNotifications(notifications) {
   const params = [];
   
   notifications.forEach((item, index) => {
-    const base = index * 3;
-    valueRows.push(`($${base + 1}, $${base + 2}, $${base + 3})`);
-    params.push(item.user_role, item.user_id, item.message);
+    const base = index * 4;
+    valueRows.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`);
+    params.push(item.user_role, item.user_id || null, item.department || null, item.message);
   });
 
-  const sql = `INSERT INTO notifications (user_role, user_id, message) VALUES ${valueRows.join(', ')}`;
+  const sql = `INSERT INTO notifications (user_role, user_id, department, message) VALUES ${valueRows.join(', ')}`;
   return executeWithRetry(async () => {
     return await pool.query(sql, params);
   });

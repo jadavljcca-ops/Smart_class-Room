@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth, API_BASE_URL, BACKEND_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { 
@@ -6,6 +7,7 @@ import {
   Search, RefreshCw, Paperclip, Download, Eye, Calendar, BookOpen 
 } from 'lucide-react';
 import { confirmDelete } from '../../utils/alerts';
+import { formatDate, formatDateTime } from '../../utils/dateUtils';
 
 export default function FacultyDashboard() {
   const { authFetch, token, user } = useAuth();
@@ -421,7 +423,7 @@ export default function FacultyDashboard() {
                       
                       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'hsl(var(--muted))', marginTop: '0.75rem' }}>
                         <span>Downloads: <strong style={{ color: 'hsl(var(--foreground))' }}>{note.download_count || 0}</strong></span>
-                        <span>Uploaded: {new Date(note.upload_date + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
+                        <span>Uploaded: {formatDateTime(note.upload_date)}</span>
                       </div>
                     </div>
 
@@ -495,7 +497,7 @@ export default function FacultyDashboard() {
                 <div key={ann.id} className="card" style={{ padding: '1rem', borderLeft: ann.priority === 'High' ? '4px solid hsl(var(--danger))' : '1px solid hsl(var(--border))' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'hsl(var(--muted))' }}>
                     <span className={`badge badge-${ann.priority.toLowerCase()}`} style={{ fontSize: '0.65rem' }}>{ann.priority}</span>
-                    <span>{new Date(ann.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
+                    <span>{formatDateTime(ann.created_at)}</span>
                   </div>
                   <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginTop: '0.4rem', color: 'hsl(var(--foreground))' }}>{ann.title}</h4>
                   <p style={{ fontSize: '0.825rem', color: 'hsl(var(--foreground) / 0.85)', marginTop: '0.4rem', whiteSpace: 'pre-wrap' }}>
@@ -535,21 +537,32 @@ export default function FacultyDashboard() {
       </div>
 
       {/* Note Form Modal */}
-      {showNoteForm && (
+      {showNoteForm && createPortal(
         <div 
           onClick={() => setShowNoteForm(false)}
           style={{
             position: 'fixed',
-            top: 0, left: 0, width: '100vw', height: '100vh',
-            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, padding: '2rem 1rem', overflowY: 'auto'
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '1rem',
+            boxSizing: 'border-box'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ margin: 'auto', width: '100%', maxWidth: '520px', padding: '2rem', backgroundColor: 'hsl(var(--card))' }}
+            style={{ margin: 'auto', width: '100%', maxWidth: '540px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
@@ -696,25 +709,37 @@ export default function FacultyDashboard() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Announcement Form Modal */}
-      {showAnnForm && (
+      {showAnnForm && createPortal(
         <div 
           onClick={() => setShowAnnForm(false)}
           style={{
             position: 'fixed',
-            top: 0, left: 0, width: '100vw', height: '100vh',
-            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000, padding: '1rem'
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '1rem',
+            boxSizing: 'border-box'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))' }}
+            style={{ width: '100%', maxWidth: '540px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))', margin: 'auto', borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Create New Announcement</h3>
@@ -836,7 +861,8 @@ export default function FacultyDashboard() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Responsive layout styles */}

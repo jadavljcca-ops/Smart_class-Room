@@ -108,10 +108,10 @@ router.post('/register', async (req, res) => {
       ]
     );
 
-    // Notify admin
+    // Notify admin (scoped to department for sub-admins, and visible to main admin)
     await run(
-      `INSERT INTO notifications (user_role, message) VALUES (?, ?)`,
-      ['Admin', `New pending ${role} request from ${fullName} (${department})`]
+      `INSERT INTO notifications (user_role, department, message) VALUES (?, ?, ?)`,
+      ['Admin', department, `New pending ${role} request from ${fullName} (${department})`]
     );
 
     return res.status(201).json({

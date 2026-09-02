@@ -53,18 +53,33 @@ router.post('/notes', upload.array('files'), async (req, res) => {
       );
     }
 
-    // Send personalized notification to students of this department AND semester via batch insert
+    // Send personalized notification to students of this department AND semester + department sub-admin & main admin
     const notifyMsg = `New note files uploaded: ${subjectName} by Prof. ${facultyName}`;
-    const targetStudents = await query(
-      "SELECT id FROM students WHERE department = ? AND semester = ? AND status = 'Approved'",
-      [department, semester]
-    );
+    const [targetStudents, targetAdmins] = await Promise.all([
+      query(
+        "SELECT id FROM students WHERE department = ? AND semester = ? AND status = 'Approved'",
+        [department, semester]
+      ),
+      query(
+        "SELECT id FROM admins WHERE role = 'main_admin' OR (role = 'sub_admin' AND department = ?)",
+        [department]
+      )
+    ]);
     
-    const notifs = targetStudents.map(student => ({
-      user_role: 'Student',
-      user_id: student.id,
-      message: notifyMsg
-    }));
+    const notifs = [
+      ...targetStudents.map(student => ({
+        user_role: 'Student',
+        user_id: student.id,
+        department: department,
+        message: notifyMsg
+      })),
+      ...targetAdmins.map(admin => ({
+        user_role: 'Admin',
+        user_id: admin.id,
+        department: department,
+        message: notifyMsg
+      }))
+    ];
     await insertBatchNotifications(notifs);
 
     res.status(201).json({ message: 'Notes uploaded successfully.' });
@@ -166,6 +181,7 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
   const { title, description, publishDate, expiryDate, priority } = req.body;
   const department = req.user.department; // Force their own department
   const facultyName = req.user.fullName;
+  const facultyId = req.user.id;
 
   if (!title || !description || !publishDate || !expiryDate) {
     return res.status(400).json({ message: 'Please fill all required fields.' });
@@ -185,17 +201,19 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
       [title, description, department, attachmentPath, attachmentName, publishDate, expiryDate, priority || 'Medium']
     );
 
-    // Send personalized notification to students and admins via batch insert
+    // Send department-isolated notifications to students, faculty, and admins
     const notifyMsg = `New Announcement from Prof. ${facultyName}: ${title}`;
     
-    const [targetStudents, targetAdmins] = await Promise.all([
+    const [targetStudents, targetFaculty, targetAdmins] = await Promise.all([
       query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]),
-      query("SELECT id FROM admins")
+      query("SELECT id FROM faculty WHERE department = ? AND id != ? AND status = 'Approved'", [department, facultyId]),
+      query("SELECT id FROM admins WHERE role = 'main_admin' OR (role = 'sub_admin' AND department = ?)", [department])
     ]);
     
     const notifs = [
-      ...targetStudents.map(s => ({ user_role: 'Student', user_id: s.id, message: notifyMsg })),
-      ...targetAdmins.map(a => ({ user_role: 'Admin', user_id: a.id, message: notifyMsg }))
+      ...targetStudents.map(s => ({ user_role: 'Student', user_id: s.id, department, message: notifyMsg })),
+      ...targetFaculty.map(f => ({ user_role: 'Faculty', user_id: f.id, department, message: notifyMsg })),
+      ...targetAdmins.map(a => ({ user_role: 'Admin', user_id: a.id, department, message: notifyMsg }))
     ];
     await insertBatchNotifications(notifs);
 
