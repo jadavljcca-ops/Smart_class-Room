@@ -44,7 +44,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
   const [departments, setDepartments] = useState([]);
 
   const fetchStudents = async (showSpinner = true) => {
-    if (showSpinner) setLoading(true);
+    if (showSpinner && students.length === 0) setLoading(true);
     try {
       const url = propDepartment ? `/admin/students?department=${propDepartment}` : '/admin/students';
       const res = await authFetch(url);
@@ -59,7 +59,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
       console.error(err);
       showToast('Network error loading students.', 'error');
     } finally {
-      if (showSpinner) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -616,14 +616,14 @@ export default function StudentsManagement({ department: propDepartment, insideM
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
         gap: '0.75rem', 
         marginBottom: '1.5rem',
-        backgroundColor: insideModal ? 'rgba(255, 255, 255, 0.06)' : 'hsl(var(--secondary) / 0.1)',
+        backgroundColor: '#f8fafc',
         padding: '1rem',
-        borderRadius: '8px',
-        border: insideModal ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid hsl(var(--border) / 0.5)'
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0'
       }}>
         {/* Name Filter */}
         <div className="form-group" style={{ margin: 0 }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: insideModal ? '#e2e8f0' : 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Student Name</label>
+          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#000000', marginBottom: '0.25rem', display: 'block' }}>Student Name</label>
           <input
             type="text"
             className="form-control"
@@ -635,7 +635,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
 
         {/* Enrollment Filter */}
         <div className="form-group" style={{ margin: 0 }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: insideModal ? '#e2e8f0' : 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Enrollment Number</label>
+          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#000000', marginBottom: '0.25rem', display: 'block' }}>Enrollment Number</label>
           <input
             type="text"
             className="form-control"
@@ -648,7 +648,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
         {/* Department Filter (Only show if not scoped to a specific department already) */}
         {!(propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '')) && (
           <div className="form-group" style={{ margin: 0 }}>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: insideModal ? '#e2e8f0' : 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Department</label>
+            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#000000', marginBottom: '0.25rem', display: 'block' }}>Department</label>
             <select
               className="form-control"
               value={filterDept}
@@ -664,7 +664,7 @@ export default function StudentsManagement({ department: propDepartment, insideM
 
         {/* Semester Filter */}
         <div className="form-group" style={{ margin: 0 }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: insideModal ? '#e2e8f0' : 'hsl(var(--muted))', marginBottom: '0.25rem', display: 'block' }}>Semester</label>
+          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#000000', marginBottom: '0.25rem', display: 'block' }}>Semester</label>
           <select
             className="form-control"
             value={filterSem}
@@ -681,10 +681,10 @@ export default function StudentsManagement({ department: propDepartment, insideM
       {/* Grid or Table List */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '4rem' }}>
-          <h3 style={{ color: 'hsl(var(--muted))' }}>Loading students database...</h3>
+          <h3 style={{ color: '#64748b' }}>Loading students database...</h3>
         </div>
       ) : filteredStudents.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '4rem 1.5rem', color: 'hsl(var(--muted))' }}>
+        <div className="card" style={{ textAlign: 'center', padding: '4rem 1.5rem', color: '#000000', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
           No active students found. Click "Add Student" or "Bulk Import" to populate.
         </div>
       ) : (
@@ -771,16 +771,16 @@ export default function StudentsManagement({ department: propDepartment, insideM
             position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
             backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1200, padding: '1rem'
+            zIndex: 20000, padding: '1rem'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', alignSelf: 'center' }}
+            style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', alignSelf: 'center', backgroundColor: '#ffffff', color: '#000000', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{editingId ? 'Edit Student' : 'Add New Student'}</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#000000' }}>{editingId ? 'Edit Student' : 'Add New Student'}</h3>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}>
                 <X size={20} />
               </button>
@@ -902,16 +902,16 @@ export default function StudentsManagement({ department: propDepartment, insideM
             position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
             backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1200, padding: '1rem'
+            zIndex: 20000, padding: '1rem'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '750px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', alignSelf: 'center' }}
+            style={{ width: '100%', maxWidth: '750px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', alignSelf: 'center', backgroundColor: '#ffffff', color: '#000000', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border))', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#000000' }}>
                 <Upload size={20} color="hsl(var(--primary))" />
                 Spreadsheet Bulk Import (.csv / .xlsx)
               </h3>

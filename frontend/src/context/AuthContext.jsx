@@ -5,10 +5,60 @@ const AuthContext = createContext();
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (window.location.protocol + '//' + window.location.hostname + ':5000');
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
+// Fast in-memory client cache for instant 0ms responses across navigation
+const clientCache = new Map();
+
+export const clearClientCache = (filter = '') => {
+  if (!filter) {
+    clientCache.clear();
+  } else {
+    for (const key of clientCache.keys()) {
+      if (key.includes(filter)) {
+        clientCache.delete(key);
+      }
+    }
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
+
+  // Prefetch helper for background data loading
+  const prefetch = (endpoints = []) => {
+    endpoints.forEach(ep => {
+      authFetch(ep).catch(() => {});
+    });
+  };
+
+  useEffect(() => {
+    if (user && token) {
+      // Background prefetch according to role for instant click-to-load
+      if (user.role === 'admin') {
+        const deptParam = user.adminRole === 'sub_admin' && user.department ? `?department=${user.department}` : '';
+        prefetch([
+          `/admin/stats${deptParam}`,
+          '/admin/departments',
+          `/admin/students${deptParam}`,
+          `/admin/faculty${deptParam}`,
+          '/admin/announcements',
+          `/admin/requests${deptParam}`
+        ]);
+      } else if (user.role === 'faculty') {
+        prefetch([
+          '/faculty/notes',
+          '/student/announcements',
+          '/admin/departments'
+        ]);
+      } else if (user.role === 'student') {
+        prefetch([
+          '/student/notes',
+          '/student/announcements'
+        ]);
+      }
+    }
+  }, [user?.role, user?.department, token]);
 
   useEffect(() => {
     if (token) {
@@ -79,6 +129,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    clientCache.clear();
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
@@ -98,11 +149,31 @@ export const AuthProvider = ({ children }) => {
     if (!response.ok) {
       throw new Error(data.message || 'Password update failed.');
     }
+    clientCache.clear();
     return data.message;
   };
 
-  // Helper fetch method with automatically injected Bearer token
+  // Helper fetch method with automatically injected Bearer token and fast 0ms client caching
   const authFetch = async (endpoint, options = {}) => {
+    const isGet = !options.method || options.method.toUpperCase() === 'GET';
+    const cacheKey = `${token || 'anon'}:${endpoint}`;
+
+    // If it's a mutation (POST, PUT, DELETE, PATCH), invalidate client cache immediately
+    if (!isGet) {
+      clientCache.clear();
+    }
+
+    // Check client cache for instant 0ms response on GET queries
+    if (isGet && !options.skipCache) {
+      const cached = clientCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp < 30000)) {
+        return new Response(JSON.stringify(cached.data), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
     const headers = {
       ...options.headers,
       'Authorization': `Bearer ${token}`
@@ -122,6 +193,19 @@ export const AuthProvider = ({ children }) => {
       // Token might be expired or invalid
       logout();
       throw new Error('Session expired or unauthorized. Please log in again.');
+    }
+
+    // If successful GET, cache cloned data for fast subsequent loads
+    if (isGet && response.ok && !endpoint.includes('/download') && !endpoint.includes('/notifications')) {
+      try {
+        const clone = response.clone();
+        clone.json().then(data => {
+          clientCache.set(cacheKey, {
+            data,
+            timestamp: Date.now()
+          });
+        }).catch(() => {});
+      } catch (e) {}
     }
 
     return response;
@@ -152,7 +236,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, changePassword, authFetch, updateProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, changePassword, authFetch, updateProfile, prefetch, clearCache: clearClientCache }}>
       {children}
     </AuthContext.Provider>
   );

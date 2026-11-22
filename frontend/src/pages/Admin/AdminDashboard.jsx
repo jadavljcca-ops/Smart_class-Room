@@ -7,7 +7,7 @@ import SVGChart from '../../components/Shared/SVGChart';
 import { Users, GraduationCap, Clock, Megaphone, FileText, BarChart3, X, Search, Hash, FileDown, Eye, ArrowLeft, School, Trash2 } from 'lucide-react';
 import { formatDate, formatDateTime } from '../../utils/dateUtils';
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Import sub-admin page components to embed inside department portals
 import RegistrationRequests from './RegistrationRequests';
@@ -24,6 +24,7 @@ import notesIcon from '../../assets/notes-icon.png';
 export default function AdminDashboard() {
   const { authFetch, token, user } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -54,7 +55,7 @@ export default function AdminDashboard() {
   const [notesSearch, setNotesSearch] = useState('');
 
   const fetchStats = async () => {
-    setLoadingStats(true);
+    if (!stats) setLoadingStats(true);
     try {
       const url = selectedDept ? `/admin/stats?department=${selectedDept}` : '/admin/stats';
       const res = await authFetch(url);
@@ -218,15 +219,9 @@ export default function AdminDashboard() {
     n.file_name.toLowerCase().includes(notesSearch.toLowerCase())
   );
 
-  const headingText = user?.adminRole === 'main_admin'
-    ? (selectedDept ? `Viewing ${selectedDept} Department` : 'Welcome, Main Admin')
-    : `Welcome, ${user?.department || 'Department'} Admin`;
+  const headingText = selectedDept ? `Viewing ${selectedDept} Department` : 'Dashboard';
 
-  const subheadingText = user?.adminRole === 'main_admin'
-    ? (selectedDept
-      ? `Departmental administrator sub-panel for ${selectedDept}.`
-      : 'Monitor global system metrics, manage departments, sub-admins, registrations, and notices.')
-    : `Monitor metrics, manage registrations, faculty, and notices for the ${user?.department || 'selected'} department.`;
+  const welcomeName = user?.fullName || (user?.adminRole === 'main_admin' ? 'Administrator' : `${user?.department || ''} Admin`);
 
   return (
     <>
@@ -234,10 +229,20 @@ export default function AdminDashboard() {
         {/* Header Banner — wrapped in sticky-header-wrapper to mask top gap on scroll */}
 
         <div className="sticky-header-wrapper">
-          <div className="admin-top-header-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem', background: 'linear-gradient(135deg, #002d62 0%, #001f3f 100%)', border: '1px solid rgba(255, 255, 255, 0.16)', borderRadius: '20px', padding: '28px 32px', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)' }}>
+          <div className="admin-top-header-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem', background: 'linear-gradient(135deg, #002d62 0%, #001f44 100%)', border: '1px solid rgba(251, 191, 36, 0.25)', borderRadius: '22px', padding: '28px 32px', boxShadow: '0 10px 30px rgba(0, 40, 85, 0.25)' }}>
             <div>
-              <h1 style={{ fontSize: '2.1rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>{headingText}</h1>
-              <p style={{ color: '#94a3b8', margin: '0.4rem 0 0 0', fontSize: '0.95rem' }}>{subheadingText}</p>
+              <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, color: '#ffffff', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>
+                {headingText}
+              </h1>
+              <p style={{ color: '#ffffff', margin: '0.4rem 0 0 0', fontSize: '1rem', fontWeight: 500 }}>
+                {selectedDept ? (
+                  `Departmental administrator sub-panel for ${selectedDept}.`
+                ) : (
+                  <>
+                    Welcome back, <span style={{ color: '#fbbf24', fontWeight: 700 }}>{welcomeName}</span> 👋
+                  </>
+                )}
+              </p>
             </div>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <div className="admin-desktop-banner-notif">
@@ -278,26 +283,28 @@ export default function AdminDashboard() {
                     justifyContent: 'space-between',
                     minHeight: '130px',
                     backgroundColor: '#ffffff',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid rgba(0, 0, 0, 0.06)',
+                    borderRadius: '18px',
+                    boxShadow: '0 4px 18px rgba(0, 40, 85, 0.05)',
                     transition: 'all 0.2s',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.borderColor = '#f59e0b';
-                    e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.12), 0 0 14px rgba(245, 158, 11, 0.25)';
+                    e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.6)';
+                    e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 40, 85, 0.12)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor = '#e2e8f0';
-                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.06)';
+                    e.currentTarget.style.boxShadow = '0 4px 18px rgba(0, 40, 85, 0.05)';
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.3rem', color: '#0f172a' }}>{dept}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.35rem', color: '#002855' }}>{dept}</div>
                     <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Administration Portal</div>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                    <span className="btn btn-secondary" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', fontWeight: 600 }}>
+                    <span className="btn btn-secondary" style={{ padding: '0.35rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, borderRadius: '8px' }}>
                       Enter Portal →
                     </span>
                   </div>
@@ -380,9 +387,15 @@ export default function AdminDashboard() {
 
             {/* Stats Cards */}
             <div className="dashboard-grid">
-              {/* Total Students (Clickable trigger modal) */}
+              {/* Total Students */}
               <div
-                onClick={handleOpenStudentsModal}
+                onClick={() => {
+                  if (selectedDept) {
+                    setActiveSubTab('students');
+                  } else {
+                    navigate('/admin/students');
+                  }
+                }}
                 className="card"
                 style={{ cursor: 'pointer', transition: 'all 0.2s' }}
               >
@@ -418,7 +431,7 @@ export default function AdminDashboard() {
                   if (selectedDept) {
                     setActiveSubTab('faculty');
                   } else {
-                    setShowFacultyModal(true);
+                    navigate('/admin/faculty');
                   }
                 }}
                 className="card"
@@ -487,7 +500,7 @@ export default function AdminDashboard() {
                   if (selectedDept) {
                     setActiveSubTab('announcements');
                   } else {
-                    setShowAnnouncementsModal(true);
+                    navigate('/admin/announcements');
                   }
                 }}
                 className="card"
@@ -611,17 +624,17 @@ export default function AdminDashboard() {
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none', margin: 'auto', borderRadius: '12px', color: '#ffffff' }}
+            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#ffffff', backdropFilter: 'none', margin: 'auto', borderRadius: '20px', color: '#000000', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.15)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
-                <GraduationCap color="hsl(var(--primary))" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#000000' }}>
+                <GraduationCap color="#f59e0b" />
                 Approved Students Register
               </h3>
               <button
                 type="button"
                 onClick={() => { setShowStudentsModal(false); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <X size={20} />
               </button>
@@ -650,17 +663,17 @@ export default function AdminDashboard() {
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none', margin: 'auto', borderRadius: '12px', color: '#ffffff' }}
+            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#ffffff', backdropFilter: 'none', margin: 'auto', borderRadius: '20px', color: '#000000', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.15)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
-                <Users color="hsl(var(--success))" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#000000' }}>
+                <Users color="#10b981" />
                 Faculty Members Register
               </h3>
               <button
                 type="button"
                 onClick={() => { setShowFacultyModal(false); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <X size={20} />
               </button>
@@ -688,17 +701,17 @@ export default function AdminDashboard() {
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none', margin: 'auto', borderRadius: '12px', color: '#ffffff' }}
+            style={{ width: '100%', maxWidth: '1050px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#ffffff', backdropFilter: 'none', margin: 'auto', borderRadius: '20px', color: '#000000', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.15)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
-                <Megaphone color="hsl(var(--warning))" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#000000' }}>
+                <Megaphone color="#f59e0b" />
                 Announcements & Notices
               </h3>
               <button
                 type="button"
                 onClick={() => { setShowAnnouncementsModal(false); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <X size={20} />
               </button>
@@ -726,16 +739,16 @@ export default function AdminDashboard() {
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '950px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#001c3d', backdropFilter: 'none', margin: 'auto', borderRadius: '12px', color: '#ffffff' }}
+            style={{ width: '100%', maxWidth: '950px', padding: '2rem', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#ffffff', backdropFilter: 'none', margin: 'auto', borderRadius: '20px', color: '#000000', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.15)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
-                <FileText color="hsl(var(--success))" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#000000' }}>
+                <FileText color="#10b981" />
                 Uploaded Study Documents & Notes
               </h3>
               <button
                 onClick={() => { setShowNotesModal(false); setNotesSearch(''); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
               >
                 <X size={20} />
               </button>
@@ -782,19 +795,19 @@ export default function AdminDashboard() {
                   <tbody>
                     {filteredNotes.map((note) => (
                       <tr key={note.id}>
-                        <td style={{ fontWeight: 700 }}>{note.subject_name}</td>
-                        <td>{note.department}</td>
+                        <td style={{ fontWeight: 700, color: '#000000' }}>{note.subject_name}</td>
+                        <td style={{ color: '#000000' }}>{note.department}</td>
                         <td style={{ textAlign: 'center' }}>
                           <span className="badge badge-low">{note.semester}</span>
                         </td>
-                        <td style={{ fontSize: '0.825rem', color: 'hsl(var(--muted))' }}>{note.file_name}</td>
-                        <td style={{ fontWeight: 600, color: 'hsl(var(--primary))' }}>Prof. {note.faculty_name}</td>
-                        <td style={{ fontSize: '0.825rem' }}>{formatDateTime(note.upload_date)}</td>
+                        <td style={{ fontSize: '0.825rem', color: '#475569' }}>{note.file_name}</td>
+                        <td style={{ fontWeight: 600, color: '#d97706' }}>Prof. {note.faculty_name}</td>
+                        <td style={{ fontSize: '0.825rem', color: '#000000' }}>{formatDateTime(note.upload_date)}</td>
                         <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                           <button
                             onClick={() => handleDownloadNote(note)}
                             className="btn btn-secondary"
-                            style={{ padding: '0.4rem 0.6rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem' }}
+                            style={{ padding: '0.4rem 0.6rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', backgroundColor: '#f1f5f9', color: '#000000', border: '1px solid #cbd5e1' }}
                           >
                             <FileDown size={12} />
                             Download

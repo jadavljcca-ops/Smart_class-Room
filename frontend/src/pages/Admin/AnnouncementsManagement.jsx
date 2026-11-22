@@ -31,7 +31,7 @@ export default function AnnouncementsManagement({ department: propDepartment, in
   const [submitting, setSubmitting] = useState(false);
 
   const fetchAnnouncements = async () => {
-    setLoading(true);
+    if (announcements.length === 0) setLoading(true);
     try {
       const res = await authFetch('/admin/announcements');
       if (res.ok) {
@@ -386,10 +386,10 @@ export default function AnnouncementsManagement({ department: propDepartment, in
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '580px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))', margin: 'auto', borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}
+            style={{ width: '100%', maxWidth: '580px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#ffffff', color: '#000000', margin: 'auto', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#000000' }}>
 
                 {editingId ? 'Edit Announcement' : 'Create New Announcement'}
               </h3>

@@ -82,5 +82,25 @@ export const showProfileUpdatedAlert = async (customMessage = 'Your profail has 
   });
 };
 
+export const showPasswordIncorrectAlert = async () => {
+  return await Swal.fire({
+    icon: 'error',
+    title: 'This Password is Incorrect.',
+    showConfirmButton: false,
+    timer: 1000,
+    timerProgressBar: false,
+    background: '#ffffff',
+    color: '#000000',
+    iconColor: '#dc2626',
+    customClass: {
+      popup: 'swal-custom-white-popup swal-custom-incorrect-popup',
+      title: 'swal-incorrect-title'
+    },
+    backdrop: `rgba(0, 0, 0, 0.45)`,
+    allowOutsideClick: true
+  });
+};
+
+
 
 

@@ -29,7 +29,7 @@ export default function FacultyManagement({ department: propDepartment, insideMo
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchFaculty = async (showSpinner = true) => {
-    if (showSpinner) setLoading(true);
+    if (showSpinner && faculty.length === 0) setLoading(true);
     try {
       const url = propDepartment ? `/admin/faculty?department=${propDepartment}` : '/admin/faculty';
       const res = await authFetch(url);
@@ -44,7 +44,7 @@ export default function FacultyManagement({ department: propDepartment, insideMo
       console.error(err);
       showToast('Network error loading faculty.', 'error');
     } finally {
-      if (showSpinner) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -410,17 +410,17 @@ export default function FacultyManagement({ department: propDepartment, insideMo
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000,
+            zIndex: 20000,
             padding: '1rem'
           }}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', alignSelf: 'center' }}
+            style={{ width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', alignSelf: 'center', backgroundColor: '#ffffff', color: '#000000', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#000000' }}>
 
                 {editingId ? 'Edit Faculty Account' : 'Add New Faculty'}
               </h3>

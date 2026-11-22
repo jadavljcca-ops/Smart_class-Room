@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   Bell, Sun, Moon, LogOut, Key, User, Menu, X,
   ChevronDown, BookOpen, Megaphone, UserCheck, Users, ShieldAlert,
-  Home, Download, Settings
+  Home, Download, Settings, LayoutGrid, GraduationCap, Building2, ShieldCheck, School
 } from 'lucide-react';
 import NotificationMenu from './NotificationMenu';
 
@@ -64,34 +64,59 @@ export default function Navbar() {
       <nav className="navbar">
         <div className="container navbar-inner">
           {/* Brand Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ backgroundColor: 'hsl(var(--primary))', color: '#020617', borderRadius: '12px', padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.6rem', height: '2.6rem' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
-                <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-              </svg>
-            </div>
-            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>
-                <span style={{ color: 'white' }}>Edu</span><span style={{ color: 'hsl(var(--primary))' }}>Mark</span>
-              </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
+              <img 
+                src="/favicon.svg" 
+                alt="Edumark Logo" 
+                style={{
+                  width: '2.5rem',
+                  height: '2.5rem',
+                  borderRadius: '10px',
+                  boxShadow: '0 4px 14px rgba(251, 191, 36, 0.4)',
+                  display: 'block',
+                  flexShrink: 0
+                }} 
+              />
+              <div>
+                <span style={{ fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', display: 'block', lineHeight: 1.1 }}>
+                  <span style={{ color: 'white' }}>Edu</span><span style={{ color: '#fbbf24' }}>Mark</span>
+                </span>
+                {user && (
+                  <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.02em', display: 'block', marginTop: '1px' }}>
+                    {user.role === 'admin' ? (user.adminRole === 'main_admin' ? 'Admin Hub' : `${user.department || ''} Admin`) : user.role === 'faculty' ? 'Faculty Hub' : 'Student Hub'}
+                  </span>
+                )}
+              </div>
             </Link>
           </div>
 
           {/* Desktop Menu links based on auth state & current page */}
-          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             {location.pathname !== '/' && user ? (
               <>
                 {user.role === 'admin' && (
                   <>
-                    <Link to="/admin" className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Dashboard</Link>
-                    <Link to="/admin/faculty" className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>Faculty</Link>
-                    <Link to="/admin/students" className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>Students</Link>
-                    <Link to="/admin/announcements" className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>Announcements</Link>
+                    <Link to="/admin" className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>
+                      <LayoutGrid size={18} /> Dashboard
+                    </Link>
+                    <Link to="/admin/faculty" className={`nav-link ${location.pathname === '/admin/faculty' ? 'active' : ''}`}>
+                      <GraduationCap size={18} /> Faculty
+                    </Link>
+                    <Link to="/admin/students" className={`nav-link ${location.pathname === '/admin/students' ? 'active' : ''}`}>
+                      <Users size={18} /> Students
+                    </Link>
+                    <Link to="/admin/announcements" className={`nav-link ${location.pathname === '/admin/announcements' ? 'active' : ''}`}>
+                      <Megaphone size={18} /> Announcements
+                    </Link>
                     {user.adminRole === 'main_admin' && (
                       <>
-                        <Link to="/admin/departments" className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>Departments</Link>
-                        <Link to="/admin/sub-admins" className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>Sub Admins</Link>
+                        <Link to="/admin/departments" className={`nav-link ${location.pathname === '/admin/departments' ? 'active' : ''}`}>
+                          <Building2 size={18} /> Departments
+                        </Link>
+                        <Link to="/admin/sub-admins" className={`nav-link ${location.pathname === '/admin/sub-admins' ? 'active' : ''}`}>
+                          <ShieldCheck size={18} /> Sub Admins
+                        </Link>
                       </>
                     )}
 
@@ -137,8 +162,8 @@ export default function Navbar() {
                           top: 'calc(100% + 10px)',
                           right: 0,
                           minWidth: '230px',
-                          backgroundColor: '#001c3d',
-                          border: '1px solid rgba(255,255,255,0.12)',
+                          backgroundColor: '#002855',
+                          border: '1px solid rgba(255,255,255,0.15)',
                           borderRadius: '12px',
                           padding: '0.5rem',
                           boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
@@ -214,17 +239,23 @@ export default function Navbar() {
 
                 {user.role === 'faculty' && (
                   <>
-                    <Link to="/faculty" className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>Dashboard & Notes</Link>
+                    <Link to="/faculty" className={`nav-link ${location.pathname === '/faculty' ? 'active' : ''}`}>
+                      <BookOpen size={18} /> Dashboard &amp; Notes
+                    </Link>
+                  </>
+                )}
+
+                {user.role === 'student' && (
+                  <>
+                    <Link to="/student" className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>
+                      <BookOpen size={18} /> Dashboard &amp; Study Notes
+                    </Link>
                   </>
                 )}
 
               </>
             ) : (
               <>
-                <a href="/#features" className="nav-link">Features</a>
-                <a href="/#stats" className="nav-link">Statistics</a>
-                <a href="/#departments" className="nav-link">Departments</a>
-                <a href="/#faq" className="nav-link">FAQ</a>
                 {user && (
                   <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="nav-link" style={{ fontWeight: 700, color: 'hsl(var(--primary))' }}>
                     Go to Dashboard →
@@ -240,7 +271,7 @@ export default function Navbar() {
 
 
             {/* Go to Home Page Button (next to theme toggle on auth pages) */}
-            {!user && (location.pathname === '/login' || location.pathname === '/register') && (
+            {!user && location.pathname === '/login' && (
               <Link
                 to="/"
                 className="desktop-only-btn"
@@ -275,56 +306,55 @@ export default function Navbar() {
 
                 {/* Unified Profile card at bottom of sidebar for Admin, Faculty, and Students */}
                 <div className="desktop-only-block" style={{ width: '100%', paddingTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {/* Photo-style User Card */}
+                  {/* Photo-style User Card matching photo */}
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: '0.75rem',
-                    padding: '0.6rem 0.5rem',
-                    borderRadius: '10px',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '16px',
+                    backgroundColor: 'rgba(0, 20, 50, 0.45)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
                     cursor: (isAdminPage || user.role === 'faculty') ? 'pointer' : 'default',
-                    transition: 'background 0.2s',
+                    transition: 'all 0.2s ease',
                     flex: 1,
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)'
                   }}
                     onClick={() => {
                       if (isAdminPage) navigate('/admin/profile');
                       else if (user.role === 'faculty') navigate('/change-password');
                     }}
                     onMouseEnter={e => {
-                      if (isAdminPage || user.role === 'faculty') e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 20, 50, 0.65)';
+                      e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.35)';
                     }}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 20, 50, 0.45)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                    }}
                     title={isAdminPage ? "Edit Profile" : user.role === 'faculty' ? "Change Password" : user.fullName}
                   >
                     {/* Avatar circle */}
                     <div style={{
-                      width: '40px', height: '40px', borderRadius: '50%',
-                      background: isAdminPage
-                        ? 'linear-gradient(135deg, #f59e0b, #ea580c)'
-                        : user.role === 'faculty'
-                          ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
-                          : 'linear-gradient(135deg, #10b981, #059669)',
+                      width: '38px', height: '38px', borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.1rem', fontWeight: 800, color: '#fff',
+                      fontSize: '1rem', fontWeight: 800, color: '#001b3d',
                       flexShrink: 0,
-                      boxShadow: isAdminPage
-                        ? '0 2px 8px rgba(245,158,11,0.4)'
-                        : user.role === 'faculty'
-                          ? '0 2px 8px rgba(59,130,246,0.4)'
-                          : '0 2px 8px rgba(16,185,129,0.4)',
+                      boxShadow: '0 2px 8px rgba(251, 191, 36, 0.4)'
                     }}>
-                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
+                      <GraduationCap size={20} color="#001b3d" />
                     </div>
                     <div style={{ flex: 1, overflow: 'hidden' }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {user.fullName}
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.fullName || 'Administrator'}
                       </div>
-                      <div style={{ fontSize: '0.73rem', color: '#94a3b8', textTransform: 'capitalize', marginTop: '0.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {user.role === 'admin'
-                          ? (user.adminRole === 'main_admin' ? 'Main Admin' : 'Admin')
-                          : (user.role.charAt(0).toUpperCase() + user.role.slice(1))}
-                        {user.department ? ` | ${user.department}` : ''}
+                      <div style={{ fontSize: '0.73rem', color: '#94a3b8', marginTop: '0.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.email || 'admin@ljcca.edu'}
                       </div>
                     </div>
+                    {(isAdminPage || user.role === 'faculty') && (
+                      <ChevronDown size={14} color="#94a3b8" style={{ flexShrink: 0 }} />
+                    )}
                   </div>
 
                   {/* Logout Button */}
@@ -364,28 +394,18 @@ export default function Navbar() {
 
               </>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }} className="desktop-only-flex">
+              <div style={{ display: 'flex', alignItems: 'center' }} className="desktop-only-flex">
                 <Link
                   to="/login"
-                  className="btn btn-secondary"
+                  className="btn btn-primary"
                   style={{
-                    padding: '0.4rem 0.9rem',
-                    fontSize: '0.85rem',
+                    padding: '0.45rem 1.25rem',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
                     textDecoration: 'none'
                   }}
                 >
                   Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="btn btn-primary"
-                  style={{
-                    padding: '0.4rem 0.9rem',
-                    fontSize: '0.85rem',
-                    textDecoration: 'none'
-                  }}
-                >
-                  Register
                 </Link>
               </div>
             )}
@@ -415,7 +435,7 @@ export default function Navbar() {
             right: 0,
             maxHeight: 'calc(100vh - 4.5rem)',
             overflowY: 'auto',
-            backgroundColor: '#001c3d',
+            backgroundColor: '#002855',
             borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
             padding: '1.25rem 1.5rem',
             display: 'flex',
@@ -492,16 +512,9 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <a href="/#features" onClick={() => setIsOpen(false)} className="nav-link">Features</a>
-                <a href="/#stats" onClick={() => setIsOpen(false)} className="nav-link">Statistics</a>
-                <a href="/#how-it-works" onClick={() => setIsOpen(false)} className="nav-link">How It Works</a>
-                <a href="/#departments" onClick={() => setIsOpen(false)} className="nav-link">Departments</a>
-                <a href="/#faq" onClick={() => setIsOpen(false)} className="nav-link">FAQ</a>
-
-                {/* Login / Register inside mobile drawer */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
-                  <Link to="/login" onClick={() => setIsOpen(false)} className="btn btn-secondary" style={{ width: '100%' }}>Login</Link>
-                  <Link to="/register" onClick={() => setIsOpen(false)} className="btn btn-primary" style={{ width: '100%' }}>Register</Link>
+                {/* Login inside mobile drawer */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', paddingTop: '0.5rem' }}>
+                  <Link to="/login" onClick={() => setIsOpen(false)} className="btn btn-primary" style={{ width: '100%', textAlign: 'center', fontWeight: 700 }}>Login</Link>
                 </div>
               </>
             )}
@@ -510,14 +523,16 @@ export default function Navbar() {
       )}
 
       {/* Floating Circular Mobile Hamburger Toggle Button (Hidden on laptop/desktop view, visible ONLY on mobile) */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="mobile-floating-toggle"
-        aria-label="Toggle navigation menu"
-        title="Menu"
-      >
-        {isOpen ? <X size={20} color="#ffffff" strokeWidth={2.4} /> : <Menu size={20} color="#ffffff" strokeWidth={2.4} />}
-      </button>
+      {!(location.pathname === '/' && !user) && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="mobile-floating-toggle"
+          aria-label="Toggle navigation menu"
+          title="Menu"
+        >
+          {isOpen ? <X size={20} color="#ffffff" strokeWidth={2.4} /> : <Menu size={20} color="#ffffff" strokeWidth={2.4} />}
+        </button>
+      )}
 
       {/* CSS rules for navigation links & responsive displays */}
       <style>{`

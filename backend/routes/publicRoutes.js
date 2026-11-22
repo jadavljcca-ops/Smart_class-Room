@@ -5,9 +5,11 @@ const { query, get } = require('../db');
 // GET /api/public/stats
 router.get('/stats', async (req, res) => {
   try {
-    const studentCountResult = await get("SELECT COUNT(*) as count FROM students");
-    const facultyCountResult = await get("SELECT COUNT(*) as count FROM faculty");
-    const materialsCountResult = await get("SELECT COUNT(*) as count FROM notes");
+    const [studentCountResult, facultyCountResult, materialsCountResult] = await Promise.all([
+      get("SELECT COUNT(*) as count FROM students"),
+      get("SELECT COUNT(*) as count FROM faculty"),
+      get("SELECT COUNT(*) as count FROM notes")
+    ]);
 
     res.json({
       students: parseInt(studentCountResult.count, 10),

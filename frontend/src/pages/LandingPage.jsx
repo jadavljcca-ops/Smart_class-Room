@@ -1,47 +1,80 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
 import {
-  BookOpen, Users, Award, ShieldCheck, Megaphone,
-  Download, Upload, ChevronRight, CheckCircle,
-  HelpCircle, Layers, Activity, FileText, ArrowRight,
-  Sparkles, Check, Globe, Zap, Smartphone, X, Bell, GraduationCap
+  BookOpen, Megaphone, Bell, Search, Layers, Users,
+  Zap, ArrowRight, Download, X, GraduationCap, CheckCircle2,
+  FileText
 } from 'lucide-react';
-
-const CountUp = ({ end, duration = 2000, suffix = "", isFloat = false }) => {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    let startTimestamp = null;
-    const step = (timestamp) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      setCount(progress * end);
-      if (progress < 1) {
-        window.requestAnimationFrame(step);
-      }
-    };
-    window.requestAnimationFrame(step);
-  }, [end, duration]);
-  return <>{isFloat ? count.toFixed(1) : Math.floor(count).toLocaleString()}{suffix}</>;
-};
 
 export default function LandingPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('student');
-  const [openFaq, setOpenFaq] = useState(null);
-  const [stats, setStats] = useState({ students: 5000, faculty: 120, materials: 1500, uptime: 99.9 });
-  const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const navigate = useNavigate();
+
+  // Check if PWA is already installed or running as standalone webapp
+  const isAppInstalled = () => {
+    if (typeof window === 'undefined') return true;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                         window.matchMedia('(display-mode: fullscreen)').matches ||
+                         window.matchMedia('(display-mode: minimal-ui)').matches ||
+                         window.navigator.standalone === true ||
+                         document.referrer.includes('android-app://');
+    const isSavedInstalled = localStorage.getItem('pwa_installed') === 'true';
+    const isDismissed = sessionStorage.getItem('pwa_banner_dismissed') === 'true';
+    return isStandalone || isSavedInstalled || isDismissed;
+  };
+
+  const [showInstallBanner, setShowInstallBanner] = useState(() => !isAppInstalled());
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   useEffect(() => {
+    // If already installed or running as standalone, don't show install banner
+    if (isAppInstalled()) {
+      setShowInstallBanner(false);
+      return;
+    }
+
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      if (!isAppInstalled()) {
+        setShowInstallBanner(true);
+      }
     };
+
+    // Automatically detect when PWA has finished installing via browser
+    const handleAppInstalled = () => {
+      localStorage.setItem('pwa_installed', 'true');
+      setShowInstallBanner(false);
+      setDeferredPrompt(null);
+    };
+
+    const standaloneMedia = window.matchMedia('(display-mode: standalone)');
+    const handleModeChange = (e) => {
+      if (e.matches) {
+        localStorage.setItem('pwa_installed', 'true');
+        setShowInstallBanner(false);
+      }
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    if (standaloneMedia.addEventListener) {
+      standaloneMedia.addEventListener('change', handleModeChange);
+    } else if (standaloneMedia.addListener) {
+      standaloneMedia.addListener(handleModeChange);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      if (standaloneMedia.removeEventListener) {
+        standaloneMedia.removeEventListener('change', handleModeChange);
+      } else if (standaloneMedia.removeListener) {
+        standaloneMedia.removeListener(handleModeChange);
+      }
+    };
   }, []);
 
   const handleInstallClick = async () => {
@@ -49,74 +82,92 @@ export default function LandingPage() {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
+        localStorage.setItem('pwa_installed', 'true');
         setDeferredPrompt(null);
         setShowInstallBanner(false);
       }
     } else {
-      // Direct user / trigger install
       alert('To install the app, click the install/download icon in your browser address bar or select "Install App" from browser menu.');
     }
   };
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/public/stats')
-      .then(res => res.json())
-      .then(data => {
-        if (data && typeof data.students === 'number') {
-          setStats(data);
-        }
-      })
-      .catch(err => console.error('Failed to load stats', err));
-  }, []);
-
-
-  const toggleFaq = (index) => {
-    setOpenFaq(openFaq === index ? null : index);
+  const handleDismissBanner = () => {
+    setShowInstallBanner(false);
+    sessionStorage.setItem('pwa_banner_dismissed', 'true');
   };
 
-  const departments = [
-    { name: 'Computer Engineering', code: 'CE', desc: 'Focuses on software engineering, cloud architecture, AI systems, and computer networking.' },
-    { name: 'Information Technology', code: 'IT', desc: 'Concentrates on database management, cybersecurity, web applications, and data analytics.' },
-    { name: 'Civil Engineering', code: 'Civil', desc: 'Deals with planning, designing, and constructing sustainable modern infrastructure.' },
-    { name: 'Mechanical Engineering', code: 'Mech', desc: 'Covers thermodynamics, fluid dynamics, mechanical design, and robotics.' },
-    { name: 'Electrical Engineering', code: 'EE', desc: 'Emphasizes smart power systems, signal processing, and electrical machinery.' },
-    { name: 'Science & Humanities', code: 'S&H', desc: 'Provides foundational sciences in physics, mathematics, chemistry, and communication.' }
+  const handleGetStarted = () => {
+    if (user) {
+      if (user.role === 'admin') navigate('/admin');
+      else if (user.role === 'faculty') navigate('/faculty');
+      else navigate('/student');
+    } else {
+      navigate('/login');
+    }
+  };
+
+  // 6 Classroom Features with 3 distinct colors from theme: navy (#003580), amber (#f59e0b), dark (#1e2a3a)
+  const features = [
+    {
+      icon: <BookOpen size={28} />,
+      title: 'Unit-Wise Study Materials',
+      desc: 'Faculty easily upload syllabus-mapped lecture notes, PPT presentations, and reference documents for students to download with 1-click access.',
+      variant: 'navy'
+    },
+    {
+      icon: <Megaphone size={28} />,
+      title: 'Priority Announcements',
+      desc: 'Broadcast campus circulars, exam schedules, and emergency notices with High, Medium, or Low urgency badges directly to student dashboards.',
+      variant: 'amber'
+    },
+    {
+      icon: <Layers size={28} />,
+      title: 'Department & Semester Hubs',
+      desc: 'Structured organization by department (BCA, B.Com, BBA, B.Sc) and semester, ensuring students find exactly what belongs to their academic curriculum.',
+      variant: 'dark'
+    },
+    {
+      icon: <Search size={28} />,
+      title: 'Instant Note & Subject Search',
+      desc: 'Quickly find notes, syllabus files, and circulars by subject, unit number, faculty name, or keywords with instant, optimized search.',
+      variant: 'dark'
+    },
+    {
+      icon: <Users size={28} />,
+      title: 'Multi-Role Campus Portals',
+      desc: 'Tailored dashboards for Students, Faculty, and Administrators with secure verification workflows, student rosters, and material management.',
+      variant: 'amber'
+    },
+    {
+      icon: <Zap size={28} />,
+      title: 'Progressive Web App (PWA)',
+      desc: 'Install directly on smartphones or desktops without app store friction. Enjoy lightning-fast performance, offline caching, and responsive design.',
+      variant: 'navy'
+    }
   ];
 
-  const features = {
-    student: [
-      { icon: <Download size={24} />, title: 'Download Study Material', desc: 'Instantly download unit-wise PDFs, PPTs, and code materials uploaded directly by your professors with 1-click access.' },
-      { icon: <Megaphone size={24} />, title: 'Immediate Broadcasts', desc: 'Receive high-priority announcements, exam notices, and urgent college alerts straight on your dashboard.' },
-      { icon: <Activity size={24} />, title: 'Personalized Smart Feed', desc: 'See notifications dynamically tailored to your department, semester, and registered subjects in real time.' }
-    ],
-    faculty: [
-      { icon: <Upload size={24} />, title: 'Upload Notes & Syllabus', desc: 'Easily drag and drop course documents, syllabi, and notes categorized by subject and academic unit.' },
-      { icon: <Users size={24} />, title: 'Engagement Insights', desc: 'Monitor how many students have accessed and downloaded your lecture materials to track student progress.' },
-      { icon: <FileText size={24} />, title: 'Notify Classes Instantly', desc: 'Trigger instant notifications automatically to all students in your department when new lectures or notes go live.' }
-    ],
-    admin: [
-      { icon: <ShieldCheck size={24} />, title: 'Role-Based Access Control', desc: 'Verify, approve, or manage registration requests for faculty and students securely with audit history.' },
-      { icon: <Layers size={24} />, title: 'Departments & Sub-Admins', desc: 'Quickly organize academic departments, manage subject hierarchies, and assign sub-admin responsibilities.' },
-      { icon: <Award size={24} />, title: 'Campus Broadcast Hub', desc: 'Designate announcements as High, Medium, or Low priority with optional file attachments and live feeds.' }
-    ]
-  };
-
-  const faqs = [
-    { q: 'How do I register for the portal?', a: 'Students and Faculty members can register via the Join link. Once submitted, your registration request goes to the Admin for approval. You will receive access once the admin verifies your details.' },
-    { q: 'What types of file formats are supported for notes?', a: 'Faculty members can upload PDF, Word documents, PowerPoint slides, Excel spreadsheets, and ZIP archives. The max file upload limit is 10MB.' },
-    { q: 'How will I receive notifications about new notes?', a: 'Once a faculty member uploads new notes for your department and semester, a notification is immediately dispatched to your account. You will see a notification badge in the navbar.' },
-    { q: 'Can I change my registered department after sign up?', a: 'To maintain database integrity, you cannot change your department directly. You will need to contact the administrator at admin@edumark.com to adjust your profile.' }
+  // 3 Simple Steps for Classroom System
+  const steps = [
+    {
+      num: '1',
+      title: 'Faculty Uploads Material',
+      desc: 'Professors upload unit-wise notes, syllabi, assignment resources, and official notices from their dashboard.'
+    },
+    {
+      num: '2',
+      title: 'Students Filter & Access',
+      desc: 'Students select their department and semester to instantly view, read, and download relevant study materials.'
+    },
+    {
+      num: '3',
+      title: 'Stay Informed in Real Time',
+      desc: 'Receive immediate alerts for exam schedules, urgent announcements, and academic updates right on your screen.'
+    }
   ];
 
   return (
-    <div className="landing-page animate-fade-in" style={{ position: 'relative', overflowX: 'hidden' }}>
-
-      {/* Futuristic Glowing Ambient Orbs */}
-      <div className="abstract-blob blob-orb-1 animate-orb-pulse"></div>
-      <div className="abstract-blob blob-orb-2 animate-orb-pulse delay-2"></div>
-      <div className="abstract-blob blob-orb-3 animate-orb-pulse delay-4"></div>
-
-      {/* Install App Floating Screen Bottom Banner (strictly on Landing Page) */}
+    <div style={styles.page} className="landing-page">
+      {/* PWA Install Banner */}
       {showInstallBanner && createPortal(
         <div style={{
           position: 'fixed',
@@ -142,34 +193,28 @@ export default function LandingPage() {
             WebkitBackdropFilter: 'blur(16px)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1, minWidth: 0 }}>
-              {/* Compact yellow rounded square icon badge */}
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-                flexShrink: 0,
-                boxShadow: '0 2px 10px rgba(245, 158, 11, 0.35)'
-              }}>
-                <GraduationCap size={22} strokeWidth={2.2} />
-              </div>
-
-              {/* Compact Text */}
+              <img
+                src="/favicon.svg"
+                alt="Edumark Logo"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  flexShrink: 0,
+                  boxShadow: '0 2px 10px rgba(251, 191, 36, 0.4)',
+                  display: 'block'
+                }}
+              />
               <div style={{ overflow: 'hidden' }}>
                 <div style={{ fontWeight: 800, fontSize: '0.96rem', color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  Install Smart Attendance App
+                  Install EduMark Classroom App
                 </div>
                 <div style={{ color: '#94a3b8', fontSize: '0.78rem', marginTop: '0.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  Install as an app for fast offline access & native experience.
+                  Install as an app for fast offline access to notes, syllabi &amp; notices.
                 </div>
               </div>
             </div>
 
-            {/* Actions: Compact Install button + Close cross */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
               <button
                 onClick={handleInstallClick}
@@ -189,7 +234,7 @@ export default function LandingPage() {
               </button>
 
               <button
-                onClick={() => setShowInstallBanner(false)}
+                onClick={handleDismissBanner}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -199,7 +244,7 @@ export default function LandingPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'color 0.2s',
+                  transition: 'color 0.2s'
                 }}
                 onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
                 onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
@@ -213,1174 +258,733 @@ export default function LandingPage() {
         document.body
       )}
 
-
-
-      {/* Hero Section */}
-      <section className="hero-section" style={{ position: 'relative', zIndex: 2 }}>
-
-        <div className="container hero-container">
-          
-          {/* Left Text Column */}
-          <div className="hero-content animate-fade-in-up delay-1">
-            <div className="edumark-badge">
-              <Sparkles size={16} className="spin-slow" style={{ color: '#f59e0b' }} />
-              <span>Next-Gen Academic & Classroom Ecosystem</span>
+      {/* ===================== HERO SECTION ===================== */}
+      <section style={styles.hero}>
+        <div style={styles.heroLayout} className="animate-fade-in-up landing-hero-layout">
+          {/* Left Text Col */}
+          <div style={styles.heroTextCol}>
+            <div style={styles.badge}>
+              <Zap size={16} color="#fbbf24" className="spin-slow" />
+              <span>Edu<span style={{ color: '#fbbf24' }}>Mark</span> Academic Platform</span>
             </div>
 
-            <h1 className="hero-title">
-              Streamlining Learning &amp; Collaboration for <br />
-              <span className="gradient-text animate-gradient-text">Edumark Campus</span>
-            </h1>
+            <div style={styles.heroBrandWrap}>
+              <img
+                src="/favicon.svg"
+                alt="EduMark Logo"
+                style={{
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '14px',
+                  boxShadow: '0 6px 20px rgba(251, 191, 36, 0.45)',
+                  display: 'block',
+                  flexShrink: 0
+                }}
+              />
+              <h1 style={styles.heroTitle}>
+                Edu<span style={{ color: '#fbbf24' }}>Mark</span>
+              </h1>
+            </div>
 
-            <p className="hero-subtitle">
-              The unified digital platform for universities and colleges to share study materials, broadcast live announcements, and empower students and faculty with seamless cloud access.
+            <h2 style={styles.heroSubtitle}>
+              Streamline Classroom Learning <br />
+              <span style={{ color: '#fbbf24' }}>with Smart Notes &amp; Instant Notices</span>
+            </h2>
+
+            <p style={styles.heroDesc}>
+              The unified digital platform for colleges and universities to share course notes, broadcast priority campus circulars, and empower students and faculty with seamless academic access.
             </p>
 
-            <div className="hero-actions">
-              {user ? (
-                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="btn btn-primary btn-lg pulse-primary">
-                  Go to Dashboard <ArrowRight size={20} />
-                </Link>
-              ) : (
-                <>
-                  <Link to="/login" className="btn btn-primary btn-lg pulse-primary">
-                    Access Portal <ArrowRight size={20} />
-                  </Link>
-                  <Link to="/register" className="btn btn-secondary btn-lg">
-                    Request Registration
-                  </Link>
-                </>
-              )}
+            <div style={styles.heroBtns}>
+              <button
+                style={styles.btnPrimary}
+                onClick={handleGetStarted}
+                id="landing-get-started-btn"
+              >
+                Get Started <Zap size={18} color="#c2410c" fill="#ea580c" style={{ display: 'inline-flex', verticalAlign: 'middle' }} />
+              </button>
+
+              <button
+                style={styles.btnGhost}
+                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                id="landing-how-it-works-btn"
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(229, 231, 235, 0.28)';
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.25), 0 0 16px rgba(229, 231, 235, 0.35)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(229, 231, 235, 0.16)';
+                  e.currentTarget.style.borderColor = 'rgba(229, 231, 235, 0.45)';
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.3)';
+                }}
+              >
+                How it Works
+              </button>
             </div>
 
-            {/* Trust Marks */}
-            <div className="trust-marks">
-              <span className="trust-item">
-                <CheckCircle size={16} style={{ color: '#10b981' }} />
-                <span>Instant Cloud Downloads</span>
+            <div style={styles.trustRow}>
+              <span style={styles.trustItem}>
+                <CheckCircle2 size={15} color="#10b981" /> 1-Click Note Downloads
               </span>
-              <span className="trust-item">
-                <CheckCircle size={16} style={{ color: '#10b981' }} />
-                <span>Live Broadcasts</span>
+              <span style={styles.trustItem}>
+                <CheckCircle2 size={15} color="#10b981" /> Cloud Synced
               </span>
-              <span className="trust-item">
-                <CheckCircle size={16} style={{ color: '#10b981' }} />
-                <span>Verified Faculty Notes</span>
+              <span style={styles.trustItem}>
+                <CheckCircle2 size={15} color="#10b981" /> Verified Campus Access
               </span>
             </div>
           </div>
 
-          {/* Right Visual Floating Showcase Cards */}
-          <div className="hero-visual-content animate-fade-in-up delay-2">
-            <div className="glowing-center-orb animate-orb-pulse"></div>
-
-            {/* Floating Card 1: Active Lecture Stream */}
-            <div className="glass-panel animate-float shimmer-wrapper hero-floating-card hero-card-1">
-              <div className="card-mini-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <BookOpen size={18} style={{ color: '#f59e0b' }} />
-                  <span>Active Lecture Unit</span>
-                </div>
-                <span className="live-ping-container">
-                  <span className="live-ping-ring"></span>
-                  <span className="live-ping-dot"></span>
-                </span>
+          {/* Right Visual Col — 3 Live Floating Cards */}
+          <div style={styles.heroVisualCol} className="animate-fade-in-up delay-2">
+            {/* Card 1: Active Lecture Unit */}
+            <div style={styles.cardPreview1} className="animate-float">
+              <div style={styles.previewCardHeader}>
+                <BookOpen size={16} color="#fbbf24" />
+                <span>Active Lecture Material</span>
+                <span style={styles.livePingDot}></span>
               </div>
-              <div className="card-mini-title">Full Stack Web Engineering - CE501</div>
-              <div className="card-mini-data">
-                <span className="data-label">Unit 3: REST API & Cloud Auth</span>
-                <span className="data-value" style={{ color: '#f59e0b' }}>PDF • 4.2 MB</span>
-              </div>
-              <div className="mock-progress-bar" style={{ marginTop: '10px' }}>
-                <div className="mock-progress" style={{ width: '92%' }}></div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>Prof. K. Patel • Computer Eng.</span>
-                <span className="mini-badge-success">Verified Note</span>
+              <div style={styles.previewCardTitle}>Data Structures &amp; Algorithms - Unit 3</div>
+              <div style={styles.previewCardData}>
+                <span style={styles.previewCardLabel}>Resource File</span>
+                <span style={styles.previewCardValue}>PDF • 4.2 MB</span>
               </div>
             </div>
 
-            {/* Floating Card 2: Instant Broadcast & Cloud Sync */}
-            <div className="glass-panel animate-float-delayed shimmer-wrapper hero-floating-card hero-card-2">
-              <div className="card-mini-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Zap size={18} style={{ color: '#10b981' }} />
-                  <span>Cloud Synchronization</span>
-                </div>
-                <span className="live-ping-container">
-                  <span className="live-ping-ring" style={{ backgroundColor: '#10b981' }}></span>
-                  <span className="live-ping-dot" style={{ backgroundColor: '#10b981' }}></span>
-                </span>
+            {/* Card 2: Priority Announcement */}
+            <div style={styles.cardPreview2} className="animate-float-delayed">
+              <div style={styles.previewCardHeader}>
+                <Bell size={16} color="#10b981" />
+                <span>Urgent Broadcast</span>
+                <span style={{ ...styles.livePingDot, backgroundColor: '#10b981' }}></span>
               </div>
-              <div className="card-mini-title">Real-Time Database Sync</div>
-              <div className="card-mini-data">
-                <span className="data-label">Latency / Uptime</span>
-                <span className="data-value" style={{ color: '#10b981' }}>99.9% Online (&lt; 20ms)</span>
+              <div style={styles.previewCardTitle}>Mid-Semester Exam Schedule Released</div>
+              <div style={styles.previewCardData}>
+                <span style={styles.previewCardLabel}>Priority Badge</span>
+                <span style={{ ...styles.previewCardValue, color: '#10b981' }}>HIGH • BCA Sem 4</span>
               </div>
             </div>
 
-            {/* Floating Card 3: Priority Notification Alert */}
-            <div className="glass-panel animate-float-reverse shimmer-wrapper hero-floating-card hero-card-3">
-              <div className="card-mini-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Megaphone size={18} style={{ color: '#38bdf8' }} />
-                  <span>Urgent Broadcast</span>
-                </div>
-                <span className="mini-badge" style={{ marginLeft: 'auto' }}>High Priority</span>
+            {/* Card 3: Department Hub */}
+            <div style={styles.cardPreview3} className="animate-float-more-delayed">
+              <div style={styles.previewCardHeader}>
+                <GraduationCap size={16} color="#fbbf24" />
+                <span>Department Portal</span>
               </div>
-              <div className="card-mini-title">Mid-Semester Exam Schedule & Syllabus</div>
+              <div style={styles.previewCardTitle}>Computer Applications (BCA)</div>
               <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                <span className="mini-badge">All Departments</span>
-                <span className="mini-badge-success">Official Announcement</span>
+                <span style={styles.miniTag}>Semester 1-6</span>
+                <span style={styles.miniTagSuccess}>All Subjects</span>
+                <span style={styles.miniTagAmber}>Verified Access</span>
               </div>
             </div>
+          </div>
+        </div>
 
+        {/* Stats Row inside Hero */}
+        <div style={styles.statsRow} className="animate-fade-in-up delay-3 landing-stats-row">
+          <div style={styles.statCard} className="stat-box-hover landing-stat-card">
+            <div style={styles.statNum} className="stat-num-glow">5,000+</div>
+            <div style={styles.statLabel}>Active Students</div>
+          </div>
+          <div style={styles.statCard} className="stat-box-hover landing-stat-card">
+            <div style={styles.statNum} className="stat-num-glow">1,500+</div>
+            <div style={styles.statLabel}>Study Materials Uploaded</div>
+          </div>
+          <div style={styles.statCard} className="stat-box-hover landing-stat-card">
+            <div style={styles.statNum} className="stat-num-glow">100%</div>
+            <div style={styles.statLabel}>Department Coverage</div>
           </div>
         </div>
       </section>
 
-      {/* Interactive Stats Banner */}
-      <section id="stats" className="stats-section" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="container">
-          <div className="glass-panel shimmer-wrapper stats-banner animate-fade-in-up delay-3">
-            <div className="stat-box stat-box-hover">
-              <div className="stat-num stat-num-glow">
-                <CountUp end={stats.students} suffix={stats.students > 1000 ? "+" : ""} />
-              </div>
-              <div className="stat-desc">Active Students</div>
-            </div>
-            <div className="stat-divider"></div>
-
-            <div className="stat-box stat-box-hover">
-              <div className="stat-num stat-num-glow">
-                <CountUp end={stats.faculty} suffix={stats.faculty > 100 ? "+" : ""} />
-              </div>
-              <div className="stat-desc">Expert Faculty</div>
-            </div>
-            <div className="stat-divider"></div>
-
-            <div className="stat-box stat-box-hover">
-              <div className="stat-num stat-num-glow">
-                <CountUp end={stats.materials} suffix={stats.materials > 1000 ? "+" : ""} />
-              </div>
-              <div className="stat-desc">Lecture Notes Shared</div>
-            </div>
-            <div className="stat-divider"></div>
-
-            <div className="stat-box stat-box-hover">
-              <div className="stat-num stat-num-glow">
-                <CountUp end={stats.uptime} isFloat={true} suffix="%" />
-              </div>
-              <div className="stat-desc">System Uptime</div>
-            </div>
-          </div>
+      {/* ===================== FEATURES SECTION (WHITE / LIGHT BLUE BG #f0f4f8) ===================== */}
+      <section style={styles.featuresSection}>
+        <div style={styles.sectionHead}>
+          <h2 style={styles.sectionTitle}>Everything You Need in One Platform</h2>
+          <p style={styles.sectionSub}>Powerful academic features designed for modern colleges and universities</p>
         </div>
-      </section>
 
-      {/* 3 Simple Steps Section (How It Works) */}
-      <section id="how-it-works" className="how-it-works-section" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="container">
-          <div className="section-header animate-fade-in-up">
-            <h2 className="section-title">How Edumark Works in 3 Simple Steps</h2>
-            <p className="section-subtitle">A seamless pipeline designed for fast notes distribution and instant student notifications.</p>
-          </div>
+        {/* 6 Cards with DIFFERENT COLORS: Navy (#003580), Amber (#f59e0b), Dark (#1e2a3a) */}
+        <div style={styles.featuresGrid} className="landing-features-grid">
+          {features.map((item, idx) => {
+            const isAmber = item.variant === 'amber';
+            const isDark = item.variant === 'dark';
 
-          <div className="steps-grid">
-            <div className="step-item glass-panel feature-card-hover shimmer-wrapper">
-              <div className="step-icon-wrapper step-icon-glow">1</div>
-              <h3 className="step-title">Faculty Uploads Notes</h3>
-              <p className="step-desc">Professors upload lecture PDFs, PPT slides, and syllabus files categorized by subject and unit.</p>
-            </div>
+            // Exact color mappings from attendance.edumark.app
+            const cardBg = isAmber ? '#f59e0b' : isDark ? '#1e2a3a' : '#003580';
+            const iconBg = isAmber ? '#001b3d' : '#f59e0b';
+            const iconColor = isAmber ? '#f59e0b' : '#001b3d';
+            const titleColor = isAmber ? '#001b3d' : '#ffffff';
+            const descColor = isAmber ? 'rgba(0, 27, 61, 0.85)' : '#ffffff';
 
-            <div className="step-connector"></div>
-
-            <div className="step-item glass-panel feature-card-hover shimmer-wrapper">
-              <div className="step-icon-wrapper step-icon-glow" style={{ animationDelay: '1s' }}>2</div>
-              <h3 className="step-title">Instant Broadcast</h3>
-              <p className="step-desc">Students in that department and semester automatically receive an instant notification badge and alert.</p>
-            </div>
-
-            <div className="step-connector"></div>
-
-            <div className="step-item glass-panel feature-card-hover shimmer-wrapper">
-              <div className="step-icon-wrapper step-icon-glow" style={{ animationDelay: '2s' }}>3</div>
-              <h3 className="step-title">1-Click Study Download</h3>
-              <p className="step-desc">Students access their personalized portal on desktop or mobile and download study files instantly.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="features-section" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="container">
-          <div className="section-header animate-fade-in-up">
-            <h2 className="section-title">Designed for Every Campus Role</h2>
-            <p className="section-subtitle">A unified system offering dedicated workspaces for students, faculty, and administrators.</p>
-          </div>
-
-          <div className="features-tabs-wrapper">
-            <div className="features-tabs glass-panel">
-              <button
-                className={`tab-btn ${activeTab === 'student' ? 'active' : ''}`}
-                onClick={() => setActiveTab('student')}
+            return (
+              <div
+                key={idx}
+                style={{ ...styles.featureCard, backgroundColor: cardBg }}
+                className={`feature-card-hover variant-${item.variant} landing-feature-card`}
               >
-                <Users size={18} /> Students
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'faculty' ? 'active' : ''}`}
-                onClick={() => setActiveTab('faculty')}
-              >
-                <BookOpen size={18} /> Faculty Members
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
-                onClick={() => setActiveTab('admin')}
-              >
-                <ShieldCheck size={18} /> Portal Admins
-              </button>
-            </div>
-
-            <div className="features-content-grid">
-              {features[activeTab].map((feat, index) => (
-                <div key={index} className="glass-panel feature-card feature-card-hover shimmer-wrapper">
-                  <div className="feature-icon-wrapper">
-                    {feat.icon}
-                  </div>
-                  <h3 className="feature-card-title">{feat.title}</h3>
-                  <p className="feature-card-desc">{feat.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Departments Section */}
-      <section id="departments" className="departments-section" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="container">
-          <div className="section-header animate-fade-in-up">
-            <h2 className="section-title">Supported Academic Departments</h2>
-            <p className="section-subtitle">Explore notes and announcements filtered dynamically across all engineering and science departments.</p>
-          </div>
-
-          <div className="departments-grid">
-            {departments.map((dept, index) => (
-              <div key={index} className="glass-panel dept-card feature-card-hover shimmer-wrapper">
-                <div className="dept-badge">{dept.code}</div>
-                <h3 className="dept-name">{dept.name}</h3>
-                <p className="dept-desc">{dept.desc}</p>
-                <div className="dept-footer">
-                  <span className="dept-link">
-                    Explore Department <ChevronRight size={16} />
+                <div style={{ ...styles.featureIconBox, backgroundColor: iconBg }}>
+                  <span style={{ color: iconColor, display: 'flex' }}>
+                    {item.icon}
                   </span>
                 </div>
+                <h3 style={{ ...styles.featureCardTitle, color: titleColor }} className="feature-card-heading">
+                  {item.title}
+                </h3>
+                <p style={{ ...styles.featureCardDesc, color: descColor }} className="feature-card-paragraph">
+                  {item.desc}
+                </p>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="faq-section" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="container faq-container">
-          <div className="faq-intro">
-            <div className="faq-intro-icon-box step-icon-glow">
-              <HelpCircle size={32} style={{ color: '#001b3d' }} />
-            </div>
-            <h2 className="faq-title">Frequently Asked Questions</h2>
-            <p className="faq-subtitle">
-              Have questions about using the classroom portal? Browse through quick answers below or contact our administrator desk.
-            </p>
-            <div className="glass-panel faq-support-card shimmer-wrapper">
-              <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.35rem', color: '#fff' }}>Need Assistance?</div>
-              <p style={{ fontSize: '0.88rem', color: '#94a3b8', marginBottom: '1.2rem', lineHeight: 1.5 }}>
-                For account verification, password resets, or department edits, get in touch directly.
-              </p>
-              <a href="mailto:admin@edumark.com" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-                Email Admin Support
-              </a>
-            </div>
-          </div>
-
-          <div className="faq-accordion">
-            {faqs.map((faq, index) => (
-              <div key={index} className={`glass-panel faq-item shimmer-wrapper ${openFaq === index ? 'open' : ''}`}>
-                <div className="faq-question" onClick={() => toggleFaq(index)}>
-                  <span>{faq.q}</span>
-                  <ChevronRight size={20} className="faq-chevron" />
-                </div>
-                <div className="faq-answer">
-                  <p>{faq.a}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Campus CTA Section */}
-      <section className="cta-banner-section" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="container">
-          <div className="glass-panel shimmer-wrapper cta-banner-card">
-            <div className="cta-banner-content">
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.4rem', fontWeight: 800 }}>Join the Edumark Digital Community</h2>
-              <p style={{ color: '#e2e8f0', fontSize: '1.1rem', marginTop: '0.5rem', lineHeight: 1.6 }}>
-                Sign up now to access verified notes, official campus updates, and assignments tailored to your courses.
-              </p>
-            </div>
-            <div className="cta-banner-actions">
-              {user ? (
-                <Link to={user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student'} className="btn btn-primary btn-lg pulse-primary">
-                  Go to Dashboard <ArrowRight size={20} />
-                </Link>
-              ) : (
-                <>
-                  <Link to="/register" className="btn btn-primary btn-lg pulse-primary">
-                    Create Account <ArrowRight size={20} />
-                  </Link>
-                  <Link to="/login" className="btn btn-secondary btn-lg">
-                    Access Portal
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer Section */}
-      <footer className="landing-footer" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="container footer-grid">
-          <div className="footer-brand">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.2rem' }}>
-              <div style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '12px', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.8rem', height: '2.8rem', boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#001b3d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/>
-                  <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
-                </svg>
-              </div>
-              <span style={{ fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em' }}>
-                <span style={{ color: 'white' }}>Edu</span><span style={{ color: '#f59e0b' }}>Mark</span>
-              </span>
-            </div>
-            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
-              Edumark classroom system streamlines notes downloads, syllabus sharing, and official notifications for students and faculty across all college departments.
-            </p>
-          </div>
-          <div className="footer-links-col">
-            <h4>Quick Links</h4>
-            <a href="/#features">Features</a>
-            <a href="/#stats">Statistics</a>
-            <a href="/#how-it-works">How It Works</a>
-            <a href="/#departments">Departments</a>
-            <a href="/#faq">FAQs</a>
-          </div>
-          <div className="footer-links-col">
-            <h4>Portal Access</h4>
-            <Link to="/login">Account Login</Link>
-            <Link to="/register">Register Profile</Link>
-            <a href="mailto:admin@edumark.com">Admin Desk</a>
-          </div>
-          <div className="footer-links-col">
-            <h4>Campus Address</h4>
-            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>
-              LJ University Campus, S.G. Road, Ahmedabad, Gujarat 382210
-            </p>
-          </div>
-        </div>
-        <div className="container footer-bottom" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
-          <p>© {new Date().getFullYear()} Edumark System. All rights reserved.</p>
-          <p style={{ fontSize: '0.95rem', color: '#f59e0b', textAlign: 'center', marginTop: '0.25rem' }}>
-            Built &amp; Designed with Modern Academic Architecture
+      {/* ===================== 3 SIMPLE STEPS SECTION ===================== */}
+      <section id="how-it-works" style={styles.stepsSection} className="landing-steps-section">
+        <div style={styles.sectionHead} className="landing-section-head">
+          <h2 style={{ ...styles.sectionTitle, color: '#ffffff' }}>3 Simple Steps</h2>
+          <p style={{ ...styles.sectionSub, color: 'rgba(147,197,253,0.85)' }}>
+            Effortless academic material sharing and communication across your entire college.
           </p>
         </div>
+
+        <div style={styles.stepsGrid} className="landing-steps-grid">
+          {steps.map((s, idx) => (
+            <React.Fragment key={idx}>
+              <div style={styles.stepCard} className="landing-step-card">
+                <div style={{ ...styles.stepCircle, animationDelay: `${idx * 0.8}s` }} className="step-icon-glow landing-step-circle">
+                  {s.num}
+                </div>
+                <h3 style={styles.stepTitle} className="landing-step-title">{s.title}</h3>
+                <p style={styles.stepDesc} className="landing-step-desc">{s.desc}</p>
+              </div>
+              {idx < steps.length - 1 && (
+                <div style={styles.stepConnector} className="landing-step-connector" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* CTA Card */}
+        <div style={styles.ctaContainer} className="landing-cta-container">
+          <div style={styles.ctaCard} className="shimmer-wrapper landing-cta-card">
+            <div style={styles.ctaBadgeIcon}>
+              <GraduationCap size={26} color="#001b3d" />
+            </div>
+            <h2 style={styles.ctaTitle} className="landing-cta-title">
+              Ready to Transform Your College Classroom Experience?
+            </h2>
+            <p style={styles.ctaDesc} className="landing-cta-desc">
+              Join the portal now to access lecture notes, syllabi, and instant campus circulars.
+            </p>
+            <button
+              style={styles.btnPrimary}
+              onClick={handleGetStarted}
+              id="landing-cta-btn"
+              className="landing-cta-btn"
+            >
+              Login to Portal &nbsp; <ArrowRight size={18} style={{ display: 'inline', verticalAlign: 'middle' }} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ===================== FOOTER ===================== */}
+      <footer style={styles.footer}>
+        <div style={styles.footerLogo}>
+          <img src="/favicon.svg" alt="Logo" style={styles.logoIcon} />
+          <span style={{ ...styles.navBrand, fontSize: '1.25rem' }}>
+            Edu<span style={{ color: '#fbbf24' }}>Mark</span>
+          </span>
+        </div>
+        <p style={styles.footerText}>
+          © {new Date().getFullYear()} EduMark Classroom &amp; Academic Management System.
+        </p>
+        <p style={styles.footerCredit}>
+          This Module is Build, Designed, and Devloped by <span style={{ color: '#fbbf24' }}>Jadav Dashrath</span> And <span style={{ color: '#fbbf24' }}>Dabhi Prit</span>
+        </p>
       </footer>
-
-      {/* High-End Component Scoped Styles & Animations */}
-      <style>{`
-        /* Ambient Blobs */
-        .abstract-blob {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(90px);
-          z-index: 1;
-          pointer-events: none;
-        }
-
-        .blob-orb-1 {
-          top: -8%;
-          left: -6%;
-          width: 55vw;
-          height: 55vw;
-          background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(0, 59, 122, 0.2) 50%, transparent 70%);
-        }
-
-        .blob-orb-2 {
-          top: 35%;
-          right: -8%;
-          width: 50vw;
-          height: 50vw;
-          background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, rgba(0, 37, 75, 0.2) 50%, transparent 70%);
-        }
-
-        .blob-orb-3 {
-          bottom: -5%;
-          left: 20%;
-          width: 45vw;
-          height: 45vw;
-          background: radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, transparent 70%);
-        }
-
-        /* Hero Section */
-        .hero-section {
-          padding: 6.5rem 0 5rem 0;
-        }
-
-        .hero-container {
-          display: grid;
-          grid-template-columns: 1.15fr 0.85fr;
-          gap: 3.5rem;
-          align-items: center;
-        }
-
-        .edumark-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          border-radius: 99px;
-          font-size: 0.85rem;
-          font-weight: 700;
-          color: #f59e0b;
-          background: rgba(245, 158, 11, 0.12);
-          border: 1px solid rgba(245, 158, 11, 0.3);
-          margin-bottom: 1.8rem;
-          box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
-        }
-
-        .hero-title {
-          font-size: clamp(2.4rem, 4.5vw, 3.8rem);
-          font-weight: 800;
-          line-height: 1.15;
-          letter-spacing: -0.02em;
-          margin-bottom: 1.5rem;
-          color: #ffffff;
-        }
-
-        .gradient-text {
-          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 45%, #38bdf8 100%);
-          background-size: 200% 200%;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          display: inline-block;
-        }
-
-        .hero-subtitle {
-          font-size: 1.15rem;
-          color: #94a3b8;
-          line-height: 1.65;
-          margin-bottom: 2.2rem;
-          max-width: 600px;
-        }
-
-        .hero-actions {
-          display: flex;
-          gap: 1.2rem;
-          flex-wrap: wrap;
-          margin-bottom: 2rem;
-        }
-
-        .btn-lg {
-          padding: 0.95rem 2rem;
-          font-size: 1.05rem;
-          font-weight: 700;
-          border-radius: 99px;
-        }
-
-        .trust-marks {
-          display: flex;
-          gap: 1.5rem;
-          flex-wrap: wrap;
-          font-size: 0.88rem;
-          color: #cbd5e1;
-          margin-top: 0.5rem;
-        }
-
-        .trust-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        /* Hero Floating Cards Showcase */
-        .hero-visual-content {
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          padding: 10px 0;
-        }
-
-        .glowing-center-orb {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 280px;
-          height: 280px;
-          background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, rgba(56, 189, 248, 0.15) 50%, transparent 70%);
-          border-radius: 50%;
-          z-index: 1;
-          pointer-events: none;
-        }
-
-        .hero-floating-card {
-          position: relative;
-          z-index: 2;
-          padding: 22px 24px;
-          border-radius: 16px;
-        }
-
-        .hero-card-1 {
-          border-color: rgba(245, 158, 11, 0.35) !important;
-          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px rgba(245, 158, 11, 0.15) !important;
-        }
-
-        .hero-card-2 {
-          border-color: rgba(16, 185, 129, 0.35) !important;
-          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.15) !important;
-          margin-left: 20px;
-        }
-
-        .hero-card-3 {
-          border-color: rgba(56, 189, 248, 0.35) !important;
-          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.15) !important;
-        }
-
-        .card-mini-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          font-size: 0.82rem;
-          color: #94a3b8;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 700;
-          margin-bottom: 12px;
-        }
-
-        .card-mini-title {
-          font-size: 1.1rem;
-          font-weight: 700;
-          color: #ffffff;
-          margin-bottom: 12px;
-        }
-
-        .card-mini-data {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 14px;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 10px;
-        }
-
-        .data-label {
-          font-size: 0.84rem;
-          color: #94a3b8;
-        }
-
-        .data-value {
-          font-size: 0.88rem;
-          font-weight: 700;
-          color: #ffffff;
-        }
-
-        .mini-badge {
-          padding: 4px 10px;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          font-weight: 700;
-          background: rgba(56, 189, 248, 0.15);
-          color: #38bdf8;
-        }
-
-        .mini-badge-success {
-          padding: 4px 10px;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          font-weight: 700;
-          background: rgba(16, 185, 129, 0.15);
-          color: #10b981;
-        }
-
-        .mock-progress-bar {
-          height: 6px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 3px;
-          overflow: hidden;
-        }
-
-        .mock-progress {
-          height: 100%;
-          background: linear-gradient(90deg, #f59e0b, #fbbf24);
-          border-radius: 3px;
-        }
-
-        /* Stats Section */
-        .stats-section {
-          padding: 3rem 0 4rem 0;
-        }
-
-        .stats-banner {
-          display: flex;
-          justify-content: space-around;
-          align-items: center;
-          padding: 34px 28px;
-          border-radius: 20px !important;
-          flex-wrap: wrap;
-          gap: 20px;
-        }
-
-        .stat-box {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 6px;
-          flex: 1;
-          min-width: 160px;
-        }
-
-        .stat-num {
-          font-size: 2.5rem;
-          font-weight: 800;
-          color: #f59e0b;
-          letter-spacing: -0.02em;
-          transition: text-shadow 0.3s;
-        }
-
-        .stat-desc {
-          font-size: 0.88rem;
-          color: #94a3b8;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 600;
-        }
-
-        .stat-divider {
-          width: 1px;
-          height: 50px;
-          background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* How It Works (Steps) */
-        .how-it-works-section {
-          padding: 5rem 0;
-        }
-
-        .steps-grid {
-          display: grid;
-          grid-template-columns: 1fr auto 1fr auto 1fr;
-          gap: 1.5rem;
-          align-items: center;
-          margin-top: 3.5rem;
-        }
-
-        .step-item {
-          padding: 36px 28px;
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
-          border-radius: 18px;
-          height: 100%;
-        }
-
-        .step-icon-wrapper {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.45rem;
-          font-weight: 800;
-          color: #001b3d;
-          box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
-        }
-
-        .step-title {
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #ffffff;
-        }
-
-        .step-desc {
-          font-size: 0.92rem;
-          color: #94a3b8;
-          line-height: 1.6;
-        }
-
-        .step-connector {
-          width: 50px;
-          height: 2px;
-          background: linear-gradient(90deg, rgba(245, 158, 11, 0.8), rgba(56, 189, 248, 0.8));
-          opacity: 0.4;
-        }
-
-        /* Features Section */
-        .features-section {
-          padding: 5rem 0;
-        }
-
-        .section-header {
-          text-align: center;
-          max-width: 700px;
-          margin: 0 auto 3rem auto;
-        }
-
-        .section-title {
-          font-size: 2.2rem;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          margin-bottom: 0.85rem;
-          color: #ffffff;
-        }
-
-        .section-subtitle {
-          color: #94a3b8;
-          font-size: 1.05rem;
-          line-height: 1.6;
-        }
-
-        .features-tabs-wrapper {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 2.5rem;
-        }
-
-        .features-tabs {
-          display: flex;
-          padding: 6px;
-          border-radius: 14px;
-          gap: 8px;
-        }
-
-        .tab-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 22px;
-          border: none;
-          background: none;
-          border-radius: 10px;
-          font-size: 0.95rem;
-          font-weight: 600;
-          cursor: pointer;
-          color: #94a3b8;
-          transition: all 0.25s;
-        }
-
-        .tab-btn:hover {
-          color: #ffffff;
-        }
-
-        .tab-btn.active {
-          background: rgba(245, 158, 11, 0.2) !important;
-          color: #f59e0b !important;
-          border: 1px solid rgba(245, 158, 11, 0.45) !important;
-          box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2) !important;
-        }
-
-        .features-content-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 2rem;
-          width: 100%;
-        }
-
-        .feature-card {
-          padding: 32px 28px;
-          border-radius: 18px;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .feature-icon-wrapper {
-          width: 3.4rem;
-          height: 3.4rem;
-          border-radius: 14px;
-          background: rgba(245, 158, 11, 0.15);
-          color: #f59e0b;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 1.5rem;
-          border: 1px solid rgba(245, 158, 11, 0.3);
-          transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .feature-card-title {
-          font-size: 1.25rem;
-          font-weight: 700;
-          margin-bottom: 0.75rem;
-          color: #ffffff;
-        }
-
-        .feature-card-desc {
-          font-size: 0.92rem;
-          color: #94a3b8;
-          line-height: 1.65;
-        }
-
-        /* Departments */
-        .departments-section {
-          padding: 5rem 0;
-        }
-
-        .departments-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 2rem;
-        }
-
-        .dept-card {
-          padding: 28px;
-          border-radius: 18px;
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-        }
-
-        .dept-badge {
-          background: rgba(56, 189, 248, 0.15);
-          color: #38bdf8;
-          padding: 4px 12px;
-          border-radius: 8px;
-          font-size: 0.78rem;
-          font-weight: 700;
-          width: fit-content;
-          margin-bottom: 1.2rem;
-          border: 1px solid rgba(56, 189, 248, 0.3);
-        }
-
-        .dept-name {
-          font-size: 1.25rem;
-          font-weight: 750;
-          margin-bottom: 0.6rem;
-          color: #ffffff;
-        }
-
-        .dept-desc {
-          font-size: 0.9rem;
-          color: #94a3b8;
-          line-height: 1.6;
-          margin-bottom: 1.8rem;
-          flex-grow: 1;
-        }
-
-        .dept-footer {
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          padding-top: 1.2rem;
-        }
-
-        .dept-link {
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: #f59e0b;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          cursor: pointer;
-          transition: gap 0.2s;
-        }
-
-        .dept-link:hover {
-          gap: 8px;
-        }
-
-        /* FAQ Section */
-        .faq-section {
-          padding: 5rem 0;
-        }
-
-        .faq-container {
-          display: grid;
-          grid-template-columns: 0.9fr 1.1fr;
-          gap: 4rem;
-        }
-
-        .faq-intro-icon-box {
-          width: 56px;
-          height: 56px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #f59e0b, #d97706);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 1.5rem;
-        }
-
-        .faq-title {
-          font-size: 2.2rem;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          margin-bottom: 1rem;
-          color: #ffffff;
-        }
-
-        .faq-subtitle {
-          color: #94a3b8;
-          line-height: 1.65;
-          margin-bottom: 2rem;
-          font-size: 1rem;
-        }
-
-        .faq-support-card {
-          padding: 24px;
-          border-radius: 16px;
-        }
-
-        .faq-accordion {
-          display: flex;
-          flex-direction: column;
-          gap: 1.2rem;
-        }
-
-        .faq-item {
-          border-radius: 14px;
-          overflow: hidden;
-          transition: all 0.3s;
-        }
-
-        .faq-question {
-          padding: 1.4rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-weight: 600;
-          font-size: 1.02rem;
-          color: #ffffff;
-          cursor: pointer;
-          user-select: none;
-        }
-
-        .faq-chevron {
-          transition: transform 0.3s;
-          color: #94a3b8;
-          flex-shrink: 0;
-        }
-
-        .faq-answer {
-          max-height: 0;
-          overflow: hidden;
-          transition: max-height 0.35s cubic-bezier(0, 1, 0, 1), padding 0.35s;
-          padding: 0 1.4rem;
-          font-size: 0.92rem;
-          color: #94a3b8;
-          line-height: 1.65;
-        }
-
-        .faq-item.open .faq-chevron {
-          transform: rotate(90deg);
-          color: #f59e0b;
-        }
-
-        .faq-item.open .faq-answer {
-          max-height: 250px;
-          padding: 0 1.4rem 1.4rem 1.4rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          padding-top: 1rem;
-        }
-
-        /* CTA Banner */
-        .cta-banner-section {
-          padding: 3rem 0 6rem 0;
-        }
-
-        .cta-banner-card {
-          border-radius: 24px;
-          padding: 4rem 3.5rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 3rem;
-          border-color: rgba(245, 158, 11, 0.3) !important;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(245, 158, 11, 0.2) !important;
-        }
-
-        .cta-banner-actions {
-          display: flex;
-          gap: 1.2rem;
-          flex-shrink: 0;
-        }
-
-        /* Footer */
-        .landing-footer {
-          padding: 4.5rem 0 2rem 0;
-        }
-
-        .footer-grid {
-          display: grid;
-          grid-template-columns: 1.6fr repeat(3, 1fr);
-          gap: 3rem;
-          margin-bottom: 3.5rem;
-        }
-
-        .footer-links-col {
-          display: flex;
-          flex-direction: column;
-          gap: 0.85rem;
-        }
-
-        .footer-links-col h4 {
-          font-size: 0.95rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: #ffffff;
-          margin-bottom: 0.5rem;
-        }
-
-        .footer-links-col a {
-          font-size: 0.9rem;
-          color: #94a3b8;
-          text-decoration: none;
-          transition: color 0.2s;
-        }
-
-        .footer-links-col a:hover {
-          color: #f59e0b;
-        }
-
-        .footer-bottom {
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          padding-top: 1.8rem;
-          font-size: 0.85rem;
-          color: #64748b;
-        }
-
-        /* Responsive Breakpoints */
-        @media (max-width: 992px) {
-          .hero-container {
-            grid-template-columns: 1fr;
-            text-align: center;
-            gap: 3.5rem;
-          }
-
-          .hero-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-
-          .hero-actions {
-            justify-content: center;
-          }
-
-          .trust-marks {
-            justify-content: center;
-          }
-
-          .hero-card-2 {
-            margin-left: 0;
-          }
-
-          .steps-grid {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-          }
-
-          .step-connector {
-            display: none;
-          }
-
-          .faq-container {
-            grid-template-columns: 1fr;
-            gap: 2.5rem;
-          }
-
-          .cta-banner-card {
-            flex-direction: column;
-            text-align: center;
-            padding: 3rem 2rem;
-          }
-
-          .cta-banner-actions {
-            justify-content: center;
-            width: 100%;
-          }
-
-          .footer-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 2.5rem;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .hero-section {
-            padding: 4.5rem 0 3rem 0;
-          }
-
-          .hero-title {
-            font-size: 2.2rem;
-          }
-
-          .hero-actions {
-            flex-direction: column;
-            width: 100%;
-          }
-
-          .hero-actions .btn {
-            width: 100%;
-          }
-
-          .stats-banner {
-            padding: 24px 16px;
-            gap: 24px;
-          }
-
-          .stat-divider {
-            display: none;
-          }
-
-          .stat-box {
-            min-width: 130px;
-          }
-
-          .stat-num {
-            font-size: 2rem;
-          }
-
-          .features-tabs {
-            flex-direction: column;
-            width: 100%;
-          }
-
-          .tab-btn {
-            justify-content: center;
-            width: 100%;
-          }
-
-          .cta-banner-actions {
-            flex-direction: column;
-          }
-
-          .cta-banner-actions .btn {
-            width: 100%;
-          }
-
-          .footer-grid {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-          }
-        }
-      `}</style>
     </div>
   );
 }
+
+// Exact Styles from attendance.edumark.app
+const styles = {
+  page: {
+    minHeight: '100vh',
+    width: '100%',
+    maxWidth: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    fontFamily: "'Inter', system-ui, sans-serif",
+    overflowX: 'hidden'
+  },
+  hero: {
+    background: 'linear-gradient(180deg, #003366 0%, #004080 50%, #003366 100%)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '40px 0 80px 0',
+    width: '100%'
+  },
+  heroLayout: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+    gap: '40px',
+    width: '100%',
+    maxWidth: '1350px',
+    padding: '20px 4% 50px 4%',
+    alignItems: 'center'
+  },
+  heroTextCol: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    textAlign: 'left'
+  },
+  badge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    borderRadius: '99px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: '#fbbf24',
+    background: 'rgba(251, 191, 36, 0.1)',
+    marginBottom: '20px',
+    border: '1px solid rgba(251, 191, 36, 0.25)'
+  },
+  heroBrandWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    marginBottom: '16px'
+  },
+  heroTitle: {
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+    fontWeight: '800',
+    color: '#ffffff',
+    margin: 0,
+    letterSpacing: '-1.5px',
+    lineHeight: '1'
+  },
+  heroSubtitle: {
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: 'clamp(1.4rem, 2.5vw, 2.2rem)',
+    color: '#ffffff',
+    fontWeight: '700',
+    lineHeight: '1.25',
+    margin: '0 0 16px 0',
+    letterSpacing: '-0.5px'
+  },
+  heroDesc: {
+    fontSize: '1.05rem',
+    color: 'rgba(147, 197, 253, 0.9)',
+    lineHeight: '1.65',
+    margin: '0 0 32px 0',
+    maxWidth: '580px'
+  },
+  heroBtns: {
+    display: 'flex',
+    gap: '16px',
+    flexWrap: 'wrap',
+    marginBottom: '28px'
+  },
+  btnPrimary: {
+    background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+    border: 'none',
+    color: '#001b3d',
+    fontWeight: '700',
+    fontSize: '1rem',
+    padding: '14px 32px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  btnGhost: {
+    background: 'rgba(229, 231, 235, 0.16)',
+    border: '1.5px solid rgba(229, 231, 235, 0.45)',
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: '1rem',
+    padding: '12px 32px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.3)',
+    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  trustRow: {
+    display: 'flex',
+    gap: '20px',
+    flexWrap: 'wrap',
+    fontSize: '0.88rem',
+    color: 'rgba(147, 197, 253, 0.8)',
+    fontWeight: '500'
+  },
+  trustItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  heroVisualCol: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+    position: 'relative',
+    padding: '10px 0'
+  },
+  cardPreview1: {
+    background: 'rgba(0, 35, 75, 0.65)',
+    border: '1px solid rgba(251, 191, 36, 0.35)',
+    boxShadow: '0 16px 36px rgba(0, 0, 0, 0.35)',
+    padding: '22px 26px',
+    borderRadius: '18px',
+    backdropFilter: 'blur(12px)'
+  },
+  cardPreview2: {
+    background: 'rgba(0, 35, 75, 0.65)',
+    border: '1px solid rgba(16, 185, 129, 0.35)',
+    boxShadow: '0 16px 36px rgba(0, 0, 0, 0.35)',
+    padding: '22px 26px',
+    borderRadius: '18px',
+    backdropFilter: 'blur(12px)'
+  },
+  cardPreview3: {
+    background: 'rgba(0, 35, 75, 0.65)',
+    border: '1px solid rgba(14, 165, 233, 0.35)',
+    boxShadow: '0 16px 36px rgba(0, 0, 0, 0.35)',
+    padding: '22px 26px',
+    borderRadius: '18px',
+    backdropFilter: 'blur(12px)'
+  },
+  previewCardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '0.82rem',
+    color: 'rgba(147, 197, 253, 0.9)',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    fontWeight: '600',
+    marginBottom: '10px'
+  },
+  livePingDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    backgroundColor: '#fbbf24',
+    marginLeft: 'auto'
+  },
+  previewCardTitle: {
+    fontFamily: "'Outfit', sans-serif",
+    fontWeight: '700',
+    fontSize: '1.15rem',
+    color: '#ffffff',
+    marginBottom: '12px'
+  },
+  previewCardData: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '10px 14px',
+    background: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: '10px'
+  },
+  previewCardLabel: {
+    fontSize: '0.85rem',
+    color: 'rgba(147, 197, 253, 0.8)'
+  },
+  previewCardValue: {
+    fontSize: '0.9rem',
+    fontWeight: '700',
+    color: '#ffffff'
+  },
+  miniTag: {
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    background: 'rgba(14, 165, 233, 0.15)',
+    color: '#38bdf8',
+    fontWeight: '600'
+  },
+  miniTagSuccess: {
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    background: 'rgba(16, 185, 129, 0.15)',
+    color: '#10b981',
+    fontWeight: '600'
+  },
+  miniTagAmber: {
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontSize: '0.78rem',
+    background: 'rgba(251, 191, 36, 0.15)',
+    color: '#fbbf24',
+    fontWeight: '600'
+  },
+  statsRow: {
+    display: 'flex',
+    gap: '24px',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    padding: '0 4%',
+    width: '100%',
+    maxWidth: '1350px'
+  },
+  statCard: {
+    flex: '1 1 260px',
+    background: 'rgba(0, 35, 75, 0.65)',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '18px',
+    padding: '30px 24px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '8px',
+    backdropFilter: 'blur(8px)'
+  },
+  statNum: {
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: '2.6rem',
+    fontWeight: '800',
+    color: '#fbbf24',
+    lineHeight: '1'
+  },
+  statLabel: {
+    fontSize: '0.88rem',
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  featuresSection: {
+    backgroundColor: '#f0f4f8',
+    padding: '90px 4%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '100%'
+  },
+  sectionHead: {
+    textAlign: 'center',
+    marginBottom: '56px',
+    maxWidth: '750px'
+  },
+  sectionTitle: {
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)',
+    fontWeight: '800',
+    color: '#002d62',
+    margin: '0 0 14px',
+    letterSpacing: '-0.5px'
+  },
+  sectionSub: {
+    fontSize: '1.05rem',
+    color: '#5a7a9e',
+    lineHeight: '1.6',
+    margin: 0
+  },
+  featuresGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    columnGap: '24px',
+    rowGap: '32px',
+    width: '100%',
+    maxWidth: '1350px'
+  },
+  featureCard: {
+    borderRadius: '20px',
+    padding: '36px 30px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    border: 'none',
+    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+  },
+  featureIconBox: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  featureCardTitle: {
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: '1.25rem',
+    fontWeight: '700',
+    margin: 0
+  },
+  featureCardDesc: {
+    fontSize: '0.95rem',
+    lineHeight: '1.65',
+    margin: 0
+  },
+  stepsSection: {
+    background: 'linear-gradient(180deg, #003366 0%, #004080 50%, #003366 100%)',
+    padding: '90px 4%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '100%'
+  },
+  stepsGrid: {
+    display: 'flex',
+    gap: '0',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: '1200px',
+    flexWrap: 'wrap'
+  },
+  stepCard: {
+    flex: '1 1 240px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '16px',
+    padding: '0 20px'
+  },
+  stepCircle: {
+    width: '68px',
+    height: '68px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.6rem',
+    fontWeight: '800',
+    color: '#001b3d',
+    boxShadow: '0 10px 24px rgba(251, 191, 36, 0.45)',
+    flexShrink: 0
+  },
+  stepConnector: {
+    height: '2px',
+    width: '60px',
+    minWidth: '40px',
+    background: 'rgba(255, 255, 255, 0.15)',
+    marginTop: '34px',
+    flexShrink: 0
+  },
+  stepTitle: {
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: '1.1rem',
+    fontWeight: '700',
+    color: '#ffffff',
+    margin: 0
+  },
+  stepDesc: {
+    fontSize: '0.9rem',
+    color: 'rgba(147, 197, 253, 0.8)',
+    lineHeight: '1.6',
+    margin: 0
+  },
+  ctaContainer: {
+    width: '100%',
+    maxWidth: '1200px',
+    marginTop: '70px',
+    display: 'flex',
+    justifyContent: 'center'
+  },
+  ctaCard: {
+    width: '100%',
+    background: 'linear-gradient(135deg, rgba(0, 64, 128, 0.6) 0%, rgba(0, 51, 102, 0.85) 100%)',
+    border: '1px solid rgba(251, 191, 36, 0.35)',
+    borderRadius: '24px',
+    padding: '50px 36px',
+    textAlign: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '14px',
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(12px)'
+  },
+  ctaBadgeIcon: {
+    width: '52px',
+    height: '52px',
+    borderRadius: '16px',
+    background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 6px 18px rgba(251, 191, 36, 0.4)',
+    marginBottom: '4px'
+  },
+  ctaTitle: {
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: 'clamp(1.6rem, 3.2vw, 2.3rem)',
+    fontWeight: '800',
+    color: '#ffffff',
+    margin: 0,
+    letterSpacing: '-0.5px'
+  },
+  ctaDesc: {
+    fontSize: '1.05rem',
+    color: 'rgba(147, 197, 253, 0.9)',
+    margin: '0 0 12px',
+    maxWidth: '560px'
+  },
+  footer: {
+    backgroundColor: '#00264d',
+    padding: '40px 4%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '10px',
+    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+    width: '100%'
+  },
+  footerLogo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '6px'
+  },
+  footerText: {
+    fontSize: '0.9rem',
+    color: 'rgba(147, 197, 253, 0.7)',
+    margin: 0,
+    textAlign: 'center'
+  },
+  footerCredit: {
+    fontSize: '0.88rem',
+    color: 'rgba(147, 197, 253, 0.6)',
+    margin: 0,
+    textAlign: 'center'
+  },
+  logoIcon: {
+    width: '38px',
+    height: '38px',
+    borderRadius: '10px',
+    display: 'block'
+  },
+  navBrand: {
+    fontFamily: "'Outfit', sans-serif",
+    fontWeight: '800',
+    fontSize: '1.5rem',
+    color: '#ffffff',
+    letterSpacing: '-0.5px'
+  }
+};

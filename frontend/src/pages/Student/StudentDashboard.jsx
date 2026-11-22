@@ -27,7 +27,7 @@ export default function StudentDashboard() {
   const [annQuery, setAnnQuery] = useState('');
 
   const fetchAnnouncements = async () => {
-    setLoadingAnn(true);
+    if (announcements.length === 0) setLoadingAnn(true);
     try {
       const res = await authFetch('/student/announcements');
       if (res.ok) {
@@ -45,7 +45,7 @@ export default function StudentDashboard() {
   };
 
   const fetchNotes = async () => {
-    setLoadingNotes(true);
+    if (notes.length === 0) setLoadingNotes(true);
     try {
       const res = await authFetch('/student/notes');
       if (res.ok) {
@@ -170,26 +170,26 @@ export default function StudentDashboard() {
 
       {/* Welcome banner */}
       <div 
-        className="card" 
+        className="panel-welcome-banner" 
         style={{ 
           marginBottom: '2.5rem', 
-          background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', 
+          background: 'linear-gradient(135deg, #002d62 0%, #001f44 100%)', 
           color: '#ffffff',
-          border: 'none',
-          boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.4)',
+          border: '1px solid rgba(251, 191, 36, 0.25)',
+          boxShadow: '0 10px 30px rgba(0, 40, 85, 0.22)',
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
           flexWrap: 'wrap', 
           gap: '1.25rem',
-          padding: '24px 32px',
-          borderRadius: '16px'
+          padding: '28px 32px',
+          borderRadius: '22px'
         }}
       >
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Student Dashboard</h1>
-          <p style={{ color: 'rgba(255, 255, 255, 0.85)', margin: '0.4rem 0 0 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>Welcome, {user?.fullName}</span>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, color: '#ffffff', fontFamily: "'Outfit', sans-serif" }}>Dashboard</h1>
+          <p style={{ color: '#ffffff', margin: '0.4rem 0 0 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>Welcome back, <span style={{ color: '#fbbf24', fontWeight: 700 }}>{user?.fullName}</span> 👋</span>
             <span>•</span>
             <span>Sem {user?.semester}</span>
             <span>•</span>

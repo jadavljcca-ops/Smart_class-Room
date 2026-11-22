@@ -9,9 +9,10 @@ const pool = new Pool({
     rejectUnauthorized: false
   },
   keepAlive: true,
+  min: 2,
+  max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 15000,
-  max: 20
+  connectionTimeoutMillis: 15000
 });
 
 pool.on('error', (err, client) => {
@@ -239,6 +240,20 @@ async function initializeTables() {
     await client.query("UPDATE notes SET department = 'BCA' WHERE department = 'Computer Application'");
     await client.query("UPDATE announcements SET department = 'BCA' WHERE department = 'Computer Application'");
     await client.query("UPDATE registration_requests SET department = 'BCA' WHERE department = 'Computer Application'");
+
+    // High performance indexes for instant data retrieval
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_students_dept_sem ON students(department, semester);
+      CREATE INDEX IF NOT EXISTS idx_students_status ON students(status);
+      CREATE INDEX IF NOT EXISTS idx_faculty_dept ON faculty(department);
+      CREATE INDEX IF NOT EXISTS idx_faculty_status ON faculty(status);
+      CREATE INDEX IF NOT EXISTS idx_notes_dept_sem ON notes(department, semester);
+      CREATE INDEX IF NOT EXISTS idx_notes_faculty ON notes(faculty_id);
+      CREATE INDEX IF NOT EXISTS idx_announcements_dept ON announcements(department);
+      CREATE INDEX IF NOT EXISTS idx_requests_status_dept ON registration_requests(status, department);
+      CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read);
+      CREATE INDEX IF NOT EXISTS idx_notifications_dept ON notifications(department);
+    `);
 
     await client.query('COMMIT');
     console.log("Database initialized successfully on Neon PostgreSQL!");

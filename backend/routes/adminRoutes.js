@@ -98,25 +98,45 @@ router.get('/stats', async (req, res) => {
     let notesPerDept, studentsPerDept, requestStats;
 
     if (isGlobal) {
-      studentsCount = await get("SELECT COUNT(*) as count FROM students WHERE status='Approved'");
-      facultyCount = await get("SELECT COUNT(*) as count FROM faculty WHERE status='Approved'");
-      pendingCount = await get("SELECT COUNT(*) as count FROM registration_requests WHERE status='Pending'");
-      announcementsCount = await get("SELECT COUNT(*) as count FROM announcements");
-      notesCount = await get("SELECT COUNT(*) as count FROM notes");
-
-      notesPerDept = await query("SELECT department, COUNT(*) as count FROM notes GROUP BY department");
-      studentsPerDept = await query("SELECT department, COUNT(*) as count FROM students GROUP BY department");
-      requestStats = await query("SELECT status, COUNT(*) as count FROM registration_requests GROUP BY status");
+      [
+        studentsCount,
+        facultyCount,
+        pendingCount,
+        announcementsCount,
+        notesCount,
+        notesPerDept,
+        studentsPerDept,
+        requestStats
+      ] = await Promise.all([
+        get("SELECT COUNT(*) as count FROM students WHERE status='Approved'"),
+        get("SELECT COUNT(*) as count FROM faculty WHERE status='Approved'"),
+        get("SELECT COUNT(*) as count FROM registration_requests WHERE status='Pending'"),
+        get("SELECT COUNT(*) as count FROM announcements"),
+        get("SELECT COUNT(*) as count FROM notes"),
+        query("SELECT department, COUNT(*) as count FROM notes GROUP BY department"),
+        query("SELECT department, COUNT(*) as count FROM students GROUP BY department"),
+        query("SELECT status, COUNT(*) as count FROM registration_requests GROUP BY status")
+      ]);
     } else {
-      studentsCount = await get("SELECT COUNT(*) as count FROM students WHERE status='Approved' AND department = ?", [dept]);
-      facultyCount = await get("SELECT COUNT(*) as count FROM faculty WHERE status='Approved' AND department = ?", [dept]);
-      pendingCount = await get("SELECT COUNT(*) as count FROM registration_requests WHERE status='Pending' AND department = ?", [dept]);
-      announcementsCount = await get("SELECT COUNT(*) as count FROM announcements WHERE department = ? OR department = 'All'", [dept]);
-      notesCount = await get("SELECT COUNT(*) as count FROM notes WHERE department = ?", [dept]);
-
-      notesPerDept = await query("SELECT department, COUNT(*) as count FROM notes WHERE department = ? GROUP BY department", [dept]);
-      studentsPerDept = await query("SELECT department, COUNT(*) as count FROM students WHERE department = ? GROUP BY department", [dept]);
-      requestStats = await query("SELECT status, COUNT(*) as count FROM registration_requests WHERE department = ? GROUP BY status", [dept]);
+      [
+        studentsCount,
+        facultyCount,
+        pendingCount,
+        announcementsCount,
+        notesCount,
+        notesPerDept,
+        studentsPerDept,
+        requestStats
+      ] = await Promise.all([
+        get("SELECT COUNT(*) as count FROM students WHERE status='Approved' AND department = ?", [dept]),
+        get("SELECT COUNT(*) as count FROM faculty WHERE status='Approved' AND department = ?", [dept]),
+        get("SELECT COUNT(*) as count FROM registration_requests WHERE status='Pending' AND department = ?", [dept]),
+        get("SELECT COUNT(*) as count FROM announcements WHERE department = ? OR department = 'All'", [dept]),
+        get("SELECT COUNT(*) as count FROM notes WHERE department = ?", [dept]),
+        query("SELECT department, COUNT(*) as count FROM notes WHERE department = ? GROUP BY department", [dept]),
+        query("SELECT department, COUNT(*) as count FROM students WHERE department = ? GROUP BY department", [dept]),
+        query("SELECT status, COUNT(*) as count FROM registration_requests WHERE department = ? GROUP BY status", [dept])
+      ]);
     }
 
     res.json({

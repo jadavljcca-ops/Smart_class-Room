@@ -1,7 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="16" fill="#f59e0b"/>
-  <g transform="translate(12, 12) scale(1.66)">
-    <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" fill="none" stroke="#020617" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" fill="none" stroke="#020617" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+  <!-- Amber/Yellow Rounded Background Box -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+
+  <!-- Lucide GraduationCap Line Outline (Dark Navy #001b3d) -->
+  <g fill="none" stroke="#001b3d" stroke-width="36" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Diamond Cap Top -->
+    <polygon points="256 128, 432 208, 256 288, 80 208" />
+    <!-- Under Cap Skull Arc -->
+    <path d="M152 244 v64 c0 32 46 58 104 58 s104 -26 104 -58 v-64" />
+    <!-- Side Tassel Line -->
+    <path d="M432 208 v124" />
   </g>
 </svg>

@@ -91,16 +91,22 @@ export default function Register() {
     <div className="auth-wrapper">
       <div className={`auth-card animate-fade-in ${isBlinking ? 'blink-animation' : ''}`} style={{ maxWidth: '540px', padding: '2rem 1.75rem' }}>
         <div className="auth-header" style={{ marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ backgroundColor: 'hsl(var(--primary))', color: '#020617', borderRadius: '1.25rem', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '4.2rem', height: '4.2rem', marginBottom: '0.6rem', boxShadow: '0 10px 25px -5px rgba(245,158,11,0.3)' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/>
-              <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
-            </svg>
-          </div>
+          <img 
+            src="/favicon.svg" 
+            alt="EduMark Logo" 
+            style={{ 
+              width: '4.5rem', 
+              height: '4.5rem', 
+              borderRadius: '1.25rem', 
+              marginBottom: '0.6rem', 
+              boxShadow: '0 10px 25px -5px rgba(251,191,36,0.4)',
+              display: 'block'
+            }} 
+          />
           <div className="auth-logo" style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-            <span style={{ color: '#0f172a' }}>Edu</span><span style={{ color: 'hsl(var(--primary))' }}>Mark</span>
+            <span style={{ color: '#ffffff' }}>Edu</span><span style={{ color: '#fbbf24' }}>Mark</span>
           </div>
-          <p style={{ color: 'hsl(var(--muted))', fontSize: '0.85rem' }}>
+          <p style={{ color: '#93c5fd', fontSize: '0.85rem' }}>
             Register as a Student or Faculty member
           </p>
         </div>

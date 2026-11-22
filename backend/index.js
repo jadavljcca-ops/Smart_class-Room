@@ -8,6 +8,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 const { db } = require('./db');
+const { getCache, setCache, invalidateCache } = require('./utils/cache');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const facultyRoutes = require('./routes/facultyRoutes');
@@ -27,6 +28,41 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Automatic cache invalidation on any database mutation (POST, PUT, DELETE, PATCH)
+app.use((req, res, next) => {
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+    invalidateCache();
+  }
+  next();
+});
+
+// High-speed In-Memory Response Caching for GET queries
+app.use((req, res, next) => {
+  if (
+    req.method === 'GET' && 
+    req.originalUrl.startsWith('/api/') && 
+    !req.originalUrl.includes('/notifications') && 
+    !req.originalUrl.includes('/download')
+  ) {
+    const authHeader = req.headers.authorization || 'anon';
+    const cacheKey = `${authHeader}:${req.originalUrl}`;
+    const cachedData = getCache(cacheKey);
+
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+
+    const originalJson = res.json.bind(res);
+    res.json = (body) => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        setCache(cacheKey, body, 20000); // 20s fast cache
+      }
+      return originalJson(body);
+    };
+  }
+  next();
+});
 
 // Serve uploads folder (Note: files are also downloadable securely via stream routes)
 const uploadsPath = path.join(__dirname, 'uploads');

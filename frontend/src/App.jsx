@@ -89,16 +89,18 @@ function AppLayout() {
   const { user } = useAuth();
   const location = useLocation();
   const isAdminPage = user?.role === 'admin' && location.pathname.startsWith('/admin');
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isAuthPage = location.pathname === '/login';
+  const isLandingPage = location.pathname === '/';
+  const hideNavbar = isAuthPage || isLandingPage;
   
   return (
     <div className={isAdminPage ? 'admin-sidebar-layout' : 'standard-layout'}>
-      {!isAuthPage && <Navbar />}
-      <main className={isAdminPage ? 'admin-main-content' : ''} style={{ minHeight: isAuthPage ? '100vh' : 'calc(100vh - 4.5rem)', width: '100%' }}>
+      {!hideNavbar && <Navbar />}
+      <main className={isAdminPage ? 'admin-main-content' : ''} style={{ minHeight: hideNavbar ? '100vh' : 'calc(100vh - 4.5rem)', width: '100%' }}>
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<Navigate to="/login" replace />} />
 
           {/* Secure Common Routes */}
           <Route 

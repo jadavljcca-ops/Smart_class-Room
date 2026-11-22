@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { showPasswordIncorrectAlert } from '../../utils/alerts';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, GraduationCap } from 'lucide-react';
 
 export default function Login() {
@@ -34,7 +35,16 @@ export default function Login() {
       }
     } catch (err) {
       console.error(err);
-      showToast(err.message || 'Login failed. Please check credentials.', 'error');
+      if (
+        err.message === 'This Password is Incorrect.' ||
+        err.message?.toLowerCase().includes('password') ||
+        err.message?.toLowerCase().includes('invalid') ||
+        err.message?.toLowerCase().includes('credentials')
+      ) {
+        await showPasswordIncorrectAlert();
+      } else {
+        showToast(err.message || 'Login failed. Please check credentials.', 'error');
+      }
       setSubmitting(false);
     }
   };
@@ -45,8 +55,8 @@ export default function Login() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#001a35', /* Base dark navy */
-      backgroundImage: 'radial-gradient(circle at 10% 40%, #1e133c 0%, #001a35 45%, #001a35 100%)', /* Added subtle purple glow on left */
+      background: 'linear-gradient(180deg, #003366 0%, #004d99 50%, #003366 100%)',
+      backgroundAttachment: 'fixed',
       padding: '1.5rem',
       fontFamily: 'var(--font-family)',
       position: 'relative',
@@ -57,11 +67,13 @@ export default function Login() {
         zIndex: 1,
         width: '100%',
         maxWidth: '420px',
-        background: '#032042', /* Card specific navy blue */
-        border: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'rgba(0, 51, 102, 0.6)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        border: '1px solid rgba(255, 255, 255, 0.14)',
         borderRadius: '24px',
         padding: '2.5rem',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(251, 191, 36, 0.1)',
         color: 'white'
       }}>
         <div style={{ position: 'absolute', top: '24px', left: '24px' }}>
@@ -84,23 +96,23 @@ export default function Login() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem', marginTop: '1rem' }}>
-          <div style={{ 
-            background: 'linear-gradient(135deg, #ffb300, #ff8c00)',
-            borderRadius: '14px', 
-            padding: '0.85rem', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            marginBottom: '1rem',
-            boxShadow: '0 8px 20px rgba(255, 140, 0, 0.3)'
-          }}>
-            <GraduationCap size={32} color="#000" strokeWidth={2.5} />
-          </div>
+          <img 
+            src="/favicon.svg" 
+            alt="EduMark Logo" 
+            style={{ 
+              width: '76px', 
+              height: '76px', 
+              borderRadius: '20px', 
+              marginBottom: '1rem',
+              boxShadow: '0 8px 25px rgba(251, 191, 36, 0.45)',
+              display: 'block'
+            }} 
+          />
           
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
-            <span style={{ color: 'white' }}>Edu</span><span style={{ color: '#ff9900' }}>Mark</span>
+            <span style={{ color: 'white' }}>Edu</span><span style={{ color: '#fbbf24' }}>Mark</span>
           </h1>
-          <p style={{ color: '#8a9bb3', fontSize: '0.9rem', margin: 0 }}>
+          <p style={{ color: '#93c5fd', fontSize: '0.9rem', margin: 0 }}>
             Sign in to access your academic dashboard
           </p>
         </div>

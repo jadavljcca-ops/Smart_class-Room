@@ -43,7 +43,7 @@ export default function FacultyDashboard() {
   const [annAttachment, setAnnAttachment] = useState(null);
 
   const fetchNotes = async () => {
-    setLoadingNotes(true);
+    if (notes.length === 0) setLoadingNotes(true);
     try {
       const res = await authFetch('/faculty/notes');
       if (res.ok) {
@@ -61,7 +61,7 @@ export default function FacultyDashboard() {
   };
 
   const fetchAnnouncements = async () => {
-    setLoadingAnnouncements(true);
+    if (announcements.length === 0) setLoadingAnnouncements(true);
     try {
       const res = await authFetch('/faculty/announcements');
       if (res.ok) {
@@ -326,23 +326,23 @@ export default function FacultyDashboard() {
     <div className="container animate-fade-in" style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
       
 
-      {/* Welcome banner — wrapped in sticky-header-wrapper-white to mask top scrolling gap */}
+      {/* Welcome banner */}
       <div className="sticky-header-wrapper-white">
         <div 
-          className="card" 
+          className="panel-welcome-banner" 
           style={{ 
-            background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', 
+            background: 'linear-gradient(135deg, #002d62 0%, #001f44 100%)', 
             color: '#ffffff',
-            border: 'none',
-            boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.4)',
-            padding: '24px 32px',
-            borderRadius: '16px',
+            border: '1px solid rgba(251, 191, 36, 0.25)',
+            boxShadow: '0 10px 30px rgba(0, 40, 85, 0.22)',
+            padding: '28px 32px',
+            borderRadius: '22px',
             marginBottom: 0
           }}
         >
-          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Faculty Dashboard</h1>
-          <p style={{ color: 'rgba(255, 255, 255, 0.85)', margin: '0.4rem 0 0 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            Welcome, Prof. {user?.fullName} <span style={{ fontSize: '1.4rem' }}>👋</span>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, color: '#ffffff', fontFamily: "'Outfit', sans-serif" }}>Dashboard</h1>
+          <p style={{ color: '#ffffff', margin: '0.4rem 0 0 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            Welcome back, <span style={{ color: '#fbbf24', fontWeight: 700 }}>Prof. {user?.fullName}</span> 👋
           </p>
         </div>
       </div>
@@ -562,10 +562,10 @@ export default function FacultyDashboard() {
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ margin: 'auto', width: '100%', maxWidth: '540px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}
+            style={{ margin: 'auto', width: '100%', maxWidth: '540px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#ffffff', color: '#000000', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#000000' }}>
 
                 {editingNoteId ? 'Update Lecture Note' : 'Upload Lecture Note'}
               </h3>
@@ -739,10 +739,10 @@ export default function FacultyDashboard() {
           <div 
             onClick={(e) => e.stopPropagation()}
             className="card animate-fade-in" 
-            style={{ width: '100%', maxWidth: '540px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'hsl(var(--card))', margin: 'auto', borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}
+            style={{ width: '100%', maxWidth: '540px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#ffffff', color: '#000000', margin: 'auto', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Create New Announcement</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#000000' }}>Create New Announcement</h3>
 
               <button 
                 onClick={() => setShowAnnForm(false)}
