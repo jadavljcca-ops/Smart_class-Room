@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
   // Prefetch helper for background data loading
   const prefetch = (endpoints = []) => {
     endpoints.forEach(ep => {
-      authFetch(ep).catch(() => {});
+      authFetch(ep, { isPrefetch: true }).catch(() => {});
     });
   };
 
@@ -48,8 +48,8 @@ export const AuthProvider = ({ children }) => {
       } else if (user.role === 'faculty') {
         prefetch([
           '/faculty/notes',
-          '/student/announcements',
-          '/admin/departments'
+          '/faculty/announcements',
+          '/auth/departments'
         ]);
       } else if (user.role === 'student') {
         prefetch([
@@ -189,9 +189,10 @@ export const AuthProvider = ({ children }) => {
       headers
     });
 
-    if (response.status === 401 || response.status === 403) {
-      // Token might be expired or invalid
-      logout();
+    if (response.status === 401) {
+      if (!options.isPrefetch) {
+        logout();
+      }
       throw new Error('Session expired or unauthorized. Please log in again.');
     }
 

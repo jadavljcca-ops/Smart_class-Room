@@ -28,22 +28,43 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    // Check if email already exists in any table
-    const adminCheck = await get('SELECT id FROM admins WHERE email = ?', [email]);
-    const facultyCheck = await get('SELECT id FROM faculty WHERE email = ?', [email]);
-    const studentCheck = await get('SELECT id FROM students WHERE email = ?', [email]);
-    const requestCheck = await get('SELECT id, status FROM registration_requests WHERE email = ?', [email]);
+    // 1. Check if email already exists in active accounts or pending requests
+    const [adminCheck, facultyCheck, studentCheck, requestCheck] = await Promise.all([
+      get('SELECT id FROM admins WHERE email = ?', [email]),
+      get('SELECT id FROM faculty WHERE email = ?', [email]),
+      get('SELECT id FROM students WHERE email = ?', [email]),
+      get('SELECT id, status FROM registration_requests WHERE email = ?', [email])
+    ]);
 
     if (adminCheck || facultyCheck || studentCheck) {
-      return res.status(400).json({ message: 'This email ID is no longer in use.' });
+      return res.status(400).json({ message: 'This email ID is already registered in the system.' });
     }
     
     if (requestCheck) {
       if (requestCheck.status === 'Pending') {
         return res.status(400).json({ message: 'Your registration request is already pending approval.' });
       } else {
-        // If Rejected or Accepted (and not in students table), delete it to allow re-registration
+        // If Rejected or stale entry, remove it so the user can register again
         await run('DELETE FROM registration_requests WHERE email = ?', [email]);
+      }
+    }
+
+    // 2. Check if mobile number already exists in active accounts or pending requests
+    const [facultyMobile, studentMobile, requestMobile] = await Promise.all([
+      get('SELECT id FROM faculty WHERE mobile_number = ?', [mobileNumber]),
+      get('SELECT id FROM students WHERE mobile_number = ?', [mobileNumber]),
+      get("SELECT id, status FROM registration_requests WHERE mobile_number = ?", [mobileNumber])
+    ]);
+
+    if (facultyMobile || studentMobile) {
+      return res.status(400).json({ message: 'This mobile number is already registered in the system.' });
+    }
+
+    if (requestMobile) {
+      if (requestMobile.status === 'Pending') {
+        return res.status(400).json({ message: 'This mobile number is already pending approval with another request.' });
+      } else {
+        await run('DELETE FROM registration_requests WHERE mobile_number = ?', [mobileNumber]);
       }
     }
 

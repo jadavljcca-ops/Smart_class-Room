@@ -49,11 +49,14 @@ function RequireAuth({ children, allowedRoles }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  const userRole = (user.role || '').toLowerCase();
+  const normalizedAllowed = allowedRoles?.map(r => r.toLowerCase());
+
+  if (normalizedAllowed && !normalizedAllowed.includes(userRole)) {
     // Role not authorized, redirect to their default home
-    if (user.role === 'admin') return <Navigate to="/admin" replace />;
-    if (user.role === 'faculty') return <Navigate to="/faculty" replace />;
-    if (user.role === 'student') return <Navigate to="/student" replace />;
+    if (userRole === 'admin') return <Navigate to="/admin" replace />;
+    if (userRole === 'faculty') return <Navigate to="/faculty" replace />;
+    if (userRole === 'student') return <Navigate to="/student" replace />;
     return <Navigate to="/login" replace />;
   }
 
@@ -64,7 +67,8 @@ function RequireAuth({ children, allowedRoles }) {
 function RequireMainAdmin({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (user && user.role === 'admin' && user.adminRole === 'main_admin') {
+  const userRole = (user?.role || '').toLowerCase();
+  if (user && userRole === 'admin' && user.adminRole === 'main_admin') {
     return children;
   }
   return <Navigate to="/admin" replace />;
@@ -77,9 +81,10 @@ function HomeRedirect() {
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   
-  if (user.role === 'admin') return <Navigate to="/admin" replace />;
-  if (user.role === 'faculty') return <Navigate to="/faculty" replace />;
-  if (user.role === 'student') return <Navigate to="/student" replace />;
+  const userRole = (user.role || '').toLowerCase();
+  if (userRole === 'admin') return <Navigate to="/admin" replace />;
+  if (userRole === 'faculty') return <Navigate to="/faculty" replace />;
+  if (userRole === 'student') return <Navigate to="/student" replace />;
 
   return <Navigate to="/login" replace />;
 }

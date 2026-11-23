@@ -222,8 +222,8 @@ router.post('/requests/:id/action', async (req, res) => {
         );
       }
 
-      // Update request status to Accepted
-      await run("UPDATE registration_requests SET status = 'Accepted' WHERE id = ?", [id]);
+      // Remove request from registration_requests once transferred to active faculty/student table
+      await run("DELETE FROM registration_requests WHERE id = ?", [id]);
       res.json({ message: 'Registration request accepted successfully.' });
 
     } else if (action === 'Reject') {
@@ -279,7 +279,17 @@ router.post('/faculty', async (req, res) => {
     const requestCheck = await get("SELECT id FROM registration_requests WHERE email = ? AND status = 'Pending'", [email]);
 
     if (adminCheck || facultyCheck || studentCheck || requestCheck) {
-      return res.status(400).json({ message: 'This email ID is no longer in use.' });
+      return res.status(400).json({ message: 'This email ID is already registered in the system.' });
+    }
+
+    const [facultyMobile, studentMobile, requestMobile] = await Promise.all([
+      get('SELECT id FROM faculty WHERE mobile_number = ?', [mobileNumber]),
+      get('SELECT id FROM students WHERE mobile_number = ?', [mobileNumber]),
+      get("SELECT id FROM registration_requests WHERE mobile_number = ? AND status = 'Pending'", [mobileNumber])
+    ]);
+
+    if (facultyMobile || studentMobile || requestMobile) {
+      return res.status(400).json({ message: 'This mobile number is already registered in the system.' });
     }
 
     const empCheck = await get('SELECT id FROM faculty WHERE employee_id = ?', [employeeId]);
@@ -324,6 +334,11 @@ router.put('/faculty/:id', async (req, res) => {
       return res.status(400).json({ message: 'Email is already taken by another user.' });
     }
 
+    const mobileCheck = await get('SELECT id FROM faculty WHERE mobile_number = ? AND id != ?', [mobileNumber, id]);
+    if (mobileCheck) {
+      return res.status(400).json({ message: 'Mobile number is already taken by another user.' });
+    }
+
     const empCheck = await get('SELECT id FROM faculty WHERE employee_id = ? AND id != ?', [employeeId, id]);
     if (empCheck) {
       return res.status(400).json({ message: 'Employee ID is already taken.' });
@@ -346,15 +361,26 @@ router.delete('/faculty/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
+    const existingFaculty = await get('SELECT * FROM faculty WHERE id = ?', [id]);
+    if (!existingFaculty) {
+      return res.status(404).json({ message: 'Faculty not found.' });
+    }
+
     if (req.user.adminRole !== 'main_admin') {
-      const existingFaculty = await get('SELECT id, department FROM faculty WHERE id = ?', [id]);
-      if (!existingFaculty || existingFaculty.department !== req.user.department) {
+      if (existingFaculty.department !== req.user.department) {
         return res.status(403).json({ message: 'Forbidden. You can only manage faculty in your own department.' });
       }
     }
 
+    // Completely and permanently delete from database
     await run("DELETE FROM faculty WHERE id = ?", [id]);
-    res.json({ message: 'Faculty account deleted successfully.' });
+    await run(
+      "DELETE FROM registration_requests WHERE email = ? OR mobile_number = ? OR employee_id = ?",
+      [existingFaculty.email, existingFaculty.mobile_number, existingFaculty.employee_id]
+    );
+    await run("DELETE FROM notifications WHERE user_role = 'Faculty' AND user_id = ?", [id]);
+
+    res.json({ message: 'Faculty account deleted permanently from database.' });
   } catch (error) {
     console.error('Delete faculty error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -766,7 +792,17 @@ router.post('/students', async (req, res) => {
     const requestCheck = await get("SELECT id FROM registration_requests WHERE email = ? AND status = 'Pending'", [email]);
 
     if (adminCheck || facultyCheck || studentCheck || requestCheck) {
-      return res.status(400).json({ message: 'This email ID is no longer in use.' });
+      return res.status(400).json({ message: 'This email ID is already registered in the system.' });
+    }
+
+    const [facultyMobile, studentMobile, requestMobile] = await Promise.all([
+      get('SELECT id FROM faculty WHERE mobile_number = ?', [mobileNumber]),
+      get('SELECT id FROM students WHERE mobile_number = ?', [mobileNumber]),
+      get("SELECT id FROM registration_requests WHERE mobile_number = ? AND status = 'Pending'", [mobileNumber])
+    ]);
+
+    if (facultyMobile || studentMobile || requestMobile) {
+      return res.status(400).json({ message: 'This mobile number is already registered in the system.' });
     }
 
     const enrollCheck = await get('SELECT id FROM students WHERE enrollment_number = ?', [enrollmentNumber]);
@@ -836,6 +872,18 @@ router.post('/students/bulk', async (req, res) => {
         continue;
       }
 
+      // Check duplicate mobile
+      const [facMob, stuMob, reqMob] = await Promise.all([
+        get('SELECT id FROM faculty WHERE mobile_number = ?', [mobileNumber]),
+        get('SELECT id FROM students WHERE mobile_number = ?', [mobileNumber]),
+        get("SELECT id FROM registration_requests WHERE mobile_number = ? AND status = 'Pending'", [mobileNumber])
+      ]);
+      if (facMob || stuMob || reqMob) {
+        duplicateCount++;
+        duplicatesList.push(`${mobileNumber} (Mobile)`);
+        continue;
+      }
+
       try {
         const hash = await bcrypt.hash(password.toString(), 10);
         await run(
@@ -868,7 +916,7 @@ router.delete('/students/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const student = await get('SELECT id, department FROM students WHERE id = ?', [id]);
+    const student = await get('SELECT * FROM students WHERE id = ?', [id]);
     if (!student) {
       return res.status(404).json({ message: 'Student not found.' });
     }
@@ -877,8 +925,16 @@ router.delete('/students/:id', async (req, res) => {
       return res.status(403).json({ message: 'Forbidden. You can only delete students in your own department.' });
     }
 
+    // Completely and permanently delete from database
     await run('DELETE FROM students WHERE id = ?', [id]);
-    res.json({ message: 'Student deleted successfully.' });
+    await run(
+      "DELETE FROM registration_requests WHERE email = ? OR mobile_number = ? OR enrollment_number = ?",
+      [student.email, student.mobile_number, student.enrollment_number]
+    );
+    await run('DELETE FROM downloads WHERE student_id = ?', [id]);
+    await run("DELETE FROM notifications WHERE user_role = 'Student' AND user_id = ?", [id]);
+
+    res.json({ message: 'Student deleted permanently from database.' });
   } catch (error) {
     console.error('Delete student error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -897,13 +953,20 @@ router.post('/students/bulk-delete', async (req, res) => {
 
   try {
     for (const id of ids) {
-      const student = await get('SELECT id, department FROM students WHERE id = ?', [id]);
+      const student = await get('SELECT * FROM students WHERE id = ?', [id]);
       if (!student) { failedCount++; continue; }
       if (req.user.adminRole !== 'main_admin' && student.department !== req.user.department) { failedCount++; continue; }
+      
       await run('DELETE FROM students WHERE id = ?', [id]);
+      await run(
+        "DELETE FROM registration_requests WHERE email = ? OR mobile_number = ? OR enrollment_number = ?",
+        [student.email, student.mobile_number, student.enrollment_number]
+      );
+      await run('DELETE FROM downloads WHERE student_id = ?', [id]);
+      await run("DELETE FROM notifications WHERE user_role = 'Student' AND user_id = ?", [id]);
       deletedCount++;
     }
-    res.json({ message: `Deleted ${deletedCount} student(s). ${failedCount > 0 ? `${failedCount} could not be deleted.` : ''}` });
+    res.json({ message: `Deleted ${deletedCount} student(s) permanently from database.` });
   } catch (error) {
     console.error('Bulk delete students error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -930,6 +993,9 @@ router.put('/students/:id', async (req, res) => {
   try {
     const emailCheck = await get('SELECT id FROM students WHERE email = ? AND id != ?', [email, id]);
     if (emailCheck) return res.status(400).json({ message: 'Email is already taken by another user.' });
+
+    const mobileCheck = await get('SELECT id FROM students WHERE mobile_number = ? AND id != ?', [mobileNumber, id]);
+    if (mobileCheck) return res.status(400).json({ message: 'Mobile number is already taken by another user.' });
 
     const enrollCheck = await get('SELECT id FROM students WHERE enrollment_number = ? AND id != ?', [enrollmentNumber, id]);
     if (enrollCheck) return res.status(400).json({ message: 'Enrollment number is already taken.' });
@@ -958,13 +1024,19 @@ router.post('/faculty/bulk-delete', async (req, res) => {
 
   try {
     for (const id of ids) {
-      const faculty = await get('SELECT id, department FROM faculty WHERE id = ?', [id]);
+      const faculty = await get('SELECT * FROM faculty WHERE id = ?', [id]);
       if (!faculty) { failedCount++; continue; }
       if (req.user.adminRole !== 'main_admin' && faculty.department !== req.user.department) { failedCount++; continue; }
+      
       await run('DELETE FROM faculty WHERE id = ?', [id]);
+      await run(
+        "DELETE FROM registration_requests WHERE email = ? OR mobile_number = ? OR employee_id = ?",
+        [faculty.email, faculty.mobile_number, faculty.employee_id]
+      );
+      await run("DELETE FROM notifications WHERE user_role = 'Faculty' AND user_id = ?", [id]);
       deletedCount++;
     }
-    res.json({ message: `Deleted ${deletedCount} faculty member(s). ${failedCount > 0 ? `${failedCount} could not be deleted.` : ''}` });
+    res.json({ message: `Deleted ${deletedCount} faculty member(s) permanently from database.` });
   } catch (error) {
     console.error('Bulk delete faculty error:', error);
     res.status(500).json({ message: 'Internal Server Error' });

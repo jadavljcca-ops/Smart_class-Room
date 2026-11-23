@@ -16,6 +16,10 @@ const pool = new Pool({
 });
 
 pool.on('error', (err, client) => {
+  if (err.code === 'ECONNRESET' || err.message?.includes('ECONNRESET')) {
+    // Neon idle connection closed by pooler; safe to ignore
+    return;
+  }
   console.error('Unexpected error on idle pg client', err);
 });
 

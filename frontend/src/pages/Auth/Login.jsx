@@ -27,11 +27,15 @@ export default function Login() {
       const user = await login(identifier, password);
       showToast(`Welcome back, ${user.fullName}!`, 'success');
 
-      if (user.role === 'admin' || user.role === 'faculty') {
-        if (user.role === 'admin') navigate('/admin');
-        if (user.role === 'faculty') navigate('/faculty');
+      const role = (user.role || '').toLowerCase();
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'faculty') {
+        navigate('/faculty');
+      } else if (role === 'student') {
+        navigate('/student');
       } else {
-        if (user.role === 'student') navigate('/student');
+        navigate('/');
       }
     } catch (err) {
       console.error(err);

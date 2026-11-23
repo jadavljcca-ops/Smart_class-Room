@@ -169,18 +169,18 @@ export default function StudentDashboard() {
     <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
 
       {/* Welcome banner */}
-      <div 
-        className="panel-welcome-banner" 
-        style={{ 
-          marginBottom: '2.5rem', 
-          background: 'linear-gradient(135deg, #002d62 0%, #001f44 100%)', 
+      <div
+        className="panel-welcome-banner"
+        style={{
+          marginBottom: '2.5rem',
+          background: 'linear-gradient(135deg, #002d62 0%, #001f44 100%)',
           color: '#ffffff',
           border: '1px solid rgba(251, 191, 36, 0.25)',
           boxShadow: '0 10px 30px rgba(0, 40, 85, 0.22)',
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          flexWrap: 'wrap', 
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
           gap: '1.25rem',
           padding: '28px 32px',
           borderRadius: '22px'
@@ -199,7 +199,7 @@ export default function StudentDashboard() {
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             onClick={() => {
-              const attendanceUrl = import.meta.env.VITE_ATTENDANCE_APP_URL || 'http://localhost:5174';
+              const attendanceUrl = import.meta.env.VITE_ATTENDANCE_APP_URL || 'http://attendance.edumark.app/';
               window.open(`${attendanceUrl}?token=${token}&role=student`, '_blank');
             }}
             className="btn btn-primary"
