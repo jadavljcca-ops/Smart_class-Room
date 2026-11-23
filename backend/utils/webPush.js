@@ -46,13 +46,13 @@ async function sendToSubscription(sub, payload) {
  * @param {Object} options
  * @param {string} options.title - Notification title
  * @param {string} options.body - Notification body
- * @param {string} [options.icon] - Icon URL
+ * @param {string} [options.icon] - Icon URL (Must be PNG for Android notification bar compatibility)
  * @param {string} [options.url] - Deep link URL on click
  * @param {string[]} [options.roles] - ['student', 'faculty', 'admin']
  * @param {string} [options.department] - Target department or 'All'
  * @param {number[]} [options.userIds] - Target specific user IDs
  */
-async function sendPushNotification({ title, body, icon = '/favicon.svg', url = '/', roles = [], department = null, userIds = [] }) {
+async function sendPushNotification({ title, body, icon = '/pwa-192.png', url = '/', roles = [], department = null, userIds = [] }) {
   try {
     let sql = 'SELECT * FROM push_subscriptions WHERE 1=1';
     const params = [];
@@ -84,8 +84,8 @@ async function sendPushNotification({ title, body, icon = '/favicon.svg', url = 
     const payload = {
       title,
       body,
-      icon,
-      badge: '/favicon.svg',
+      icon: icon && !icon.endsWith('.svg') ? icon : '/pwa-192.png',
+      badge: '/pwa-192.png',
       url,
       timestamp: Date.now(),
       tag: `edumark-${Date.now()}`

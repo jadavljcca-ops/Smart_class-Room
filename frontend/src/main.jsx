@@ -9,9 +9,15 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 )
 
-import { registerSW } from 'virtual:pwa-register'
-
-// Register PWA Service Worker
-if ('serviceWorker' in navigator) {
-  registerSW({ immediate: true })
+// Register Unified PWA & Web Push Service Worker
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then((reg) => {
+        console.log('EduMark Service Worker active at:', reg.scope);
+      })
+      .catch((err) => {
+        console.warn('EduMark Service Worker registration warning:', err);
+      });
+  });
 }

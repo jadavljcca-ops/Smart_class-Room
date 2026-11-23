@@ -53,7 +53,62 @@ export default function PushNotificationPrompt({ compact = false }) {
         </div>
       );
     }
-    return null;
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '0.65rem',
+        padding: '0.65rem 1rem',
+        backgroundColor: 'rgba(34, 197, 94, 0.08)',
+        borderRadius: '12px',
+        border: '1px solid rgba(34, 197, 94, 0.3)',
+        marginBottom: '1.25rem',
+        fontSize: '0.85rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#16a34a', fontWeight: 600 }}>
+          <CheckCircle size={17} />
+          <span>Mobile Notification Bar is Active! 📲</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={sendTestPush}
+            style={{
+              background: '#16a34a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '0.35rem 0.75rem',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              boxShadow: '0 2px 6px rgba(22, 163, 74, 0.3)'
+            }}
+          >
+            <Send size={13} /> Test Notification Bar
+          </button>
+          <button
+            type="button"
+            onClick={() => setDismissed(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              padding: '0.25rem'
+            }}
+            title="Dismiss banner"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // If permission is denied by browser settings

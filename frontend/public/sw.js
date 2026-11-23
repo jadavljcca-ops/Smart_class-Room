@@ -18,6 +18,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// PWA fetch handler for mobile offline support & install compliance
+self.addEventListener('fetch', (event) => {
+  // Pass-through to network with graceful offline fallback
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request))
+  );
+});
+
 // ==========================================
 // Web Push Notification Event (Mobile Notification Bar)
 // ==========================================
@@ -35,10 +43,13 @@ self.addEventListener('push', (event) => {
   }
 
   const title = data.title || 'EduMark Classroom 🔔';
+  
+  // Notice: Android NotificationManager REQUIRES PNG or JPG for icon/badge.
+  // SVG icons fail silently on Android status bars.
   const options = {
     body: data.body || 'You have a new update in your classroom portal.',
-    icon: data.icon || '/favicon.svg',
-    badge: '/favicon.svg',
+    icon: (data.icon && !data.icon.endsWith('.svg')) ? data.icon : '/pwa-192.png',
+    badge: '/pwa-192.png',
     vibrate: [250, 100, 250, 100, 250],
     tag: data.tag || `edumark-notif-${Date.now()}`,
     renotify: true,
@@ -54,7 +65,15 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.registration.showNotification(title, options).catch((err) => {
+      console.warn('showNotification with actions failed, retrying simplified:', err);
+      return self.registration.showNotification(title, {
+        body: options.body,
+        icon: '/pwa-192.png',
+        vibrate: [250, 100, 250],
+        data: options.data
+      });
+    })
   );
 });
 

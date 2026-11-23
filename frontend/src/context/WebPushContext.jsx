@@ -33,7 +33,7 @@ export const WebPushProvider = ({ children }) => {
 
   // Check support and register Service Worker
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       setSupported(true);
 
       navigator.serviceWorker.register('/sw.js', { scope: '/' })
@@ -41,15 +41,21 @@ export const WebPushProvider = ({ children }) => {
           setSwRegistration(reg);
 
           // Check if already subscribed
-          reg.pushManager.getSubscription().then((sub) => {
-            if (sub) {
-              setIsSubscribed(true);
-            }
-          });
+          if ('PushManager' in window && reg.pushManager) {
+            reg.pushManager.getSubscription().then((sub) => {
+              if (sub) {
+                setIsSubscribed(true);
+              }
+            }).catch(() => {});
+          }
         })
         .catch((err) => {
           console.warn('Service Worker registration failed:', err);
         });
+
+      navigator.serviceWorker.ready.then((reg) => {
+        setSwRegistration(reg);
+      }).catch(() => {});
     }
   }, []);
 
@@ -158,21 +164,39 @@ export const WebPushProvider = ({ children }) => {
 
   // Send a test push to mobile notification bar
   const sendTestPush = useCallback(async () => {
+    // 1. Immediately trigger local service worker notification on mobile screen
+    if (swRegistration && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        await swRegistration.showNotification('EduMark Classroom 🔔', {
+          body: 'Mobile notification test successful! Notification bar is active.',
+          icon: '/pwa-192.png',
+          badge: '/pwa-192.png',
+          vibrate: [250, 100, 250, 100, 250],
+          tag: `edumark-test-${Date.now()}`,
+          renotify: true,
+          data: { url: '/' }
+        });
+      } catch (e) {
+        console.warn('Local sw showNotification error:', e);
+      }
+    }
+
+    // 2. Trigger server-side Web Push broadcast via FCM
     if (!token) return;
     try {
       const res = await authFetch('/notifications/test-push', {
         method: 'POST'
       });
       if (res.ok) {
-        showToast('Test push sent! Check your device notification bar 🔔', 'success');
+        showToast('Test push sent! Check your phone notification bar 🔔', 'success');
       } else {
-        showToast('Failed to trigger test push.', 'error');
+        showToast('Failed to trigger test push from server.', 'error');
       }
     } catch (err) {
       console.error('Test push error:', err);
       showToast('Network error triggering test push.', 'error');
     }
-  }, [token, authFetch, showToast]);
+  }, [swRegistration, token, authFetch, showToast]);
 
   // Auto-subscribe if user already granted permission previously and logged in
   useEffect(() => {
