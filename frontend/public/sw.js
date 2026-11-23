@@ -50,7 +50,9 @@ self.addEventListener('push', (event) => {
     body: data.body || 'You have a new update in your classroom portal.',
     icon: (data.icon && !data.icon.endsWith('.svg')) ? data.icon : '/pwa-192.png',
     badge: '/pwa-192.png',
-    vibrate: [250, 100, 250, 100, 250],
+    sound: '/notification.wav',
+    vibrate: [350, 150, 350, 150, 450],
+    silent: false,
     tag: data.tag || `edumark-notif-${Date.now()}`,
     renotify: true,
     requireInteraction: false,
@@ -64,13 +66,22 @@ self.addEventListener('push', (event) => {
     ]
   };
 
+  // Broadcast to open client windows to play custom notification chime
+  self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+    windowClients.forEach((client) => {
+      client.postMessage({ type: 'PLAY_NOTIFICATION_SOUND' });
+    });
+  }).catch(() => {});
+
   event.waitUntil(
     self.registration.showNotification(title, options).catch((err) => {
       console.warn('showNotification with actions failed, retrying simplified:', err);
       return self.registration.showNotification(title, {
         body: options.body,
         icon: '/pwa-192.png',
-        vibrate: [250, 100, 250],
+        sound: '/notification.wav',
+        vibrate: [350, 150, 350, 150, 450],
+        silent: false,
         data: options.data
       });
     })

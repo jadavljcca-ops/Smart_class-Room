@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth, API_BASE_URL } from './AuthContext';
 import { useToast } from './ToastContext';
 
@@ -30,6 +30,77 @@ export const WebPushProvider = ({ children }) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [swRegistration, setSwRegistration] = useState(null);
+
+  const audioRef = useRef(null);
+
+  // Initialize and unlock notification sound on mobile
+  useEffect(() => {
+    try {
+      audioRef.current = new Audio('/notification.wav');
+      audioRef.current.volume = 1.0;
+      audioRef.current.preload = 'auto';
+
+      const unlock = () => {
+        if (audioRef.current) {
+          audioRef.current.muted = true;
+          const p = audioRef.current.play();
+          if (p !== undefined) {
+            p.then(() => {
+              audioRef.current.pause();
+              audioRef.current.currentTime = 0;
+              audioRef.current.muted = false;
+            }).catch(() => {
+              audioRef.current.muted = false;
+            });
+          }
+        }
+        document.removeEventListener('click', unlock);
+        document.removeEventListener('touchstart', unlock);
+      };
+
+      document.addEventListener('click', unlock, { once: true });
+      document.addEventListener('touchstart', unlock, { once: true });
+
+      return () => {
+        document.removeEventListener('click', unlock);
+        document.removeEventListener('touchstart', unlock);
+      };
+    } catch (e) {
+      console.warn('Audio init error:', e);
+    }
+  }, []);
+
+  const playNotificationSound = useCallback(() => {
+    try {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.muted = false;
+        const p = audioRef.current.play();
+        if (p !== undefined) {
+          p.catch((e) => console.log('Sound play blocked by browser:', e));
+        }
+      } else {
+        const snd = new Audio('/notification.wav');
+        snd.volume = 1.0;
+        snd.play().catch(() => {});
+      }
+    } catch (e) {}
+  }, []);
+
+  // Listen to Service Worker message when push arrives in background
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      const handleMessage = (event) => {
+        if (event.data && event.data.type === 'PLAY_NOTIFICATION_SOUND') {
+          playNotificationSound();
+        }
+      };
+      navigator.serviceWorker.addEventListener('message', handleMessage);
+      return () => {
+        navigator.serviceWorker.removeEventListener('message', handleMessage);
+      };
+    }
+  }, [playNotificationSound]);
 
   // Check support and register Service Worker
   useEffect(() => {
@@ -164,14 +235,19 @@ export const WebPushProvider = ({ children }) => {
 
   // Send a test push to mobile notification bar
   const sendTestPush = useCallback(async () => {
+    // 0. Play audible chime immediately
+    playNotificationSound();
+
     // 1. Immediately trigger local service worker notification on mobile screen
     if (swRegistration && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try {
         await swRegistration.showNotification('EduMark Classroom 🔔', {
-          body: 'Mobile notification test successful! Notification bar is active.',
+          body: 'Mobile notification test successful! Notification sound and bar are active.',
           icon: '/pwa-192.png',
           badge: '/pwa-192.png',
-          vibrate: [250, 100, 250, 100, 250],
+          sound: '/notification.wav',
+          vibrate: [350, 150, 350, 150, 450],
+          silent: false,
           tag: `edumark-test-${Date.now()}`,
           renotify: true,
           data: { url: '/' }
@@ -196,7 +272,7 @@ export const WebPushProvider = ({ children }) => {
       console.error('Test push error:', err);
       showToast('Network error triggering test push.', 'error');
     }
-  }, [swRegistration, token, authFetch, showToast]);
+  }, [playNotificationSound, swRegistration, token, authFetch, showToast]);
 
   // Auto-subscribe if user already granted permission previously and logged in
   useEffect(() => {
@@ -214,7 +290,8 @@ export const WebPushProvider = ({ children }) => {
         loading,
         subscribeToPush,
         unsubscribeFromPush,
-        sendTestPush
+        sendTestPush,
+        playNotificationSound
       }}
     >
       {children}

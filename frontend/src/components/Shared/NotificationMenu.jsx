@@ -100,7 +100,7 @@ export default function NotificationMenu() {
               setNewNotifBanner(brandNewUnread[0].message);
               setTimeout(() => setNewNotifBanner(null), 5000);
 
-              // Display in device status bar / notification shade
+              // Display in device status bar / notification shade with sound & vibration
               if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
                 if ('serviceWorker' in navigator) {
                   navigator.serviceWorker.ready.then((reg) => {
@@ -108,7 +108,9 @@ export default function NotificationMenu() {
                       body: brandNewUnread[0].message,
                       icon: '/pwa-192.png',
                       badge: '/pwa-192.png',
-                      vibrate: [250, 100, 250, 100, 250],
+                      sound: '/notification.wav',
+                      vibrate: [350, 150, 350, 150, 450],
+                      silent: false,
                       tag: `edumark-notif-${brandNewUnread[0].id}`,
                       renotify: true,
                       data: { url: user?.role === 'admin' ? '/admin' : user?.role === 'faculty' ? '/faculty' : '/student' }
