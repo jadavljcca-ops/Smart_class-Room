@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { query, run, get, insertBatchNotifications } = require('../db');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const upload = require('../utils/uploader');
+const { sendPushNotification } = require('../utils/webPush');
 const XLSX = require('xlsx');
 
 // All routes here require Admin authentication
@@ -456,6 +457,15 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
       ...targetAdmins.map(a => ({ user_role: 'Admin', user_id: a.id, department: targetDept, message: notifyMsg }))
     ];
     await insertBatchNotifications(notifs);
+
+    // Send Web Push notification to mobile devices/notification bar
+    sendPushNotification({
+      title: `📢 ${title}`,
+      body: description ? (description.length > 120 ? description.substring(0, 120) + '...' : description) : 'New college announcement posted.',
+      department: targetDept,
+      roles: ['student', 'faculty', 'admin'],
+      url: '/'
+    }).catch(e => console.error('Push broadcast error:', e));
 
     res.status(201).json({ message: 'Announcement created successfully.' });
   } catch (error) {

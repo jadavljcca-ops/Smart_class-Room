@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Bell, X } from 'lucide-react';
 import { formatDateTime } from '../../utils/dateUtils';
+import PushNotificationPrompt from './PushNotificationPrompt';
 
 export default function NotificationMenu() {
   const { user, authFetch } = useAuth();
@@ -309,6 +310,9 @@ export default function NotificationMenu() {
                   </button>
                 </div>
               </div>
+
+              {/* Mobile Web Push Activation Banner */}
+              <PushNotificationPrompt compact={true} />
               
               {notifications.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'hsl(var(--muted))', fontSize: '0.85rem' }}>

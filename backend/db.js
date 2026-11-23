@@ -205,6 +205,19 @@ async function initializeTables() {
       name TEXT UNIQUE NOT NULL
     )`);
 
+    // 10. Push Subscriptions Table for Web Push Notification & Mobile Notification Bar
+    await client.query(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER,
+      user_role TEXT,
+      department TEXT,
+      endpoint TEXT UNIQUE NOT NULL,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`);
+
     // Seed default admin if no admins exist (only runs once on first start)
     const adminCount = await client.query("SELECT COUNT(*) as count FROM admins");
     if (parseInt(adminCount.rows[0].count) === 0) {

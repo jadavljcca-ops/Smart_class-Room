@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
+import { WebPushProvider } from './context/WebPushContext';
 
 // Navigation & Components
 import Navbar from './components/Shared/Navbar';
@@ -221,9 +222,11 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <ToastProvider>
-          <BrowserRouter>
-            <AppLayout />
-          </BrowserRouter>
+          <WebPushProvider>
+            <BrowserRouter>
+              <AppLayout />
+            </BrowserRouter>
+          </WebPushProvider>
         </ToastProvider>
       </AuthProvider>
     </ThemeProvider>

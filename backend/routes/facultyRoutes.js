@@ -3,6 +3,7 @@ const router = express.Router();
 const { query, run, get, insertBatchNotifications } = require('../db');
 const { authenticateToken, requireFaculty } = require('../middleware/auth');
 const upload = require('../utils/uploader');
+const { sendPushNotification } = require('../utils/webPush');
 
 router.use(authenticateToken, requireFaculty);
 
@@ -81,6 +82,15 @@ router.post('/notes', upload.array('files'), async (req, res) => {
       }))
     ];
     await insertBatchNotifications(notifs);
+
+    // Send Web Push notification to students & admins mobile bar
+    sendPushNotification({
+      title: `📚 New Study Notes: ${subjectName}`,
+      body: `Prof. ${facultyName} uploaded new notes for Sem ${semester} (${department}).`,
+      department: department,
+      roles: ['student', 'admin'],
+      url: '/student'
+    }).catch(e => console.error('Push error on note upload:', e));
 
     res.status(201).json({ message: 'Notes uploaded successfully.' });
   } catch (error) {
@@ -216,6 +226,15 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
       ...targetAdmins.map(a => ({ user_role: 'Admin', user_id: a.id, department, message: notifyMsg }))
     ];
     await insertBatchNotifications(notifs);
+
+    // Send Web Push notification to mobile devices/notification bar
+    sendPushNotification({
+      title: `📢 ${title}`,
+      body: `Prof. ${facultyName}: ${description ? (description.length > 100 ? description.substring(0, 100) + '...' : description) : 'New announcement'}`,
+      department: department,
+      roles: ['student', 'faculty', 'admin'],
+      url: '/'
+    }).catch(e => console.error('Push error on faculty announcement:', e));
 
     res.status(201).json({ message: 'Announcement created successfully.' });
   } catch (error) {
