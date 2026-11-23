@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Bell, X } from 'lucide-react';
 import { formatDateTime } from '../../utils/dateUtils';
 import PushNotificationPrompt from './PushNotificationPrompt';
+import { triggerNotificationAlert } from '../../utils/notificationSound';
 
 export default function NotificationMenu() {
   const { user, authFetch } = useAuth();
@@ -84,15 +85,8 @@ export default function NotificationMenu() {
           if (lastKnownNotifId.current !== null && latestId > lastKnownNotifId.current) {
             const brandNewUnread = data.filter(n => n.id > lastKnownNotifId.current && !n.is_read);
             if (brandNewUnread.length > 0) {
-              try {
-                if (audioRef.current) {
-                  audioRef.current.currentTime = 0;
-                  const playPromise = audioRef.current.play();
-                  if (playPromise !== undefined) {
-                    playPromise.catch((e) => console.log('Audio play blocked:', e));
-                  }
-                }
-              } catch (e) {}
+              // Trigger physical hardware vibration and audible chime
+              triggerNotificationAlert([500, 200, 500, 200, 500]);
 
               setBellRinging(true);
               setTimeout(() => setBellRinging(false), 1500);
@@ -109,8 +103,9 @@ export default function NotificationMenu() {
                       icon: '/pwa-192.png',
                       badge: '/pwa-192.png',
                       sound: '/notification.wav',
-                      vibrate: [350, 150, 350, 150, 450],
+                      vibrate: [500, 200, 500, 200, 500],
                       silent: false,
+                      requireInteraction: true,
                       tag: `edumark-notif-${brandNewUnread[0].id}`,
                       renotify: true,
                       data: { url: user?.role === 'admin' ? '/admin' : user?.role === 'faculty' ? '/faculty' : '/student' }

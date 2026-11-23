@@ -429,41 +429,37 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
       [title, description, department || 'All', attachmentPath, attachmentName, publishDate, expiryDate, priority || 'Medium']
     );
 
-    // Send department-scoped notifications to students, faculty, and admins via batch insert
+    // Send department-scoped notifications to BOTH faculty and students (as requested: admin/sub-admin notifications go to faculty & students)
     const notifyMsg = `New Announcement: ${title}`;
     
     let targetStudents = [];
     let targetFaculty = [];
-    let targetAdmins = [];
     
     if (department && department !== 'All') {
-      [targetStudents, targetFaculty, targetAdmins] = await Promise.all([
+      [targetStudents, targetFaculty] = await Promise.all([
         query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]),
-        query("SELECT id FROM faculty WHERE department = ? AND status = 'Approved'", [department]),
-        query("SELECT id FROM admins WHERE role = 'main_admin' OR (role = 'sub_admin' AND department = ?)", [department])
+        query("SELECT id FROM faculty WHERE department = ? AND status = 'Approved'", [department])
       ]);
     } else {
-      [targetStudents, targetFaculty, targetAdmins] = await Promise.all([
+      [targetStudents, targetFaculty] = await Promise.all([
         query("SELECT id FROM students WHERE status = 'Approved'"),
-        query("SELECT id FROM faculty WHERE status = 'Approved'"),
-        query("SELECT id FROM admins")
+        query("SELECT id FROM faculty WHERE status = 'Approved'")
       ]);
     }
 
     const targetDept = department || 'All';
     const notifs = [
       ...targetStudents.map(s => ({ user_role: 'Student', user_id: s.id, department: targetDept, message: notifyMsg })),
-      ...targetFaculty.map(f => ({ user_role: 'Faculty', user_id: f.id, department: targetDept, message: notifyMsg })),
-      ...targetAdmins.map(a => ({ user_role: 'Admin', user_id: a.id, department: targetDept, message: notifyMsg }))
+      ...targetFaculty.map(f => ({ user_role: 'Faculty', user_id: f.id, department: targetDept, message: notifyMsg }))
     ];
     await insertBatchNotifications(notifs);
 
-    // Send Web Push notification to mobile devices/notification bar
+    // Send Web Push notification to BOTH faculty and students mobile devices/notification bar
     sendPushNotification({
       title: `📢 ${title}`,
       body: description ? (description.length > 120 ? description.substring(0, 120) + '...' : description) : 'New college announcement posted.',
       department: targetDept,
-      roles: ['student', 'faculty', 'admin'],
+      roles: ['student', 'faculty'],
       url: '/'
     }).catch(e => console.error('Push broadcast error:', e));
 

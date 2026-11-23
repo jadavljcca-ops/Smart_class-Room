@@ -54,41 +54,27 @@ router.post('/notes', upload.array('files'), async (req, res) => {
       );
     }
 
-    // Send personalized notification to students of this department AND semester + department sub-admin & main admin
+    // Send personalized notification ONLY to students of this department AND semester (as requested: faculty notification goes only to students)
     const notifyMsg = `New note files uploaded: ${subjectName} by Prof. ${facultyName}`;
-    const [targetStudents, targetAdmins] = await Promise.all([
-      query(
-        "SELECT id FROM students WHERE department = ? AND semester = ? AND status = 'Approved'",
-        [department, semester]
-      ),
-      query(
-        "SELECT id FROM admins WHERE role = 'main_admin' OR (role = 'sub_admin' AND department = ?)",
-        [department]
-      )
-    ]);
+    const targetStudents = await query(
+      "SELECT id FROM students WHERE department = ? AND semester = ? AND status = 'Approved'",
+      [department, semester]
+    );
     
-    const notifs = [
-      ...targetStudents.map(student => ({
-        user_role: 'Student',
-        user_id: student.id,
-        department: department,
-        message: notifyMsg
-      })),
-      ...targetAdmins.map(admin => ({
-        user_role: 'Admin',
-        user_id: admin.id,
-        department: department,
-        message: notifyMsg
-      }))
-    ];
+    const notifs = targetStudents.map(student => ({
+      user_role: 'Student',
+      user_id: student.id,
+      department: department,
+      message: notifyMsg
+    }));
     await insertBatchNotifications(notifs);
 
-    // Send Web Push notification to students & admins mobile bar
+    // Send Web Push notification ONLY to students mobile bar
     sendPushNotification({
       title: `📚 New Study Notes: ${subjectName}`,
       body: `Prof. ${facultyName} uploaded new notes for Sem ${semester} (${department}).`,
       department: department,
-      roles: ['student', 'admin'],
+      roles: ['student'],
       url: '/student'
     }).catch(e => console.error('Push error on note upload:', e));
 
@@ -211,29 +197,29 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
       [title, description, department, attachmentPath, attachmentName, publishDate, expiryDate, priority || 'Medium']
     );
 
-    // Send department-isolated notifications to students, faculty, and admins
+    // Send notifications ONLY to students of this department (as requested: faculty notification goes only to students)
     const notifyMsg = `New Announcement from Prof. ${facultyName}: ${title}`;
     
-    const [targetStudents, targetFaculty, targetAdmins] = await Promise.all([
-      query("SELECT id FROM students WHERE department = ? AND status = 'Approved'", [department]),
-      query("SELECT id FROM faculty WHERE department = ? AND id != ? AND status = 'Approved'", [department, facultyId]),
-      query("SELECT id FROM admins WHERE role = 'main_admin' OR (role = 'sub_admin' AND department = ?)", [department])
-    ]);
+    const targetStudents = await query(
+      "SELECT id FROM students WHERE department = ? AND status = 'Approved'",
+      [department]
+    );
     
-    const notifs = [
-      ...targetStudents.map(s => ({ user_role: 'Student', user_id: s.id, department, message: notifyMsg })),
-      ...targetFaculty.map(f => ({ user_role: 'Faculty', user_id: f.id, department, message: notifyMsg })),
-      ...targetAdmins.map(a => ({ user_role: 'Admin', user_id: a.id, department, message: notifyMsg }))
-    ];
+    const notifs = targetStudents.map(s => ({
+      user_role: 'Student',
+      user_id: s.id,
+      department,
+      message: notifyMsg
+    }));
     await insertBatchNotifications(notifs);
 
-    // Send Web Push notification to mobile devices/notification bar
+    // Send Web Push notification ONLY to students mobile devices/notification bar
     sendPushNotification({
       title: `📢 ${title}`,
       body: `Prof. ${facultyName}: ${description ? (description.length > 100 ? description.substring(0, 100) + '...' : description) : 'New announcement'}`,
       department: department,
-      roles: ['student', 'faculty', 'admin'],
-      url: '/'
+      roles: ['student'],
+      url: '/student'
     }).catch(e => console.error('Push error on faculty announcement:', e));
 
     res.status(201).json({ message: 'Announcement created successfully.' });

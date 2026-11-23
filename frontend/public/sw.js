@@ -51,11 +51,11 @@ self.addEventListener('push', (event) => {
     icon: (data.icon && !data.icon.endsWith('.svg')) ? data.icon : '/pwa-192.png',
     badge: '/pwa-192.png',
     sound: '/notification.wav',
-    vibrate: [350, 150, 350, 150, 450],
+    vibrate: [500, 200, 500, 200, 500],
     silent: false,
     tag: data.tag || `edumark-notif-${Date.now()}`,
     renotify: true,
-    requireInteraction: false,
+    requireInteraction: true,
     data: {
       url: data.url || '/',
       timestamp: data.timestamp || Date.now()
@@ -66,26 +66,31 @@ self.addEventListener('push', (event) => {
     ]
   };
 
-  // Broadcast to open client windows to play custom notification chime
-  self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+  // 1. Broadcast to open client windows to trigger audible chime and hardware vibration
+  const broadcastPromise = self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
     windowClients.forEach((client) => {
       client.postMessage({ type: 'PLAY_NOTIFICATION_SOUND' });
     });
   }).catch(() => {});
 
-  event.waitUntil(
-    self.registration.showNotification(title, options).catch((err) => {
-      console.warn('showNotification with actions failed, retrying simplified:', err);
-      return self.registration.showNotification(title, {
-        body: options.body,
-        icon: '/pwa-192.png',
-        sound: '/notification.wav',
-        vibrate: [350, 150, 350, 150, 450],
-        silent: false,
-        data: options.data
-      });
-    })
-  );
+  // 2. Display notification in mobile status bar / notification shade
+  const notificationPromise = self.registration.showNotification(title, options).catch((err) => {
+    console.warn('showNotification with actions failed, retrying simplified:', err);
+    return self.registration.showNotification(title, {
+      body: options.body,
+      icon: '/pwa-192.png',
+      badge: '/pwa-192.png',
+      sound: '/notification.wav',
+      vibrate: [500, 200, 500, 200, 500],
+      silent: false,
+      tag: options.tag,
+      renotify: true,
+      requireInteraction: true,
+      data: options.data
+    });
+  });
+
+  event.waitUntil(Promise.all([broadcastPromise, notificationPromise]));
 });
 
 // ==========================================

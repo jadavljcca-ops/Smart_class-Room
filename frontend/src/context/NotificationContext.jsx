@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth, API_BASE_URL } from './AuthContext';
+import { triggerNotificationAlert } from '../utils/notificationSound';
 
 const NotificationContext = createContext();
 
@@ -19,16 +20,7 @@ export const NotificationProvider = ({ children }) => {
   }, []);
 
   const playSound = useCallback(() => {
-    try {
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => {
-          // Autoplay policy may block - ignore silently
-        });
-      }
-    } catch (e) {
-      // ignore
-    }
+    triggerNotificationAlert([500, 200, 500, 200, 500]);
   }, []);
 
   const fetchNotifications = useCallback(async () => {

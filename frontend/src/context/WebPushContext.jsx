@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth, API_BASE_URL } from './AuthContext';
 import { useToast } from './ToastContext';
+import { triggerNotificationAlert, vibrateDevice, playAudioFile, playSynthesizedChime, initAudioUnlock } from '../utils/notificationSound';
 
 const WebPushContext = createContext();
 
@@ -33,58 +34,13 @@ export const WebPushProvider = ({ children }) => {
 
   const audioRef = useRef(null);
 
-  // Initialize and unlock notification sound on mobile
+  // Initialize and unlock notification sound & vibration on mobile
   useEffect(() => {
-    try {
-      audioRef.current = new Audio('/notification.wav');
-      audioRef.current.volume = 1.0;
-      audioRef.current.preload = 'auto';
-
-      const unlock = () => {
-        if (audioRef.current) {
-          audioRef.current.muted = true;
-          const p = audioRef.current.play();
-          if (p !== undefined) {
-            p.then(() => {
-              audioRef.current.pause();
-              audioRef.current.currentTime = 0;
-              audioRef.current.muted = false;
-            }).catch(() => {
-              audioRef.current.muted = false;
-            });
-          }
-        }
-        document.removeEventListener('click', unlock);
-        document.removeEventListener('touchstart', unlock);
-      };
-
-      document.addEventListener('click', unlock, { once: true });
-      document.addEventListener('touchstart', unlock, { once: true });
-
-      return () => {
-        document.removeEventListener('click', unlock);
-        document.removeEventListener('touchstart', unlock);
-      };
-    } catch (e) {
-      console.warn('Audio init error:', e);
-    }
+    initAudioUnlock();
   }, []);
 
   const playNotificationSound = useCallback(() => {
-    try {
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.muted = false;
-        const p = audioRef.current.play();
-        if (p !== undefined) {
-          p.catch((e) => console.log('Sound play blocked by browser:', e));
-        }
-      } else {
-        const snd = new Audio('/notification.wav');
-        snd.volume = 1.0;
-        snd.play().catch(() => {});
-      }
-    } catch (e) {}
+    triggerNotificationAlert([500, 200, 500, 200, 500]);
   }, []);
 
   // Listen to Service Worker message when push arrives in background
@@ -235,21 +191,22 @@ export const WebPushProvider = ({ children }) => {
 
   // Send a test push to mobile notification bar
   const sendTestPush = useCallback(async () => {
-    // 0. Play audible chime immediately
-    playNotificationSound();
+    // 0. Trigger physical hardware vibration and audible alert immediately
+    triggerNotificationAlert([500, 200, 500, 200, 500]);
 
     // 1. Immediately trigger local service worker notification on mobile screen
     if (swRegistration && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try {
         await swRegistration.showNotification('EduMark Classroom 🔔', {
-          body: 'Mobile notification test successful! Notification sound and bar are active.',
+          body: 'Mobile notification test successful! Notification sound and vibration are active.',
           icon: '/pwa-192.png',
           badge: '/pwa-192.png',
           sound: '/notification.wav',
-          vibrate: [350, 150, 350, 150, 450],
+          vibrate: [500, 200, 500, 200, 500],
           silent: false,
           tag: `edumark-test-${Date.now()}`,
           renotify: true,
+          requireInteraction: true,
           data: { url: '/' }
         });
       } catch (e) {
@@ -272,7 +229,7 @@ export const WebPushProvider = ({ children }) => {
       console.error('Test push error:', err);
       showToast('Network error triggering test push.', 'error');
     }
-  }, [playNotificationSound, swRegistration, token, authFetch, showToast]);
+  }, [swRegistration, token, authFetch, showToast]);
 
   // Auto-subscribe if user already granted permission previously and logged in
   useEffect(() => {
