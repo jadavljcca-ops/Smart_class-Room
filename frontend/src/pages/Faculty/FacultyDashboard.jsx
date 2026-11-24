@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { confirmDelete } from '../../utils/alerts';
 import { formatDate, formatDateTime } from '../../utils/dateUtils';
-import PushNotificationPrompt from '../../components/Shared/PushNotificationPrompt';
 
 export default function FacultyDashboard() {
   const { authFetch, token, user } = useAuth();
@@ -325,9 +324,7 @@ export default function FacultyDashboard() {
 
   return (
     <div className="container animate-fade-in" style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
-      <div style={{ paddingTop: '1.5rem' }}>
-        <PushNotificationPrompt />
-      </div>
+      <div style={{ paddingTop: '1.5rem' }}></div>
 
       {/* Welcome banner */}
       <div className="sticky-header-wrapper-white">

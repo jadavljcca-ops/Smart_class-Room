@@ -63,6 +63,12 @@ export default function PushNotificationPrompt({ compact = false }) {
         </div>
       );
     }
+
+    // Do not show full dashboard banner for staff (Admin, Sub-Admin, Faculty)
+    if (isStaff) {
+      return null;
+    }
+
     return (
       <div style={{
         display: 'flex',

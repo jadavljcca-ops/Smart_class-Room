@@ -6,7 +6,6 @@ import { useToast } from '../../context/ToastContext';
 import SVGChart from '../../components/Shared/SVGChart';
 import { Users, GraduationCap, Clock, Megaphone, FileText, BarChart3, X, Search, Hash, FileDown, Eye, ArrowLeft, School, Trash2 } from 'lucide-react';
 import { formatDate, formatDateTime } from '../../utils/dateUtils';
-import PushNotificationPrompt from '../../components/Shared/PushNotificationPrompt';
 
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -227,9 +226,7 @@ export default function AdminDashboard() {
   return (
     <>
       <div className="container animate-fade-in" style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
-        <div style={{ paddingTop: '1.5rem' }}>
-          <PushNotificationPrompt />
-        </div>
+        <div style={{ paddingTop: '1.5rem' }}></div>
         {/* Header Banner — wrapped in sticky-header-wrapper to mask top gap on scroll */}
 
         <div className="sticky-header-wrapper">
