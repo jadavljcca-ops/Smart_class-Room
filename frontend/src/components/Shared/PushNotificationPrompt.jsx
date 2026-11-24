@@ -11,7 +11,8 @@ export default function PushNotificationPrompt({ compact = false }) {
 
   const isStaff = user && (user.role === 'admin' || user.role === 'faculty');
 
-  if (!supported || dismissed) {
+  // Staff (Admin, Sub-Admin, Faculty) do not see any push prompt, badge, or test button
+  if (isStaff || !supported || dismissed) {
     return null;
   }
 
