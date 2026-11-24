@@ -65,10 +65,8 @@ export default function PushNotificationPrompt({ compact = false }) {
       );
     }
 
-    // Do not show full dashboard banner for staff (Admin, Sub-Admin, Faculty)
-    if (isStaff) {
-      return null;
-    }
+    // Do not show full dashboard banner once subscribed for any role
+    return null;
 
     return (
       <div style={{
