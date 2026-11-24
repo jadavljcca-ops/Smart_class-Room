@@ -506,7 +506,7 @@ export default function LandingPage() {
           © {new Date().getFullYear()} EduMark Classroom &amp; Academic Management System.
         </p>
         <p style={styles.footerCredit}>
-          This Module is Build, Designed, and Devloped by <span style={{ color: '#fbbf24' }}>Jadav Dashrath</span> And <span style={{ color: '#fbbf24' }}>Dabhi Prit</span>
+          This Module is Build, Designed, and Devloped by <span style={{ color: '#fbbf24', fontWeight: 'normal' }}>Jadav Dashrath</span> And <span style={{ color: '#fbbf24', fontWeight: 'normal' }}>Dabhi Prit</span>
         </p>
       </footer>
     </div>
@@ -963,16 +963,18 @@ const styles = {
     marginBottom: '6px'
   },
   footerText: {
-    fontSize: '0.9rem',
-    color: 'rgba(147, 197, 253, 0.7)',
+    fontSize: '1.05rem',
+    color: 'rgba(191, 219, 254, 0.85)',
     margin: 0,
-    textAlign: 'center'
+    textAlign: 'center',
+    lineHeight: 1.5
   },
   footerCredit: {
-    fontSize: '0.88rem',
-    color: 'rgba(147, 197, 253, 0.6)',
+    fontSize: '1.02rem',
+    color: 'rgba(191, 219, 254, 0.8)',
     margin: 0,
-    textAlign: 'center'
+    textAlign: 'center',
+    lineHeight: 1.5
   },
   logoIcon: {
     width: '38px',
