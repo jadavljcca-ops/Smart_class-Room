@@ -15,6 +15,7 @@ import FacultyManagement from './FacultyManagement';
 import AnnouncementsManagement from './AnnouncementsManagement';
 import StudentsManagement from './StudentsManagement';
 import NotificationMenu from '../../components/Shared/NotificationMenu';
+import PushNotificationPrompt from '../../components/Shared/PushNotificationPrompt';
 import studentAvatar from '../../assets/student-avatar.png';
 import facultyAvatar from '../../assets/faculty-avatar.png';
 import requestIcon from '../../assets/request-icon.png';
@@ -227,6 +228,10 @@ export default function AdminDashboard() {
     <>
       <div className="container animate-fade-in" style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
         <div style={{ paddingTop: '1.5rem' }}></div>
+
+        {/* Mobile Push notification permission button - automatically disappears once allowed */}
+        <PushNotificationPrompt />
+
         {/* Header Banner — wrapped in sticky-header-wrapper to mask top gap on scroll */}
 
         <div className="sticky-header-wrapper">

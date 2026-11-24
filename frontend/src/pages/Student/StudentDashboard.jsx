@@ -6,6 +6,7 @@ import {
   Calendar, RefreshCw, Filter, User, BookOpen, GraduationCap, School, Eye, Folder, ArrowLeft
 } from 'lucide-react';
 import { formatDate, formatDateTime } from '../../utils/dateUtils';
+import PushNotificationPrompt from '../../components/Shared/PushNotificationPrompt';
 
 export default function StudentDashboard() {
   const { authFetch, token, user } = useAuth();
@@ -167,6 +168,9 @@ export default function StudentDashboard() {
 
   return (
     <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
+      {/* Mobile Push notification permission button - automatically disappears once allowed */}
+      <PushNotificationPrompt />
+
       {/* Welcome banner */}
       <div
         className="panel-welcome-banner"

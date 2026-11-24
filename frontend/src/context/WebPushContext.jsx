@@ -70,10 +70,14 @@ export const WebPushProvider = ({ children }) => {
           // Check if already subscribed
           if ('PushManager' in window && reg.pushManager) {
             reg.pushManager.getSubscription().then((sub) => {
-              if (sub) {
+              if (sub && Notification.permission === 'granted') {
                 setIsSubscribed(true);
+              } else {
+                setIsSubscribed(false);
               }
-            }).catch(() => {});
+            }).catch(() => {
+              setIsSubscribed(false);
+            });
           }
         })
         .catch((err) => {
@@ -95,8 +99,32 @@ export const WebPushProvider = ({ children }) => {
 
   // Subscribe to Web Push
   const subscribeToPush = useCallback(async (manual = false) => {
-    if (!supported || !swRegistration) {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
       if (manual) showToast('Push notifications not supported on this device/browser.', 'warning');
+      return false;
+    }
+
+    let reg = swRegistration;
+    if (!reg) {
+      try {
+        reg = await navigator.serviceWorker.ready;
+        setSwRegistration(reg);
+      } catch (e) {
+        console.warn('SW ready error:', e);
+      }
+    }
+
+    if (!reg) {
+      try {
+        reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        setSwRegistration(reg);
+      } catch (e) {
+        console.warn('SW register error:', e);
+      }
+    }
+
+    if (!reg) {
+      if (manual) showToast('Service Worker is initializing. Please try again.', 'warning');
       return false;
     }
 
@@ -134,10 +162,17 @@ export const WebPushProvider = ({ children }) => {
 
       // 3. Subscribe with PushManager
       const convertedVapidKey = urlBase64ToUint8Array(vapidKey);
-      let subscription = await swRegistration.pushManager.getSubscription();
+      let subscription = await reg.pushManager.getSubscription();
+
+      if (manual && subscription) {
+        try {
+          await subscription.unsubscribe();
+        } catch (e) {}
+        subscription = null;
+      }
 
       if (!subscription) {
-        subscription = await swRegistration.pushManager.subscribe({
+        subscription = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: convertedVapidKey
         });

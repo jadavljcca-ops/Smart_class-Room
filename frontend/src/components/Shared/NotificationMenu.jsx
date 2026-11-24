@@ -324,8 +324,8 @@ export default function NotificationMenu() {
                 </div>
               </div>
 
-              {/* Mobile Web Push Activation Banner for Students */}
-              {user?.role === 'student' && <PushNotificationPrompt compact={true} />}
+              {/* Mobile Web Push Permission Button for Students & Faculty (Hidden once allowed) */}
+              {(user?.role === 'student' || user?.role === 'faculty') && <PushNotificationPrompt compact={true} />}
               
               {notifications.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'hsl(var(--muted))', fontSize: '0.85rem' }}>
