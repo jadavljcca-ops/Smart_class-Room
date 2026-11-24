@@ -16,21 +16,15 @@ export default defineConfig({
         description: "Progressive Web Application for classroom management, student rosters, study resources sharing, and announcements.",
         icons: [
           {
-            src: "/favicon.svg",
-            sizes: "any",
-            type: "image/svg+xml",
-            purpose: "any"
-          },
-          {
-            src: "/favicon.svg",
+            src: "/pwa-192.png",
             sizes: "192x192",
-            type: "image/svg+xml",
+            type: "image/png",
             purpose: "any"
           },
           {
-            src: "/favicon.svg",
+            src: "/pwa-512.png",
             sizes: "512x512",
-            type: "image/svg+xml",
+            type: "image/png",
             purpose: "maskable any"
           }
         ],

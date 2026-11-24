@@ -105,7 +105,7 @@ export default function NotificationMenu() {
                       sound: '/notification.wav',
                       vibrate: [500, 200, 500, 200, 500],
                       silent: false,
-                      requireInteraction: true,
+                      requireInteraction: false,
                       tag: `edumark-notif-${brandNewUnread[0].id}`,
                       renotify: true,
                       data: { url: user?.role === 'admin' ? '/admin' : user?.role === 'faculty' ? '/faculty' : '/student' }

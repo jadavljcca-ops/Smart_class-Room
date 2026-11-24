@@ -55,7 +55,7 @@ self.addEventListener('push', (event) => {
     silent: false,
     tag: data.tag || `edumark-notif-${Date.now()}`,
     renotify: true,
-    requireInteraction: true,
+    requireInteraction: false,
     data: {
       url: data.url || '/',
       timestamp: data.timestamp || Date.now()
@@ -85,7 +85,7 @@ self.addEventListener('push', (event) => {
       silent: false,
       tag: options.tag,
       renotify: true,
-      requireInteraction: true,
+      requireInteraction: false,
       data: options.data
     });
   });

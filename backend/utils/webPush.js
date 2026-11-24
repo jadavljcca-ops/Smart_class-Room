@@ -27,7 +27,11 @@ async function sendToSubscription(sub, payload) {
 
   try {
     await webpush.sendNotification(pushSubscription, payloadString, {
-      TTL: 60 * 60 * 24 // 24 hours
+      TTL: 60 * 60 * 24, // 24 hours
+      urgency: 'high',
+      headers: {
+        'Urgency': 'high'
+      }
     });
     return { success: true };
   } catch (error) {
