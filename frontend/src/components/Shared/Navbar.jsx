@@ -247,8 +247,17 @@ export default function Navbar() {
 
                 {user.role === 'student' && (
                   <>
-                    <Link to="/student" className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>
-                      <BookOpen size={18} /> Dashboard &amp; Study Notes
+                    <Link
+                      to="/student?tab=notices"
+                      className={`nav-link ${location.pathname === '/student' && (new URLSearchParams(location.search).get('tab') === 'notices' || !new URLSearchParams(location.search).get('tab')) ? 'active' : ''}`}
+                    >
+                      <Megaphone size={18} /> Notice &amp; Board
+                    </Link>
+                    <Link
+                      to="/student?tab=notes"
+                      className={`nav-link ${location.pathname === '/student' && new URLSearchParams(location.search).get('tab') === 'notes' ? 'active' : ''}`}
+                    >
+                      <BookOpen size={18} /> Faculty Lecture Notes
                     </Link>
                   </>
                 )}
@@ -470,7 +479,20 @@ export default function Navbar() {
 
                 {user.role === 'student' && (
                   <>
-                    <Link to="/student" onClick={() => setIsOpen(false)} className={`nav-link ${location.pathname === '/student' ? 'active' : ''}`}>Dashboard</Link>
+                    <Link
+                      to="/student?tab=notices"
+                      onClick={() => setIsOpen(false)}
+                      className={`nav-link ${location.pathname === '/student' && (new URLSearchParams(location.search).get('tab') === 'notices' || !new URLSearchParams(location.search).get('tab')) ? 'active' : ''}`}
+                    >
+                      <Megaphone size={18} /> Notice &amp; Board
+                    </Link>
+                    <Link
+                      to="/student?tab=notes"
+                      onClick={() => setIsOpen(false)}
+                      className={`nav-link ${location.pathname === '/student' && new URLSearchParams(location.search).get('tab') === 'notes' ? 'active' : ''}`}
+                    >
+                      <BookOpen size={18} /> Faculty Lecture Notes
+                    </Link>
                   </>
                 )}
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth, API_BASE_URL, BACKEND_URL } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -11,6 +12,8 @@ import PushNotificationPrompt from '../../components/Shared/PushNotificationProm
 export default function StudentDashboard() {
   const { authFetch, token, user } = useAuth();
   const { showToast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'notices';
 
   const [announcements, setAnnouncements] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -222,14 +225,12 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Two-section page layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '2rem' }} className="student-layout">
-
-        {/* SECTION 1: Announcements & Notices */}
-        <div>
+      {/* SECTION 1: Announcements & Notices */}
+      {currentTab === 'notices' && (
+        <div className="animate-fade-in" style={{ width: '100%', maxWidth: '960px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Megaphone size={20} color="hsl(var(--primary))" />
-            Notices & Board
+            Notices &amp; Board
           </h2>
 
           {/* Search notice */}
@@ -294,9 +295,11 @@ export default function StudentDashboard() {
             </div>
           )}
         </div>
+      )}
 
-        {/* SECTION 2: Faculty Notes */}
-        <div>
+      {/* SECTION 2: Faculty Notes */}
+      {currentTab === 'notes' && (
+        <div className="animate-fade-in" style={{ width: '100%' }}>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <BookOpen size={20} color="hsl(var(--success))" />
             Faculty Lecture Notes
@@ -507,8 +510,7 @@ export default function StudentDashboard() {
             </div>
           )}
         </div>
-
-      </div>
+      )}
 
       {/* Responsive layout overrides */}
       <style>{`

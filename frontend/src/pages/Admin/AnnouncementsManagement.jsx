@@ -30,6 +30,18 @@ export default function AnnouncementsManagement({ department: propDepartment, in
   const [existingAttachmentName, setExistingAttachmentName] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Autofocus input ref
+  const titleInputRef = React.useRef(null);
+
+  useEffect(() => {
+    if (showForm) {
+      const timer = setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [showForm]);
+
   const fetchAnnouncements = async () => {
     if (announcements.length === 0) setLoading(true);
     try {
@@ -405,6 +417,8 @@ export default function AnnouncementsManagement({ department: propDepartment, in
               <div className="form-group">
                 <label className="form-label">Title</label>
                 <input
+                  ref={titleInputRef}
+                  autoFocus
                   type="text"
                   className="form-control"
                   placeholder="e.g. End Semester Examination Schedule"

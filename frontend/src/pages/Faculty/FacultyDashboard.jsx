@@ -43,6 +43,28 @@ export default function FacultyDashboard() {
   const [annExpiryDate, setAnnExpiryDate] = useState('');
   const [annAttachment, setAnnAttachment] = useState(null);
 
+  // Autofocus input refs
+  const noteSubjectInputRef = React.useRef(null);
+  const annTitleInputRef = React.useRef(null);
+
+  useEffect(() => {
+    if (showNoteForm) {
+      const timer = setTimeout(() => {
+        noteSubjectInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [showNoteForm]);
+
+  useEffect(() => {
+    if (showAnnForm) {
+      const timer = setTimeout(() => {
+        annTitleInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [showAnnForm]);
+
   const fetchNotes = async () => {
     if (notes.length === 0) setLoadingNotes(true);
     try {
@@ -585,6 +607,8 @@ export default function FacultyDashboard() {
               <div className="form-group">
                 <label className="form-label">Subject Name</label>
                 <input
+                  ref={noteSubjectInputRef}
+                  autoFocus
                   type="text"
                   className="form-control"
                   placeholder="e.g. Advanced Operating Systems"
@@ -760,6 +784,8 @@ export default function FacultyDashboard() {
               <div className="form-group">
                 <label className="form-label">Title</label>
                 <input
+                  ref={annTitleInputRef}
+                  autoFocus
                   type="text"
                   className="form-control"
                   placeholder="e.g. Mid-Sem Exam Schedule"

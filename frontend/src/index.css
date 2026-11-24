@@ -383,12 +383,16 @@ body {
   color: #64748b;
 }
 
-.form-control:focus {
-  outline: none;
-  border-color: #fbbf24;
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
-  background-color: #ffffff;
-  color: #000000;
+.form-control:focus,
+input.form-control:focus,
+select.form-control:focus,
+textarea.form-control:focus {
+  outline: none !important;
+  border: 1.5px solid #000000 !important;
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 1px #000000 !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -1079,10 +1083,11 @@ div[style*="linear-gradient(135deg, #002d62"] p {
 .standard-layout select:focus,
 .admin-sidebar-layout textarea:focus,
 .standard-layout textarea:focus {
-  border-color: #f59e0b !important;
+  border: 1.5px solid #000000 !important;
+  border-color: #000000 !important;
   background-color: #ffffff !important;
-  color: #0f172a !important;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+  color: #000000 !important;
+  box-shadow: 0 0 0 1px #000000 !important;
   outline: none !important;
 }
 
@@ -1179,7 +1184,6 @@ div[style*="position: 'fixed'"] .card,
 .modal-content,
 .modal-dialog,
 .swal2-popup,
-.swal-custom-delete-popup,
 .swal-custom-white-popup {
   background-color: #ffffff !important;
   background: #ffffff !important;
@@ -1240,6 +1244,22 @@ body > div[style*="position: 'fixed'"] .search-input-wrapper input {
   border-radius: 12px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
   font-size: 0.95rem !important;
+}
+
+body > div[style*="position: fixed"] .form-control:focus,
+body > div[style*="position: 'fixed'"] .form-control:focus,
+body > div[style*="position: fixed"] input:focus,
+body > div[style*="position: 'fixed'"] input:focus,
+body > div[style*="position: fixed"] select:focus,
+body > div[style*="position: 'fixed'"] select:focus,
+body > div[style*="position: fixed"] textarea:focus,
+body > div[style*="position: 'fixed'"] textarea:focus,
+body > div[style*="position: fixed"] .search-input-wrapper input:focus,
+body > div[style*="position: 'fixed'"] .search-input-wrapper input:focus {
+  border: 1.5px solid #000000 !important;
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 1px #000000 !important;
+  outline: none !important;
 }
 
 body > div[style*="position: fixed"] input::placeholder,
@@ -1343,7 +1363,6 @@ body > div[style*="position: 'fixed'"] button:hover > svg {
 
 /* SweetAlert Popups */
 .swal2-popup,
-.swal-custom-delete-popup,
 .swal-custom-white-popup {
   background-color: #ffffff !important;
   background: #ffffff !important;
@@ -1628,10 +1647,14 @@ body > div[style*="position: 'fixed'"] button:hover > svg {
 }
 
 /* Custom SweetAlert Delete Dialog Styles */
+div.swal2-popup.swal-custom-delete-popup,
 .swal-custom-delete-popup {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 0.5px solid #000000 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
 }
 
 .swal-custom-delete-actions {
@@ -1645,36 +1668,40 @@ body > div[style*="position: 'fixed'"] button:hover > svg {
   background: hsl(var(--danger)) !important;
   color: white !important;
   border-radius: 9999px !important;
-  padding: 0.75rem 1.5rem !important;
+  padding: 0.75rem 1.6rem !important;
   font-weight: 600 !important;
   font-family: inherit !important;
   transition: all 0.2s ease !important;
   border: none !important;
   margin: 0 !important;
+  cursor: pointer !important;
 }
 
 .swal-custom-delete-confirm:hover {
-  background: hsl(var(--danger) / 0.8) !important;
+  background: hsl(var(--danger) / 0.85) !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4) !important;
 }
 
 .swal-custom-delete-cancel {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #e2e8f0 !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 0.5px solid #000000 !important;
   border-radius: 9999px !important;
-  padding: 0.75rem 1.5rem !important;
+  padding: 0.75rem 1.6rem !important;
   font-weight: 600 !important;
   font-family: inherit !important;
   transition: all 0.2s ease !important;
   margin: 0 !important;
+  cursor: pointer !important;
 }
 
 .swal-custom-delete-cancel:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
+  background: #f8fafc !important;
+  color: #000000 !important;
+  border: 0.5px solid #000000 !important;
   transform: translateY(-2px) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12) !important;
 }
 
 /* SweetAlert Global Backdrop Blur & High z-index */
