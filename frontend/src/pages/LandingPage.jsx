@@ -608,9 +608,9 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
-                <div className="landing-dev-info">
-                  <h3 className="landing-dev-name" style={{ color: '#ffffff', marginBottom: '16px' }}>Jadav Dashrath</h3>
-                  <div className="landing-btn-group">
+                <div className="landing-dev-info" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <h3 className="landing-dev-name" style={{ color: '#ffffff', marginBottom: '16px', textAlign: 'center', width: '100%' }}>Jadav Dashrath</h3>
+                  <div className="landing-btn-group" style={{ justifyContent: 'center' }}>
                     <a
                       href="https://www.linkedin.com/"
                       target="_blank"
@@ -639,9 +639,9 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
-                <div className="landing-dev-info">
-                  <h3 className="landing-dev-name" style={{ color: '#ffffff', marginBottom: '16px' }}>Dabhi Prit</h3>
-                  <div className="landing-btn-group">
+                <div className="landing-dev-info" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <h3 className="landing-dev-name" style={{ color: '#ffffff', marginBottom: '16px', textAlign: 'center', width: '100%' }}>Dabhi Prit</h3>
+                  <div className="landing-btn-group" style={{ justifyContent: 'center' }}>
                     <a
                       href="https://www.linkedin.com/"
                       target="_blank"

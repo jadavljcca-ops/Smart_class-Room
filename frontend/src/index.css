@@ -2236,8 +2236,39 @@ div.swal2-popup.swal-custom-delete-popup,
 
   .landing-devs-grid {
     grid-template-columns: 1fr;
-    max-width: 360px;
+    max-width: 340px;
     margin: 0 auto;
+    justify-items: center;
+  }
+
+  .landing-dev-card {
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .landing-dev-card-glow {
+    margin: 0 auto;
+  }
+
+  .landing-dev-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+
+  .landing-dev-name {
+    text-align: center !important;
+    width: 100%;
+  }
+
+  .landing-dev-info .landing-btn-group {
+    justify-content: center;
+    width: 100%;
   }
 }
 
@@ -2252,6 +2283,29 @@ div.swal2-popup.swal-custom-delete-popup,
 
   .landing-devs-header {
     margin-bottom: 40px;
+  }
+
+  .landing-dev-card {
+    align-items: center;
+    text-align: center;
+    margin: 0 auto;
+  }
+
+  .landing-dev-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+
+  .landing-dev-name {
+    text-align: center !important;
+  }
+
+  .landing-dev-info .landing-btn-group {
+    justify-content: center;
+    width: 100%;
   }
 }
 
