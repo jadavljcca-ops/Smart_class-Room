@@ -5,8 +5,14 @@ import { useAuth } from '../context/AuthContext';
 import {
   BookOpen, Megaphone, Bell, Search, Layers, Users,
   Zap, ArrowRight, Download, X, GraduationCap, CheckCircle2,
-  FileText
+  FileText, Compass, Code, ExternalLink
 } from 'lucide-react';
+
+const LinkedInIcon = ({ size = 15, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}>
+    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.64a1.64 1.64 0 1 0 0 3.28 1.64 1.64 0 0 0 0-3.28Z" />
+  </svg>
+);
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -490,6 +496,166 @@ export default function LandingPage() {
             >
               Login to Portal &nbsp; <ArrowRight size={18} style={{ display: 'inline', verticalAlign: 'middle' }} />
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ===================== LEADERSHIP & INNOVATION SECTION ===================== */}
+      <section id="leadership-and-team" className="landing-team-section">
+        {/* Ambient Glowing Blobs */}
+        <div className="landing-team-blob landing-team-blob-1" />
+        <div className="landing-team-blob landing-team-blob-2" />
+        <div className="landing-team-blob landing-team-blob-3" />
+
+        <div className="landing-team-container">
+          {/* TOP: ACADEMIC VISIONARY / THE MIND BEHIND THE VISION */}
+          <div className="landing-visionary-grid">
+            {/* Left: Heading & Badge */}
+            <div className="landing-visionary-heading-col">
+              <div className="landing-pill-badge">
+                <Compass size={14} className="text-yellow" />
+                <span>Academic Visionary</span>
+              </div>
+              <h2 className="landing-visionary-title" style={{ color: '#ffffff' }}>
+                <span style={{ color: '#ffffff' }}>The</span><br />
+                <span style={{ color: '#ffffff' }}>mind</span><br />
+                <span className="landing-serif-italic" style={{ color: '#fbbf24' }}>behind the<br />vision.</span>
+              </h2>
+            </div>
+
+            {/* Center: Leader Portrait Card */}
+            <div className="landing-visionary-card-col">
+              <div className="landing-portrait-card-glow">
+                <div className="landing-portrait-card-inner">
+                  <div className="landing-portrait-frame">
+                    <img
+                      src="/assets/parth-joshi.jpeg"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "https://www.edumark.app/assets/parth-joshi.jpeg";
+                      }}
+                      alt="Prof. Parth Joshi"
+                      className="landing-portrait-img"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Leader Details & Actions */}
+            <div className="landing-visionary-details-col">
+              <span className="landing-eyebrow">LEADERSHIP &amp; MENTORSHIP</span>
+              <h3 className="landing-visionary-name" style={{ color: '#ffffff' }}>Prof. Parth Joshi</h3>
+              <p className="landing-role-tag">PROJECT MENTOR &amp; GUIDE</p>
+              <p className="landing-visionary-bio">
+                Guiding the vision and academic excellence of EduMark, fostering student innovation, and driving institutional digital transformation with scalable modern architecture.
+              </p>
+              <div className="landing-btn-group">
+                <a
+                  href="https://www.linkedin.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="landing-btn-yellow"
+                  title="LinkedIn"
+                >
+                  <span>LinkedIn</span>
+                  <LinkedInIcon size={14} />
+                </a>
+                <a
+                  href="mailto:parth_ljcca@ljku.edu.in"
+                  className="landing-btn-glass"
+                  title="Portfolio"
+                >
+                  <span>Portfolio</span>
+                  <ExternalLink size={14} />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* DIVIDER */}
+          <div className="landing-team-divider" />
+
+          {/* BOTTOM: ENGINEERING & INNOVATION / THE MINDS BEHIND THE CODE */}
+          <div className="landing-devs-wrapper">
+            <div className="landing-devs-header">
+              <div className="landing-pill-badge">
+                <Code size={14} className="text-yellow" />
+                <span>Engineering &amp; Innovation</span>
+              </div>
+              <h2 className="landing-devs-title" style={{ color: '#ffffff' }}>
+                <span style={{ color: '#ffffff' }}>The minds</span><br />
+                <span className="landing-serif-italic" style={{ color: '#fbbf24' }}>behind the code.</span>
+              </h2>
+              <p className="landing-devs-sub">
+                Architecting, designing, and engineering the EduMark platform.
+              </p>
+            </div>
+
+            <div className="landing-devs-grid">
+              {/* Developer 1: Jadav Dashrath */}
+              <div className="landing-dev-card">
+                <div className="landing-dev-card-glow">
+                  <div className="landing-dev-card-inner">
+                    <div className="landing-dev-img-frame">
+                      <img
+                        src="/assets/developer-1.jpg"
+                        alt="Jadav Dashrath"
+                        className="landing-portrait-img"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="landing-dev-info">
+                  <h3 className="landing-dev-name" style={{ color: '#ffffff', marginBottom: '16px' }}>Jadav Dashrath</h3>
+                  <div className="landing-btn-group">
+                    <a
+                      href="https://www.linkedin.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="landing-btn-yellow"
+                      title="LinkedIn"
+                    >
+                      <span>LinkedIn</span>
+                      <LinkedInIcon size={14} />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Developer 2: Dabhi Prit */}
+              <div className="landing-dev-card">
+                <div className="landing-dev-card-glow">
+                  <div className="landing-dev-card-inner">
+                    <div className="landing-dev-img-frame">
+                      <img
+                        src="/assets/developer-2.jpg"
+                        alt="Dabhi Prit"
+                        className="landing-portrait-img"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="landing-dev-info">
+                  <h3 className="landing-dev-name" style={{ color: '#ffffff', marginBottom: '16px' }}>Dabhi Prit</h3>
+                  <div className="landing-btn-group">
+                    <a
+                      href="https://www.linkedin.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="landing-btn-yellow"
+                      title="LinkedIn"
+                    >
+                      <span>LinkedIn</span>
+                      <LinkedInIcon size={14} />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
