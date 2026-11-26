@@ -5,7 +5,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'lj_cca_classroom_jwt_secret_key_20
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Format: Bearer TOKEN
+  let token = authHeader && authHeader.split(' ')[1]; // Format: Bearer TOKEN
+
+  // Support EventSource / SSE connection with token in query params
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
 
   if (!token) {
     return res.status(401).json({ message: 'Access denied. No token provided.' });

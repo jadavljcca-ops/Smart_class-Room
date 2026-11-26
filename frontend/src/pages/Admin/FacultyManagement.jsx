@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, UserPlus, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, UserPlus, Eye, EyeOff, ArrowLeft, Upload, Download, AlertCircle, CheckCircle, FileText } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 export default function FacultyManagement({ department: propDepartment, insideModal }) {
-  const { authFetch } = useAuth();
+  const { authFetch, user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -18,6 +18,12 @@ export default function FacultyManagement({ department: propDepartment, insideMo
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // Bulk Upload Modal state
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [parsedFaculty, setParsedFaculty] = useState([]);
+  const [bulkFile, setBulkFile] = useState(null);
+  const [parsingFile, setParsingFile] = useState(false);
   
   // Modal / Form state
   const [showForm, setShowForm] = useState(false);
@@ -208,6 +214,185 @@ export default function FacultyManagement({ department: propDepartment, insideMo
     }
   };
 
+  // Dynamically load sheetjs for xlsx parsing
+  const loadXLSX = () => {
+    return new Promise((resolve, reject) => {
+      if (window.XLSX) {
+        resolve(window.XLSX);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      script.onload = () => resolve(window.XLSX);
+      script.onerror = () => reject(new Error('Failed to load excel parser library.'));
+      document.head.appendChild(script);
+    });
+  };
+
+  // Parse CSV helper
+  const parseCSV = (text) => {
+    const lines = text.split(/\r?\n/);
+    const result = [];
+    if (lines.length <= 1) return [];
+
+    // Parse headers
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const values = lines[i].split(',').map(v => v.trim());
+      const row = {};
+      
+      headers.forEach((header, idx) => {
+        row[header] = values[idx] || '';
+      });
+
+      result.push(row);
+    }
+    return result;
+  };
+
+  // Handle File upload parse
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setBulkFile(file);
+    setParsingFile(true);
+    setParsedFaculty([]);
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    
+    try {
+      const reader = new FileReader();
+
+      if (ext === 'csv') {
+        reader.onload = (evt) => {
+          try {
+            const rawData = parseCSV(evt.target.result);
+            processRawUploadData(rawData);
+          } catch (err) {
+            showToast('Failed to parse CSV file structure.', 'error');
+          }
+        };
+        reader.readAsText(file);
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const XLSX = await loadXLSX();
+        reader.onload = (evt) => {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rawData = XLSX.utils.sheet_to_json(worksheet);
+            processRawUploadData(rawData);
+          } catch (err) {
+            showToast('Failed to parse Excel workbook sheet.', 'error');
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        showToast('Invalid file format. Please upload a .csv or .xlsx file.', 'warning');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Error processing spreadsheet file.', 'error');
+    } finally {
+      setParsingFile(false);
+    }
+  };
+
+  // Standardize raw keys to match application expected fields
+  const processRawUploadData = (rawList) => {
+    const defaultDept = propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : '');
+
+    const formatted = rawList.map(row => {
+      // Find case-insensitive keys
+      const getVal = (possibleKeys) => {
+        const foundKey = Object.keys(row).find(k => possibleKeys.includes(k.trim().toLowerCase()));
+        return foundKey ? row[foundKey] : '';
+      };
+
+      const mobile = getVal(['mobile', 'mobilenumber', 'phone', 'contact', 'mobile number', 'phone number', 'mob']);
+      const empId = getVal(['employeeid', 'employee id', 'empid', 'emp id', 'employee_id']) || mobile;
+      return {
+        fullName: getVal(['fullname', 'name', 'facultyname', 'full name', 'faculty name']),
+        email: getVal(['email', 'emailaddress', 'email address']),
+        mobileNumber: mobile,
+        department: getVal(['department', 'dept', 'departments']) || defaultDept,
+        employeeId: empId,
+        password: mobile
+      };
+    });
+
+    // Filter out rows that are entirely or mostly empty
+    const validRows = formatted.filter(f => 
+      (f.fullName && f.fullName.toString().trim() !== '') || 
+      (f.email && f.email.toString().trim() !== '') || 
+      (f.mobileNumber && f.mobileNumber.toString().trim() !== '')
+    );
+
+    setParsedFaculty(validRows);
+    showToast(`Parsed ${validRows.length} faculty members from spreadsheet!`, 'success');
+  };
+
+  const handleBulkImport = async () => {
+    if (parsedFaculty.length === 0) {
+      showToast('No parsed faculty to import.', 'warning');
+      return;
+    }
+
+    // Verify all rows have required fields
+    const invalidRows = parsedFaculty.some(f => 
+      !f.fullName || !f.email || !f.mobileNumber || !f.department
+    );
+
+    if (invalidRows) {
+      showToast('Some parsed rows are missing required fields. Please review the preview.', 'error');
+      return;
+    }
+
+    setParsingFile(true);
+    try {
+      const res = await authFetch('/admin/faculty/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ faculty: parsedFaculty })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        showToast(data.message || 'Import complete!', 'success');
+        setShowBulkModal(false);
+        setBulkFile(null);
+        setParsedFaculty([]);
+        fetchFaculty();
+      } else {
+        showToast(data.message || 'Import failed.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error during bulk import.', 'error');
+    } finally {
+      setParsingFile(false);
+    }
+  };
+
+  // Download Sample CSV Helper
+  const downloadSampleCSV = () => {
+    const defaultDept = propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : 'BCA');
+    const headers = 'Full Name,Email,Mobile Number,Department,Employee ID\n';
+    const row1 = `Prof. Rajesh Sharma,rajesh@edumark.com,9876543210,${defaultDept},EMP101\n`;
+    const row2 = `Dr. Priya Mehta,priya@edumark.com,9876543211,${defaultDept},EMP102\n`;
+    
+    const blob = new Blob([headers + row1 + row2], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', 'faculty_bulk_import_sample.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filteredFaculty = faculty.filter((f) => {
     return (
       f.full_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -246,7 +431,11 @@ export default function FacultyManagement({ department: propDepartment, insideMo
                   <ArrowLeft size={16} /> Back to Dashboard
                 </button>
               )}
-              <button onClick={openAddModal} className="btn btn-primary">
+              <button onClick={() => setShowBulkModal(true)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Upload size={16} />
+                Bulk Import (.csv/.xlsx)
+              </button>
+              <button onClick={openAddModal} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Plus size={16} />
                 Add Faculty
               </button>
@@ -262,8 +451,12 @@ export default function FacultyManagement({ department: propDepartment, insideMo
       
       {/* Modal Actions when inside modal */}
       {insideModal && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem', gap: '0.5rem' }}>
-          <button onClick={openAddModal} className="btn btn-primary">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button onClick={() => setShowBulkModal(true)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Upload size={16} />
+            Bulk Import
+          </button>
+          <button onClick={openAddModal} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Plus size={16} />
             Add Faculty
           </button>
@@ -321,7 +514,7 @@ export default function FacultyManagement({ department: propDepartment, insideMo
         </div>
       ) : filteredFaculty.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '4rem 1.5rem', color: 'hsl(var(--muted))' }}>
-          No faculty members found. Click "Add Faculty" to create one.
+          No faculty members found. Click "Add Faculty" or "Bulk Import" to create one.
         </div>
       ) : (
         <div className="table-container">
@@ -517,6 +710,131 @@ export default function FacultyManagement({ department: propDepartment, insideMo
                 </button>
               </div>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Bulk Upload Modal */}
+      {showBulkModal && createPortal(
+        <div 
+          onClick={() => { setShowBulkModal(false); setBulkFile(null); setParsedFaculty([]); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 20000, padding: '1rem'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="card animate-fade-in" 
+            style={{ width: '100%', maxWidth: '750px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', alignSelf: 'center', backgroundColor: '#ffffff', color: '#000000', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#000000' }}>
+                <Upload size={20} color="hsl(var(--primary))" />
+                Faculty Spreadsheet Bulk Import (.csv / .xlsx)
+              </h3>
+              <button onClick={() => { setShowBulkModal(false); setBulkFile(null); setParsedFaculty([]); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Instruction Banner */}
+            <div className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', padding: '1rem', backgroundColor: 'hsl(var(--secondary) / 0.3)', border: '1px dashed hsl(var(--primary) / 0.4)', marginBottom: '1.5rem' }}>
+              <AlertCircle size={22} style={{ color: 'hsl(var(--primary))', flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}>Column Mapping Instructions</h4>
+                <p style={{ fontSize: '0.8rem', color: 'hsl(var(--muted))', lineHeight: '1.4' }}>
+                  Your sheet must contain the following headers: <strong>Full Name, Email, Mobile Number</strong>. 
+                  {!propDepartment && <span> You should also include a <strong>Department</strong> column (e.g. BCA, BBA).</span>} 
+                  &nbsp;Optional: <strong>Employee ID</strong> (defaults to mobile number). The faculty's Mobile Number will automatically be assigned as their default password.
+                </p>
+                <button onClick={downloadSampleCSV} className="btn btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', marginTop: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <Download size={12} />
+                  Download Sample CSV
+                </button>
+              </div>
+            </div>
+
+            {/* File Pick Container */}
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '0.75rem', 
+              marginBottom: '1.5rem', 
+              border: '2px dashed hsl(var(--border))', 
+              borderRadius: '8px', 
+              padding: '2.5rem 1.5rem', 
+              backgroundColor: 'hsl(var(--secondary) / 0.15)' 
+            }}>
+              <Upload size={36} style={{ color: 'hsl(var(--primary))', marginBottom: '0.25rem' }} />
+              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--muted))' }}>
+                Select faculty list spreadsheet file
+              </p>
+              <input
+                type="file"
+                className="form-control"
+                onChange={handleFileChange}
+                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                style={{ padding: '0.5rem', maxWidth: '350px', width: '100%', cursor: 'pointer', textAlign: 'center' }}
+              />
+            </div>
+
+            {/* Spreadsheet Row Previews */}
+            {parsingFile ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <h4 style={{ color: 'hsl(var(--muted))' }}>Parsing sheet file...</h4>
+              </div>
+            ) : parsedFaculty.length > 0 && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <h4 style={{ fontWeight: 700, fontSize: '0.95rem', color: 'hsl(var(--foreground))' }}>Roster Preview ({parsedFaculty.length} Faculty Members)</h4>
+                  <span style={{ fontSize: '0.75rem', color: 'hsl(var(--muted))' }}>Verify columns before importing</span>
+                </div>
+                
+                <div className="table-container" style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid hsl(var(--border) / 0.8)' }}>
+                  <table style={{ fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Dept</th>
+                        <th>Employee ID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {parsedFaculty.map((f, idx) => {
+                        const isRowInvalid = !f.fullName || !f.email || !f.mobileNumber || !f.department;
+                        return (
+                          <tr key={idx} style={{ backgroundColor: isRowInvalid ? 'hsl(var(--danger) / 0.05)' : 'inherit' }}>
+                            <td style={{ fontWeight: 700 }}>{f.fullName ? f.fullName : <span style={{ color: 'hsl(var(--danger))' }}>Missing</span>}</td>
+                            <td>{f.email ? f.email : <span style={{ color: 'hsl(var(--danger))' }}>Missing</span>}</td>
+                            <td>{f.mobileNumber ? f.mobileNumber : <span style={{ color: 'hsl(var(--danger))' }}>Missing</span>}</td>
+                            <td>{f.department ? f.department : <span style={{ color: 'hsl(var(--danger))' }}>Missing</span>}</td>
+                            <td>{f.employeeId || f.mobileNumber}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.75rem' }}>
+                  <button type="button" onClick={() => { setShowBulkModal(false); setBulkFile(null); setParsedFaculty([]); }} className="btn btn-secondary">
+                    Cancel
+                  </button>
+                  <button type="button" onClick={handleBulkImport} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <CheckCircle size={16} />
+                    Confirm Bulk Import
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>,
         document.body

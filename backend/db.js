@@ -1,3 +1,7 @@
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 const { Pool } = require('pg');
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -310,9 +314,18 @@ async function insertBatchNotifications(notifications) {
     params.push(item.user_role, item.user_id || null, item.department || null, item.message);
   });
 
-  const sql = `INSERT INTO notifications (user_role, user_id, department, message) VALUES ${valueRows.join(', ')}`;
+  const sql = `INSERT INTO notifications (user_role, user_id, department, message) VALUES ${valueRows.join(', ')} RETURNING *`;
   return executeWithRetry(async () => {
-    return await pool.query(sql, params);
+    const result = await pool.query(sql, params);
+    if (result && result.rows && result.rows.length > 0) {
+      try {
+        const { broadcastNotification } = require('./utils/notifier');
+        result.rows.forEach(row => broadcastNotification(row));
+      } catch (err) {
+        console.error('Error broadcasting realtime notification:', err);
+      }
+    }
+    return result;
   });
 }
 

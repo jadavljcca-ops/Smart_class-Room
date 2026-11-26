@@ -206,10 +206,12 @@ router.post('/requests/:id/action', async (req, res) => {
           [full_name, email, mobile_number, department, semester, enrollment_number, password_hash, raw_password]
         );
         // Create user-specific notification
-        await run(
-          `INSERT INTO notifications (user_role, user_id, department, message) VALUES (?, ?, ?, ?)`,
-          ['Student', result.id, department, 'Your registration request has been approved. You can now login.']
-        );
+        await insertBatchNotifications([{
+          user_role: 'Student',
+          user_id: result.id,
+          department,
+          message: 'Your registration request has been approved. You can now login.'
+        }]);
       } else if (role === 'faculty') {
         const result = await run(
           `INSERT INTO faculty (full_name, email, mobile_number, department, employee_id, password_hash, raw_password, status)
@@ -217,10 +219,12 @@ router.post('/requests/:id/action', async (req, res) => {
           [full_name, email, mobile_number, department, employee_id, password_hash, raw_password]
         );
         // Create user-specific notification
-        await run(
-          `INSERT INTO notifications (user_role, user_id, department, message) VALUES (?, ?, ?, ?)`,
-          ['Faculty', result.id, department, 'Your registration request has been approved. You can now login and upload notes.']
-        );
+        await insertBatchNotifications([{
+          user_role: 'Faculty',
+          user_id: result.id,
+          department,
+          message: 'Your registration request has been approved. You can now login and upload notes.'
+        }]);
       }
 
       // Remove request from registration_requests once transferred to active faculty/student table
@@ -1014,6 +1018,99 @@ router.put('/students/:id', async (req, res) => {
     res.json({ message: 'Student updated successfully.' });
   } catch (error) {
     console.error('Update student error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// POST /api/admin/faculty/bulk
+router.post('/faculty/bulk', async (req, res) => {
+  const { faculty } = req.body;
+
+  if (!faculty || !Array.isArray(faculty)) {
+    return res.status(400).json({ message: 'Invalid faculty list.' });
+  }
+
+  let successCount = 0;
+  let duplicateCount = 0;
+  let errorCount = 0;
+  const duplicatesList = [];
+
+  try {
+    for (const f of faculty) {
+      const { fullName, email, mobileNumber, department, employeeId, password } = f;
+      let targetDept = department;
+
+      if (req.user.adminRole !== 'main_admin') {
+        targetDept = req.user.department;
+      }
+
+      const empId = (employeeId && employeeId.toString().trim() !== '')
+        ? employeeId.toString().trim()
+        : (mobileNumber ? mobileNumber.toString().trim() : '');
+      const pwd = (password && password.toString().trim() !== '')
+        ? password.toString().trim()
+        : (mobileNumber ? mobileNumber.toString().trim() : '');
+
+      if (!fullName || !email || !mobileNumber || !targetDept || !empId || !pwd) {
+        errorCount++;
+        continue;
+      }
+
+      // Check duplicate email
+      const adminCheck = await get('SELECT id FROM admins WHERE email = ?', [email]);
+      const facultyCheck = await get('SELECT id FROM faculty WHERE email = ?', [email]);
+      const studentCheck = await get('SELECT id FROM students WHERE email = ?', [email]);
+      const requestCheck = await get("SELECT id FROM registration_requests WHERE email = ? AND status = 'Pending'", [email]);
+
+      if (adminCheck || facultyCheck || studentCheck || requestCheck) {
+        duplicateCount++;
+        duplicatesList.push(`${email} (Email)`);
+        continue;
+      }
+
+      // Check duplicate employee ID
+      const empCheck = await get('SELECT id FROM faculty WHERE employee_id = ?', [empId]);
+      if (empCheck) {
+        duplicateCount++;
+        duplicatesList.push(`${empId} (Employee ID)`);
+        continue;
+      }
+
+      // Check duplicate mobile
+      const [facMob, stuMob, reqMob] = await Promise.all([
+        get('SELECT id FROM faculty WHERE mobile_number = ?', [mobileNumber]),
+        get('SELECT id FROM students WHERE mobile_number = ?', [mobileNumber]),
+        get("SELECT id FROM registration_requests WHERE mobile_number = ? AND status = 'Pending'", [mobileNumber])
+      ]);
+      if (facMob || stuMob || reqMob) {
+        duplicateCount++;
+        duplicatesList.push(`${mobileNumber} (Mobile)`);
+        continue;
+      }
+
+      try {
+        const hash = await bcrypt.hash(pwd, 10);
+        await run(
+          `INSERT INTO faculty (full_name, email, mobile_number, department, employee_id, password_hash, raw_password, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'Approved')`,
+          [fullName, email, mobileNumber, targetDept, empId, hash, pwd]
+        );
+        successCount++;
+      } catch (err) {
+        console.error('Bulk insert faculty row error:', err);
+        errorCount++;
+      }
+    }
+
+    res.json({
+      message: `Import complete. Success: ${successCount}, Duplicates: ${duplicateCount}, Errors/Skipped: ${errorCount}`,
+      successCount,
+      duplicateCount,
+      errorCount,
+      duplicatesList
+    });
+  } catch (error) {
+    console.error('Bulk faculty import error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });

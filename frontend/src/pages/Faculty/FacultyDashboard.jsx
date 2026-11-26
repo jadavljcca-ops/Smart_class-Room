@@ -35,6 +35,7 @@ export default function FacultyDashboard() {
 
   // Announcement Form state
   const [showAnnForm, setShowAnnForm] = useState(false);
+  const [editingAnnId, setEditingAnnId] = useState(null);
   const [savingAnn, setSavingAnn] = useState(false);
   const [annTitle, setAnnTitle] = useState('');
   const [annDescription, setAnnDescription] = useState('');
@@ -42,6 +43,29 @@ export default function FacultyDashboard() {
   const [annPublishDate, setAnnPublishDate] = useState(new Date().toISOString().split('T')[0]);
   const [annExpiryDate, setAnnExpiryDate] = useState('');
   const [annAttachment, setAnnAttachment] = useState(null);
+
+  const openAddAnnModal = () => {
+    setEditingAnnId(null);
+    setAnnTitle('');
+    setAnnDescription('');
+    setAnnPriority('Medium');
+    setAnnPublishDate(new Date().toISOString().split('T')[0]);
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    setAnnExpiryDate(nextWeek);
+    setAnnAttachment(null);
+    setShowAnnForm(true);
+  };
+
+  const openEditAnnModal = (ann) => {
+    setEditingAnnId(ann.id);
+    setAnnTitle(ann.title);
+    setAnnDescription(ann.description);
+    setAnnPriority(ann.priority);
+    setAnnPublishDate(ann.publish_date ? ann.publish_date.split('T')[0] : '');
+    setAnnExpiryDate(ann.expiry_date ? ann.expiry_date.split('T')[0] : '');
+    setAnnAttachment(null);
+    setShowAnnForm(true);
+  };
 
   // Autofocus input refs
   const noteSubjectInputRef = React.useRef(null);
@@ -215,23 +239,28 @@ export default function FacultyDashboard() {
     formData.append('expiryDate', annExpiryDate);
     if (annAttachment) formData.append('attachment', annAttachment);
 
+    const isEditing = editingAnnId !== null;
+    const url = isEditing ? `/faculty/announcements/${editingAnnId}` : '/faculty/announcements';
+    const method = isEditing ? 'PUT' : 'POST';
+
     setSavingAnn(true);
     try {
-      const res = await authFetch('/faculty/announcements', {
-        method: 'POST',
+      const res = await authFetch(url, {
+        method,
         body: formData
       });
       const data = await res.json();
       if (res.ok) {
-        showToast(data.message || 'Announcement created successfully!', 'success');
+        showToast(data.message || (isEditing ? 'Announcement updated successfully!' : 'Announcement created successfully!'), 'success');
         setShowAnnForm(false);
+        setEditingAnnId(null);
         setAnnTitle('');
         setAnnDescription('');
         setAnnPriority('Medium');
         setAnnAttachment(null);
         fetchAnnouncements();
       } else {
-        showToast(data.message || 'Failed to create announcement.', 'error');
+        showToast(data.message || 'Failed to save announcement.', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -495,15 +524,7 @@ export default function FacultyDashboard() {
               Notice Board
             </h2>
             <button 
-              onClick={() => {
-                setAnnTitle('');
-                setAnnDescription('');
-                setAnnPriority('Medium');
-                setAnnPublishDate(new Date().toISOString().split('T')[0]);
-                setAnnExpiryDate('');
-                setAnnAttachment(null);
-                setShowAnnForm(true);
-              }}
+              onClick={openAddAnnModal}
               className="btn btn-secondary"
             >
               <Plus size={16} />
@@ -544,7 +565,16 @@ export default function FacultyDashboard() {
                       <Download size={10} />
                     </button>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.4rem', marginTop: '0.5rem' }}>
+                    <button
+                      onClick={() => openEditAnnModal(ann)}
+                      className="btn btn-secondary"
+                      style={{ padding: '0.3rem 0.6rem', color: 'hsl(var(--primary))', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                      title="Edit Notice"
+                    >
+                      <Edit size={13} />
+                      Edit
+                    </button>
                     <button
                       onClick={() => handleDeleteAnnouncement(ann.id)}
                       className="btn btn-secondary"
@@ -770,7 +800,9 @@ export default function FacultyDashboard() {
             style={{ width: '100%', maxWidth: '540px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#ffffff', color: '#000000', margin: 'auto', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 40, 85, 0.25)' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#000000' }}>Create New Announcement</h3>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#000000' }}>
+                {editingAnnId ? 'Edit Notice' : 'Create New Announcement'}
+              </h3>
 
               <button 
                 onClick={() => setShowAnnForm(false)}
@@ -880,11 +912,11 @@ export default function FacultyDashboard() {
                   disabled={savingAnn}
                 >
                   {savingAnn ? (
-                    'Publishing Notice...'
+                    'Saving Notice...'
                   ) : (
                     <>
                       <Save size={16} />
-                      Publish Notice
+                      {editingAnnId ? 'Update Notice' : 'Publish Notice'}
                     </>
                   )}
                 </button>

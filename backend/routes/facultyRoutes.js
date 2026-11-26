@@ -229,6 +229,48 @@ router.post('/announcements', upload.single('attachment'), async (req, res) => {
   }
 });
 
+// PUT /api/faculty/announcements/:id
+router.put('/announcements/:id', upload.single('attachment'), async (req, res) => {
+  const { id } = req.params;
+  const { title, description, publishDate, expiryDate, priority } = req.body;
+  const facultyDept = req.user.department;
+
+  if (!title || !description || !publishDate || !expiryDate) {
+    return res.status(400).json({ message: 'Please fill all required fields.' });
+  }
+
+  try {
+    const existing = await get("SELECT * FROM announcements WHERE id = ?", [id]);
+    if (!existing) {
+      return res.status(404).json({ message: 'Announcement not found.' });
+    }
+
+    if (existing.department !== facultyDept) {
+      return res.status(403).json({ message: 'Forbidden. You can only edit announcements for your own department.' });
+    }
+
+    let attachmentPath = existing.attachment_path;
+    let attachmentName = existing.attachment_name;
+
+    if (req.file) {
+      attachmentPath = `/uploads/${req.file.filename}`;
+      attachmentName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+    }
+
+    await run(
+      `UPDATE announcements 
+       SET title = ?, description = ?, attachment_path = ?, attachment_name = ?, publish_date = ?, expiry_date = ?, priority = ?
+       WHERE id = ?`,
+      [title, description, attachmentPath, attachmentName, publishDate, expiryDate, priority || 'Medium', id]
+    );
+
+    res.json({ message: 'Announcement updated successfully.' });
+  } catch (error) {
+    console.error('Faculty update announcement error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 // DELETE /api/faculty/announcements/:id
 router.delete('/announcements/:id', async (req, res) => {
   const { id } = req.params;

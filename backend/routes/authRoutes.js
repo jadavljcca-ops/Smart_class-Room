@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { get, run, query } = require('../db');
+const { get, run, query, insertBatchNotifications } = require('../db');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 
 // POST /api/auth/register
@@ -130,10 +130,11 @@ router.post('/register', async (req, res) => {
     );
 
     // Notify admin (scoped to department for sub-admins, and visible to main admin)
-    await run(
-      `INSERT INTO notifications (user_role, department, message) VALUES (?, ?, ?)`,
-      ['Admin', department, `New pending ${role} request from ${fullName} (${department})`]
-    );
+    await insertBatchNotifications([{
+      user_role: 'Admin',
+      department,
+      message: `New pending ${role} request from ${fullName} (${department})`
+    }]);
 
     return res.status(201).json({
       message: 'Your registration request has been sent to the Main Admin. You can log in only after approval.'

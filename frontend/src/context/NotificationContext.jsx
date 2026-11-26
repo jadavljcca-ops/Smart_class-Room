@@ -20,7 +20,7 @@ export const NotificationProvider = ({ children }) => {
   }, []);
 
   const playSound = useCallback(() => {
-    triggerNotificationAlert([500, 200, 500, 200, 500]);
+    triggerNotificationAlert([400, 150, 400, 150, 400]);
   }, []);
 
   const fetchNotifications = useCallback(async () => {
@@ -37,7 +37,7 @@ export const NotificationProvider = ({ children }) => {
       const brandNew = data.filter((n) => !prevNotifIdsRef.current.has(n.id));
 
       if (!isFirstFetchRef.current && brandNew.length > 0) {
-        // Play notification sound for new ones
+        // Play notification sound & vibration for new alerts
         playSound();
       }
 
@@ -52,14 +52,13 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [token, user, playSound]);
 
-  // Poll every 30 seconds when logged in as student
+  // Fast background polling every 6 seconds for all authenticated roles
   useEffect(() => {
-    if (!user || user.role !== 'student') return;
+    if (!user) return;
 
-    // Initial fetch
     fetchNotifications();
 
-    const interval = setInterval(fetchNotifications, 30000);
+    const interval = setInterval(fetchNotifications, 6000);
     return () => clearInterval(interval);
   }, [user, fetchNotifications]);
 

@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useAuth } from '../../context/AuthContext';
-import { Bell, X } from 'lucide-react';
+import { useAuth, API_BASE_URL } from '../../context/AuthContext';
+import { Bell, X, Volume2 } from 'lucide-react';
 import { formatDateTime } from '../../utils/dateUtils';
 import PushNotificationPrompt from './PushNotificationPrompt';
 import { triggerNotificationAlert } from '../../utils/notificationSound';
 
 export default function NotificationMenu() {
-  const { user, authFetch } = useAuth();
+  const { user, token, authFetch } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [newNotifBanner, setNewNotifBanner] = useState(null);
@@ -71,6 +71,85 @@ export default function NotificationMenu() {
     };
   }, []);
 
+  // Real-Time Server-Sent Events (SSE) listener for instantaneous notifications
+  useEffect(() => {
+    if (!user || !token) return;
+
+    let eventSource = null;
+    let reconnectTimer = null;
+
+    const connectSSE = () => {
+      try {
+        const streamUrl = `${API_BASE_URL}/notifications/stream?token=${encodeURIComponent(token)}`;
+        eventSource = new EventSource(streamUrl);
+
+        eventSource.onmessage = (event) => {
+          if (!event.data) return;
+          try {
+            const parsed = JSON.parse(event.data);
+            if (parsed.type === 'notification' && parsed.notification) {
+              const notif = parsed.notification;
+
+              // 1. Play real-time alert sound & vibration immediately
+              triggerNotificationAlert([400, 150, 400, 150, 400]);
+
+              // 2. Ring bell icon
+              setBellRinging(true);
+              setTimeout(() => setBellRinging(false), 2000);
+
+              // 3. Show top-center live alert banner
+              setNewNotifBanner(notif.message);
+              setTimeout(() => setNewNotifBanner(null), 6000);
+
+              // 4. Update notifications list
+              setNotifications((prev) => {
+                if (prev.some(n => n.id === notif.id)) return prev;
+                return [notif, ...prev];
+              });
+
+              // 5. Native OS notification if permitted
+              if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.ready.then((reg) => {
+                    reg.showNotification('EduMark Classroom 🔔', {
+                      body: notif.message,
+                      icon: '/pwa-192.png',
+                      badge: '/pwa-192.png',
+                      vibrate: [400, 150, 400, 150, 400],
+                      silent: false,
+                      tag: `edumark-notif-${notif.id}`,
+                      renotify: true,
+                      data: { url: user?.role === 'admin' ? '/admin' : user?.role === 'faculty' ? '/faculty' : '/student' }
+                    }).catch(() => {});
+                  }).catch(() => {});
+                }
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing SSE event:', e);
+          }
+        };
+
+        eventSource.onerror = () => {
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+          reconnectTimer = setTimeout(connectSSE, 5000);
+        };
+      } catch (err) {
+        console.warn('SSE initialization error:', err);
+      }
+    };
+
+    connectSSE();
+
+    return () => {
+      if (eventSource) eventSource.close();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+    };
+  }, [user, token]);
+
   const fetchNotifications = async () => {
     if (!user) return;
     try {
@@ -86,13 +165,13 @@ export default function NotificationMenu() {
             const brandNewUnread = data.filter(n => n.id > lastKnownNotifId.current && !n.is_read);
             if (brandNewUnread.length > 0) {
               // Trigger physical hardware vibration and audible chime
-              triggerNotificationAlert([500, 200, 500, 200, 500]);
+              triggerNotificationAlert([400, 150, 400, 150, 400]);
 
               setBellRinging(true);
-              setTimeout(() => setBellRinging(false), 1500);
+              setTimeout(() => setBellRinging(false), 2000);
 
               setNewNotifBanner(brandNewUnread[0].message);
-              setTimeout(() => setNewNotifBanner(null), 5000);
+              setTimeout(() => setNewNotifBanner(null), 6000);
 
               // Display in device status bar / notification shade with sound & vibration
               if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
@@ -102,7 +181,7 @@ export default function NotificationMenu() {
                       body: brandNewUnread[0].message,
                       icon: '/pwa-192.png',
                       badge: '/pwa-192.png',
-                      vibrate: [500, 250, 500, 250, 500],
+                      vibrate: [400, 150, 400, 150, 400],
                       silent: false,
                       requireInteraction: false,
                       tag: `edumark-notif-${brandNewUnread[0].id}`,
@@ -125,9 +204,36 @@ export default function NotificationMenu() {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
+    // 6-second background fallback sync
+    const interval = setInterval(fetchNotifications, 6000);
     return () => clearInterval(interval);
   }, [user]);
+
+  const handleTestAlert = async (e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    // 1. Immediately fire local sound & vibration
+    triggerNotificationAlert([400, 150, 400, 150, 400]);
+    setBellRinging(true);
+    setTimeout(() => setBellRinging(false), 2000);
+    setNewNotifBanner('🔔 Real-Time Alert Test: Sound & Vibration active!');
+    setTimeout(() => setNewNotifBanner(null), 6000);
+
+    // 2. Ask for permission if default
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      try {
+        await Notification.requestPermission();
+      } catch (err) {}
+    }
+
+    // 3. Trigger backend test route so the entire end-to-end SSE pipeline is tested
+    try {
+      await authFetch('/notifications/test', { method: 'POST' });
+    } catch (err) {}
+  };
 
   const handleMarkAsRead = async (id) => {
     try {
@@ -268,7 +374,28 @@ export default function NotificationMenu() {
                     </span>
                   )}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={handleTestAlert}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.2rem 0.5rem',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                      color: '#f59e0b',
+                      borderColor: 'rgba(245, 158, 11, 0.4)',
+                      borderRadius: '6px'
+                    }}
+                    title="Test Real-Time Alert with Sound and Vibration"
+                  >
+                    <Volume2 size={12} />
+                    Test Alert
+                  </button>
                   {notifications.length > 0 && (
                     <button
                       type="button"
@@ -419,44 +546,76 @@ export default function NotificationMenu() {
         )}
       </div>
 
-      {newNotifBanner && (
+      {newNotifBanner && createPortal(
         <div
           style={{
             position: 'fixed',
-            bottom: '1.5rem',
-            right: '1.5rem',
-            zIndex: 99999,
-            maxWidth: '360px',
-            background: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--primary) / 0.5)',
-            borderLeft: '4px solid hsl(var(--primary))',
-            borderRadius: 'var(--radius)',
+            top: '1.25rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 999999,
+            width: '92%',
+            maxWidth: '460px',
+            background: 'linear-gradient(135deg, #001f3f 0%, #002d62 100%)',
+            color: '#ffffff',
+            border: '1.5px solid rgba(245, 158, 11, 0.6)',
+            borderRadius: '16px',
             padding: '1rem 1.25rem',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(245, 158, 11, 0.25)',
             display: 'flex',
-            alignItems: 'flex-start',
-            gap: '0.75rem',
-            animation: 'slideInRight 0.4s ease'
+            alignItems: 'center',
+            gap: '1rem',
+            animation: 'fadeInDown 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)'
           }}
         >
-          <div style={{ color: 'hsl(var(--primary))', flexShrink: 0, marginTop: '0.1rem' }}>
-            <Bell size={20} />
+          <div style={{
+            width: '42px',
+            height: '42px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#ffffff',
+            flexShrink: 0,
+            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)'
+          }}>
+            <Bell size={22} className="animate-bounce" />
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: '0.875rem', marginBottom: '0.25rem', color: 'hsl(var(--foreground))' }}>
-              New Notification
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+              <span style={{ fontWeight: 800, fontSize: '0.85rem', color: '#f59e0b', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                New Live Alert 🔔
+              </span>
+              <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)' }}>Just now</span>
             </div>
-            <div style={{ fontSize: '0.825rem', color: 'hsl(var(--muted))', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '0.85rem', color: '#ffffff', fontWeight: 500, lineHeight: 1.35, wordBreak: 'break-word' }}>
               {newNotifBanner}
             </div>
           </div>
           <button
             onClick={() => setNewNotifBanner(null)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(var(--muted))', padding: 0, flexShrink: 0 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              color: 'rgba(255, 255, 255, 0.8)',
+              padding: '0.4rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              transition: 'background 0.2s'
+            }}
+            title="Dismiss notification"
           >
             <X size={16} />
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

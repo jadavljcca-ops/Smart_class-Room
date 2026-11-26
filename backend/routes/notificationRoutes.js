@@ -3,6 +3,7 @@ const router = express.Router();
 const { query, run, get } = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 const { VAPID_PUBLIC_KEY, sendPushNotification, sendToSubscription } = require('../utils/webPush');
+const { handleSseConnection, broadcastNotification } = require('../utils/notifier');
 
 // GET /api/notifications/vapid-public-key (Public or authenticated)
 router.get('/vapid-public-key', (req, res) => {
@@ -10,6 +11,52 @@ router.get('/vapid-public-key', (req, res) => {
 });
 
 router.use(authenticateToken);
+
+// GET /api/notifications/stream (Real-time SSE event stream for instantaneous alerts)
+router.get('/stream', (req, res) => {
+  handleSseConnection(req, res);
+});
+
+// POST /api/notifications/test (Trigger an instant test notification with sound & vibration)
+router.post('/test', async (req, res) => {
+  const { id, role, department } = req.user;
+  const userRoleCap = role ? (role.charAt(0).toUpperCase() + role.slice(1)) : 'Student';
+  const testMsg = `🔔 Test Alert: Real-time notification with sound & vibration is active! (${new Date().toLocaleTimeString()})`;
+
+  try {
+    const result = await run(
+      `INSERT INTO notifications (user_role, user_id, department, message) VALUES (?, ?, ?, ?)`,
+      [userRoleCap, id, department || 'All', testMsg]
+    );
+
+    const newNotif = {
+      id: result.id,
+      user_role: userRoleCap,
+      user_id: id,
+      department: department || 'All',
+      message: testMsg,
+      is_read: 0,
+      created_at: new Date().toISOString()
+    };
+
+    // Instantly broadcast via SSE
+    broadcastNotification(newNotif);
+
+    // Also trigger web push if subscribed
+    sendPushNotification({
+      title: 'EduMark Classroom 🔔',
+      body: testMsg,
+      department: department || 'All',
+      userIds: [id],
+      url: '/'
+    }).catch(e => console.error('Push test error:', e));
+
+    res.json({ success: true, message: 'Test notification triggered!', notification: newNotif });
+  } catch (error) {
+    console.error('Test notification error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
 // GET /api/notifications
 router.get('/', async (req, res) => {

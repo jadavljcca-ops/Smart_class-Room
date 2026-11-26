@@ -19,7 +19,7 @@ function getAudioContext() {
  * Physical hardware vibration trigger for mobile devices
  * @param {number[]} pattern - Milliseconds array [vibrate, pause, vibrate...]
  */
-export function vibrateDevice(pattern = [500, 200, 500, 200, 500]) {
+export function vibrateDevice(pattern = [400, 150, 400, 150, 400]) {
   try {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate(pattern);
@@ -46,41 +46,53 @@ export function playSynthesizedChime() {
 
     const now = ctx.currentTime;
 
-    // Tone 1: 880Hz (A5)
+    // Tone 1: 587Hz (D5) - warm base chime
+    const osc0 = ctx.createOscillator();
+    const gain0 = ctx.createGain();
+    osc0.type = 'sine';
+    osc0.frequency.setValueAtTime(587.33, now);
+    gain0.gain.setValueAtTime(0.65, now);
+    gain0.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc0.connect(gain0);
+    gain0.connect(ctx.destination);
+    osc0.start(now);
+    osc0.stop(now + 0.35);
+
+    // Tone 2: 880Hz (A5) - clear bell
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(880, now);
-    gain1.gain.setValueAtTime(0.4, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.frequency.setValueAtTime(880, now + 0.08);
+    gain1.gain.setValueAtTime(0.85, now + 0.08);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
     osc1.connect(gain1);
     gain1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.35);
+    osc1.start(now + 0.08);
+    osc1.stop(now + 0.45);
 
-    // Tone 2: 1320Hz (E6) harmonic bell
+    // Tone 3: 1320Hz (E6) - harmonic melody
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(1320, now + 0.12);
-    gain2.gain.setValueAtTime(0.5, now + 0.12);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+    osc2.frequency.setValueAtTime(1320, now + 0.16);
+    gain2.gain.setValueAtTime(0.9, now + 0.16);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
     osc2.connect(gain2);
     gain2.connect(ctx.destination);
-    osc2.start(now + 0.12);
-    osc2.stop(now + 0.55);
+    osc2.start(now + 0.16);
+    osc2.stop(now + 0.65);
 
-    // Tone 3: 1760Hz (A6) high sparkle
+    // Tone 4: 1760Hz (A6) - bright crystalline sparkle
     const osc3 = ctx.createOscillator();
     const gain3 = ctx.createGain();
     osc3.type = 'triangle';
-    osc3.frequency.setValueAtTime(1760, now + 0.22);
-    gain3.gain.setValueAtTime(0.3, now + 0.22);
-    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+    osc3.frequency.setValueAtTime(1760, now + 0.24);
+    gain3.gain.setValueAtTime(0.7, now + 0.24);
+    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
     osc3.connect(gain3);
     gain3.connect(ctx.destination);
-    osc3.start(now + 0.22);
-    osc3.stop(now + 0.65);
+    osc3.start(now + 0.24);
+    osc3.stop(now + 0.75);
   } catch (err) {
     console.warn('Web Audio synthesis error:', err);
   }
@@ -103,7 +115,6 @@ export function playAudioFile() {
       const playPromise = audioFileElement.play();
       if (playPromise !== undefined) {
         playPromise.catch((e) => {
-          console.log('Audio file play blocked by browser policy, falling back to Web Audio synth:', e);
           playSynthesizedChime();
         });
       }
@@ -118,11 +129,11 @@ export function playAudioFile() {
 /**
  * Complete alert: Physical hardware vibration + Audio chime
  */
-export function triggerNotificationAlert(vibratePattern = [500, 200, 500, 200, 500]) {
-  // 1. Hardware vibration
+export function triggerNotificationAlert(vibratePattern = [400, 150, 400, 150, 400]) {
+  // 1. Physical hardware vibration
   vibrateDevice(vibratePattern);
 
-  // 2. Audible chime
+  // 2. Play audible chime
   playAudioFile();
   playSynthesizedChime();
 }
@@ -137,10 +148,19 @@ export function initAudioUnlock() {
     if (audioUnlocked) return;
     audioUnlocked = true;
 
-    // Resume AudioContext
+    // Resume AudioContext & play silent node
     const ctx = getAudioContext();
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
+    if (ctx) {
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      try {
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+      } catch (e) {}
     }
 
     // Preload & prime HTML Audio element
@@ -150,7 +170,17 @@ export function initAudioUnlock() {
         audioFileElement.volume = 1.0;
         audioFileElement.preload = 'auto';
       }
-      audioFileElement.load();
+      audioFileElement.muted = true;
+      const playPromise = audioFileElement.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          audioFileElement.pause();
+          audioFileElement.currentTime = 0;
+          audioFileElement.muted = false;
+        }).catch(() => {
+          audioFileElement.muted = false;
+        });
+      }
     } catch (e) {}
 
     document.removeEventListener('click', unlock);

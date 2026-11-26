@@ -8,7 +8,7 @@ import { Search, Plus, Edit, Trash2, X, Save, RefreshCw, Paperclip, Download, Ca
 import { formatDate, formatDateTime } from '../../utils/dateUtils';
 
 export default function AnnouncementsManagement({ department: propDepartment, insideModal }) {
-  const { authFetch, token } = useAuth();
+  const { authFetch, user, token } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -83,7 +83,7 @@ export default function AnnouncementsManagement({ department: propDepartment, in
     setEditingId(null);
     setTitle('');
     setDescription('');
-    setDepartment(propDepartment || 'All');
+    setDepartment(propDepartment || (user?.adminRole !== 'main_admin' ? user?.department : 'All'));
     // Set default dates
     const today = new Date().toISOString().split('T')[0];
     const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -319,20 +319,24 @@ export default function AnnouncementsManagement({ department: propDepartment, in
                   </h3>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <button 
                     onClick={() => openEditModal(ann)}
                     className="btn btn-secondary" 
-                    style={{ padding: '0.4rem', color: 'hsl(var(--primary))' }}
+                    style={{ padding: '0.35rem 0.65rem', color: 'hsl(var(--primary))', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }}
+                    title="Edit Announcement"
                   >
-                    <Edit size={14} />
+                    <Edit size={13} />
+                    Edit
                   </button>
                   <button 
                     onClick={() => handleDelete(ann.id)}
                     className="btn btn-secondary" 
-                    style={{ padding: '0.4rem', color: 'hsl(var(--danger))' }}
+                    style={{ padding: '0.35rem 0.65rem', color: 'hsl(var(--danger))', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }}
+                    title="Delete Announcement"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={13} />
+                    Delete
                   </button>
                 </div>
               </div>
@@ -449,6 +453,13 @@ export default function AnnouncementsManagement({ department: propDepartment, in
                       type="text"
                       className="form-control"
                       value={propDepartment}
+                      readOnly
+                    />
+                  ) : user?.adminRole !== 'main_admin' ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={user?.department || department}
                       readOnly
                     />
                   ) : (
