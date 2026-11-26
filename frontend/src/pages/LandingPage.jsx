@@ -553,7 +553,7 @@ export default function LandingPage() {
               </p>
               <div className="landing-btn-group">
                 <a
-                  href="https://www.linkedin.com/"
+                  href="https://www.linkedin.com/in/parthjoshi26?utm_source=share_via&utm_content=profile&utm_medium=member_android"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="landing-btn-yellow"
@@ -612,7 +612,7 @@ export default function LandingPage() {
                   <h3 className="landing-dev-name" style={{ color: '#ffffff', marginBottom: '16px', textAlign: 'center', width: '100%' }}>Jadav Dashrath</h3>
                   <div className="landing-btn-group" style={{ justifyContent: 'center' }}>
                     <a
-                      href="https://www.linkedin.com/"
+                      href="https://www.linkedin.com/in/dashrath-jadav-393673424?utm_source=share_via&utm_content=profile&utm_medium=member_android"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="landing-btn-yellow"
@@ -643,7 +643,7 @@ export default function LandingPage() {
                   <h3 className="landing-dev-name" style={{ color: '#ffffff', marginBottom: '16px', textAlign: 'center', width: '100%' }}>Dabhi Prit</h3>
                   <div className="landing-btn-group" style={{ justifyContent: 'center' }}>
                     <a
-                      href="https://www.linkedin.com/"
+                      href="https://www.linkedin.com/in/prit-dabhi-435978372?utm_source=share_via&utm_content=profile&utm_medium=member_android"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="landing-btn-yellow"
