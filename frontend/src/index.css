@@ -2193,6 +2193,11 @@ div.swal2-popup.swal-custom-delete-popup,
 
 .landing-dev-info {
   padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
 }
 
 .landing-dev-name {
@@ -2201,7 +2206,13 @@ div.swal2-popup.swal-custom-delete-popup,
   font-weight: 400;
   color: #ffffff !important;
   line-height: 1.2;
-  margin: 0 0 4px 0;
+  margin: 0 0 16px 0;
+  text-align: center;
+  width: 100%;
+}
+
+.landing-dev-info .landing-btn-group {
+  justify-content: center;
 }
 
 .landing-dev-info .landing-role-tag {
@@ -2237,37 +2248,41 @@ div.swal2-popup.swal-custom-delete-popup,
   .landing-devs-grid {
     grid-template-columns: 1fr;
     max-width: 340px;
-    margin: 0 auto;
-    justify-items: center;
+    margin-left: 0;
+    margin-right: auto;
+    justify-items: start;
   }
 
   .landing-dev-card {
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    text-align: left;
     width: 100%;
     max-width: 320px;
-    margin: 0 auto;
+    margin-left: 0;
+    margin-right: auto;
   }
 
   .landing-dev-card-glow {
-    margin: 0 auto;
+    margin-left: 0;
+    margin-right: auto;
+    max-width: 320px;
   }
 
   .landing-dev-info {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start !important;
+    text-align: left !important;
     width: 100%;
   }
 
   .landing-dev-name {
-    text-align: center !important;
+    text-align: left !important;
     width: 100%;
   }
 
   .landing-dev-info .landing-btn-group {
-    justify-content: center;
+    justify-content: flex-start !important;
     width: 100%;
   }
 }
@@ -2286,25 +2301,31 @@ div.swal2-popup.swal-custom-delete-popup,
   }
 
   .landing-dev-card {
-    align-items: center;
-    text-align: center;
-    margin: 0 auto;
+    align-items: flex-start;
+    text-align: left;
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  .landing-dev-card-glow {
+    margin-left: 0;
+    margin-right: auto;
   }
 
   .landing-dev-info {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start !important;
+    text-align: left !important;
     width: 100%;
   }
 
   .landing-dev-name {
-    text-align: center !important;
+    text-align: left !important;
   }
 
   .landing-dev-info .landing-btn-group {
-    justify-content: center;
+    justify-content: flex-start !important;
     width: 100%;
   }
 }
