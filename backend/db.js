@@ -9,10 +9,10 @@ const pool = new Pool({
     rejectUnauthorized: false
   },
   keepAlive: true,
-  min: 2,
-  max: 20,
+  min: 0,
+  max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 15000
+  connectionTimeoutMillis: 30000
 });
 
 pool.on('error', (err, client) => {
@@ -73,7 +73,14 @@ async function get(sql, params = []) {
 }
 
 async function initializeTables() {
-  const client = await pool.connect();
+  let client;
+  try {
+    client = await executeWithRetry(() => pool.connect(), 3);
+  } catch (err) {
+    console.error("Could not connect to database during initialization:", err.message);
+    return;
+  }
+
   try {
     await client.query('BEGIN');
     
@@ -275,10 +282,12 @@ async function initializeTables() {
     await client.query('COMMIT');
     console.log("Database initialized successfully on Neon PostgreSQL!");
   } catch (err) {
-    await client.query('ROLLBACK');
-    console.error("Error initializing database tables:", err);
+    if (client) {
+      try { await client.query('ROLLBACK'); } catch (_) {}
+    }
+    console.error("Error initializing database tables:", err.message);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
 
