@@ -215,21 +215,37 @@ export default function NotificationMenu() {
       e.preventDefault();
     }
 
-    // 1. Immediately fire local sound & vibration
+    // 1. Immediately fire local sound & physical hardware vibration
     triggerNotificationAlert([400, 150, 400, 150, 400]);
     setBellRinging(true);
     setTimeout(() => setBellRinging(false), 2000);
     setNewNotifBanner('🔔 Real-Time Alert Test: Sound & Vibration active!');
     setTimeout(() => setNewNotifBanner(null), 6000);
 
-    // 2. Ask for permission if default
+    // 2. Request permission if not yet granted
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
       try {
         await Notification.requestPermission();
       } catch (err) {}
     }
 
-    // 3. Trigger backend test route so the entire end-to-end SSE pipeline is tested
+    // 3. Trigger native mobile status bar notification with vibration & sound
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.showNotification('EduMark Classroom 🔔', {
+          body: 'Mobile notification test successful! Sound and vibration are active.',
+          icon: '/pwa-192.png',
+          badge: '/pwa-192.png',
+          sound: '/notification.wav',
+          vibrate: [400, 150, 400, 150, 400],
+          silent: false,
+          tag: `test-alert-${Date.now()}`,
+          renotify: true
+        }).catch(() => {});
+      }).catch(() => {});
+    }
+
+    // 4. Trigger backend test route so the entire end-to-end SSE pipeline is tested
     try {
       await authFetch('/notifications/test', { method: 'POST' });
     } catch (err) {}

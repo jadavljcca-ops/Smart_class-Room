@@ -90,8 +90,10 @@ async function sendPushNotification({ title, body, icon = '/pwa-192.png', url = 
       body,
       icon: icon && !icon.endsWith('.svg') ? icon : '/pwa-192.png',
       badge: '/pwa-192.png',
-      vibrate: [500, 250, 500, 250, 500],
+      sound: '/notification.wav',
+      vibrate: [400, 150, 400, 150, 400],
       silent: false,
+      renotify: true,
       url,
       timestamp: Date.now(),
       tag: `edumark-${Date.now()}`

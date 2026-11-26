@@ -243,14 +243,11 @@ router.post('/unsubscribe', async (req, res) => {
 // POST /api/notifications/test-push (Send instant test push to verify mobile notification bar)
 router.post('/test-push', async (req, res) => {
   const user = req.user;
-  if (user.role === 'student') {
-    return res.status(403).json({ message: 'Test push is only available for Admin and Faculty.' });
-  }
 
   try {
     const result = await sendPushNotification({
       title: 'EduMark Classroom 🔔',
-      body: `Hello ${user.fullName || 'User'}, your mobile notifications are active!`,
+      body: `Hello ${user.fullName || 'User'}, your mobile notifications with sound & vibration are active!`,
       icon: '/pwa-192.png',
       url: user.role === 'admin' ? '/admin' : user.role === 'faculty' ? '/faculty' : '/student',
       userIds: [user.id]
